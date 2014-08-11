@@ -1,6 +1,7 @@
 import 'package:dart_endpoints/endpoints.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
+import 'dart:async';
 
 _handler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
@@ -26,8 +27,6 @@ class MyRequest extends ApiMessage {
   description: 'My Awesome Dart Cloud Endpoint'
 )
 class MyApi extends Api {
-
-  MyApi();
   
   @ApiMethod(
     name: 'myApi.get',
@@ -44,10 +43,19 @@ class MyApi extends Api {
     path: 'echo',
     description: 'Echos whatever you send to it'
   )
-  MyResponse echo(MyRequest request) {
-    return new MyResponse(1, request.message);
+  Future<MyResponse> echo(MyRequest request) {
+    return new Future.value(new MyResponse(1, request.message));
   }
   
+  @ApiMethod(
+    name: 'myApi.silence',
+    method: 'GET',
+    path: 'silence',
+    description: 'Returns nothing'
+  )
+  void silence() {
+    
+  }
 }
 
 

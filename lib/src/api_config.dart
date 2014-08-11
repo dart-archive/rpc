@@ -3,22 +3,66 @@ library endpoints.api_config;
 import 'api.dart';
 
 import 'dart:io' show Platform;
+import 'dart:async';
 import 'dart:mirrors';
 import 'dart:convert' show JSON;
 
-class _ApiMethod {
+class ApiConfigMethod {
   Symbol _methodName;
   String _name;
   String _path;
   String _method;
-
-  _ApiMethod(MethodMirror mm) {
+  ClassMirror _requestMessage;
+  ClassMirror _responseMessage;
+  
+  ApiConfigMethod(MethodMirror mm) {
     ApiMethod metadata = mm.metadata.first.reflectee;
     _methodName = mm.simpleName;
     _name = metadata.name;
     _path = metadata.path;
-    _method = metadata.method;
+    _method = metadata.method.toUpperCase();
+
+    var type = mm.returnType;
+    if (type.simpleName == new Symbol('void')) {
+      _responseMessage = reflectType(VoidMessage);
+    } else {
+      if (type.isSubtypeOf(reflectType(Future))) {
+        var types = type.typeArguments;
+        if (types.length == 1) {
+          if (types[0].simpleName != new Symbol('dynamic') && types[0].isSubtypeOf(reflectType(ApiMessage))) {
+            _responseMessage = types[0];
+          }
+        }
+      } else {
+        if (type.simpleName != new Symbol('dynamic') && type.isSubtypeOf(reflectType(ApiMessage))) {
+          _responseMessage = type;
+        }
+      }
+    }
+    if (_responseMessage == null) {
+      throw new ArgumentError("API Method return type has to be ApiMessage or Future<ApiMessage>");
+    }
+    if (mm.parameters.length > 1) {
+      throw new ArgumentError("API Methods can only accept at one ApiMessage as parameter");
+    }
+    if (mm.parameters.length == 0) {
+      _requestMessage = reflectType(VoidMessage);
+    } else {
+      var param = mm.parameters[0];
+      if (param.isNamed || param.isOptional) {
+        throw new ArgumentError("API Method parameter can't be optional or named");
+      }
+      type = param.type;
+      if (type.simpleName != new Symbol('dynamic') && type.isSubtypeOf(reflectType(ApiMessage))) {
+        _requestMessage = type;
+      } else {
+        throw new ArgumentError("API Method parameter has to be a sub-class of ApiMessage");
+      }
+    }
   }
+  
+  ClassMirror get requestMessage => _requestMessage;
+  ClassMirror get responseMessage => _responseMessage;
 }
 
 class ApiConfig {
@@ -29,7 +73,7 @@ class ApiConfig {
   String _prefix;
 
   InstanceMirror _api;
-  Map<String, _ApiMethod> _methodMap = {};
+  Map<String, ApiConfigMethod> _methodMap = {};
 
   ApiConfig(Api api) {
     _api = reflect(api);
@@ -53,7 +97,7 @@ class ApiConfig {
     );
 
     methods.forEach((MethodMirror mm) {
-      var method = new _ApiMethod(mm);
+      var method = new ApiConfigMethod(mm);
       _methodMap[mm.simpleName.toString()] = method;
     });
   }
