@@ -9,11 +9,18 @@ class ApiClass {
 }
 
 class ApiMethod {
+  final String name;
   final String path;
   final String method;
   final String description;
 
-  const ApiMethod({this.path, this.method, this.description});
+  const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
 }
 
 abstract class Api {}
+abstract class ApiMessage {}
+
+class VoidMessage extends ApiMessage {
+  VoidMessage();
+}
+

@@ -1,76 +1,34 @@
 library endpoints.api_server;
 
 import 'api.dart';
+import 'api_config.dart';
 
 import 'package:shelf/shelf.dart';
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:convert' show JSON;
-import 'dart:mirrors';
+
 
 import 'package:appengine/appengine.dart';
 
-class ApiInfo {
-  Type _apiClass;
-  String name;
-  String version;
-  String description;
-  
-  ApiInfo(Api api) {
-    _apiClass = api.runtimeType;
-    ClassMirror apiMirror = reflectClass(_apiClass);
-    ApiClass metaData = apiMirror.metadata.first.reflectee;
-    name = metaData.name;
-    version = metaData.version;
-    description = metaData.description; 
-  }
-  
-  Map toJson() {
-    Map json = {};
-    // TODO: better way to determine root URL
-    Map env = Platform.environment;
-    String root = 'https://${env['GAE_LONG_APP_ID']}.appspot.com'; 
-    if (env['GAE_PARTITION'] == 'dev') {
-      root = 'https://localhost:${env['GAE_SERVER_PORT']}';
-    }
-    json['extends'] = 'thirdParty.api';
-    json['root'] = '$root/_ah/api';
-    json['name'] = name;
-    json['version'] = version;
-    json['description'] = description;
-    json['defaultVersion'] = 'true';
-    json['abstract'] = 'false';
-    json['adapater'] = {
-      'bns': '$root/_ah/spi',
-      'type': 'lily',
-      'deadline': 10.0
-    };
-
-    return json;
-  }
-  
-  String toString() => JSON.encode(toJson());
-}
-
 class ApiServer {
 
-  List<ApiInfo> _apis = [];
-  Cascade _cascade = new Cascade();
+  List<ApiConfig> _apis = [];
+  Cascade _cascade;
 
   ApiServer() {
-    _cascade = _cascade.add(_getApiConfigs);
+    _cascade = new Cascade().add(_getApiConfigs).add(_executeApiMethod);
   }
-  
-  _getApiConfigs(Request request) {    
+
+  _getApiConfigs(Request request) {
     if (request.method != 'POST') {
       return new Response.notFound('');
     }
     if (request.url.toString() != '/_ah/spi/BackendService.getApiConfigs') {
       return new Response.notFound('');
     }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+
     Completer completer = new Completer();
-    
+
     request.readAsString().then((value) {
       // TODO: check app_revision if provided in value
       context.services.logging.debug(value);
@@ -80,15 +38,35 @@ class ApiServer {
         new Response.ok(response, headers: {'Content-Type' : 'application/json'})
       );
     });
- 
+
     return completer.future;
   }
-  
-  Handler get handler => _cascade.handler;
-  
-  void addApi(Api api) {
-    _apis.add(new ApiInfo(api));
-    // TODO create request handlers for API methods
+
+  _executeApiMethod(Request request) {
+    if (request.method != 'POST') {
+      return new Response.notFound('Not found.');
+    }
+    if (!request.url.toString().startsWith('/_ah/spi/')) {
+      return new Response.notFound('Not found.');
+    }
+
+    Completer completer = new Completer();
+
+    request.readAsString().then((value) {
+      context.services.logging.debug(value);
+      // TODO:
+      // Find API that can execute this request
+      // Execute request and wait for reply
+      // return response or notfound otherwise
+      completer.complete(new Response.notFound('Not implemented yet.'));
+    });
+
+    return completer.future;
   }
 
+  Handler get handler => _cascade.handler;
+
+  void addApi(Api api) {
+    _apis.add(new ApiConfig(api));
+  }
 }

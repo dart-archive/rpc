@@ -8,6 +8,18 @@ _handler(Request request) {
   return new Response.ok('Hello World!!', headers: headers);
 }
 
+class MyResponse extends ApiMessage {
+  int count;
+  String message;
+  
+  MyResponse(this.count, this.message);
+}
+
+class MyRequest extends ApiMessage {
+  String message;
+  MyRequest(this.message);
+}
+
 @ApiClass(
   name: 'myApi',
   version: 'v1',
@@ -16,6 +28,26 @@ _handler(Request request) {
 class MyApi extends Api {
 
   MyApi();
+  
+  @ApiMethod(
+    name: 'myApi.get',
+    path: 'get',
+    description: 'Testing get method'
+  )
+  MyResponse get() {
+    return new MyResponse(1, "test");
+  }
+  
+  @ApiMethod(
+    name: 'myApi.echo',
+    method: 'POST',
+    path: 'echo',
+    description: 'Echos whatever you send to it'
+  )
+  MyResponse echo(MyRequest request) {
+    return new MyResponse(1, request.message);
+  }
+  
 }
 
 
