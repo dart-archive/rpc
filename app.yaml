@@ -1,0 +1,12 @@
+version: 1
+runtime: contrib-dart
+vm: true
+api_version: 1
+threadsafe: true
+
+manual_scaling:
+  instances: 1
+
+handlers:
+- url: /.*
+  script: bin/server.dart

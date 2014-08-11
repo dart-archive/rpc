@@ -1,0 +1,22 @@
+name: dart_endpoints
+version: 0.0.1
+author: Gerwin Sturm
+dependencies:
+  shelf_appengine: any
+dependency_overrides:
+  shelf_appengine:
+    git:
+      url: git@github.com:dart-lang/shelf_appengine.git
+      ref: 0-1-dev
+  appengine:
+    git:
+      url: git@github.com:dart-lang/appengine.git
+      ref: staging
+  cloud_datastore:
+    git:
+      url: git@github.com:dart-lang/cloud_datastore.git
+      ref: v0.1
+  memcache:
+    git:
+      url: git@github.com:dart-lang/memcache.git
+      ref: v0.1
