@@ -22,6 +22,13 @@ class ApiConfigMethod {
     _httpMethod = metadata.method.toUpperCase();
     _description = metadata.description;
 
+    if (_name == null || _name == '') {
+      throw new ApiConfigError('$_methodName: missing method name');
+    }
+    if (_path == null || _path == '') {
+      throw new ApiConfigError('$_methodName: missing method path');
+    }
+
     var type = mm.returnType;
     if (type.simpleName == new Symbol('void')) {
       _responseMessage = reflectClass(VoidMessage);

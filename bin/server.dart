@@ -5,14 +5,14 @@ import 'dart:async';
 
 _handler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
-  
+
   return new Response.ok('Hello World!!', headers: headers);
 }
 
 class MyResponse extends ApiMessage {
   int count;
   String message;
-  
+
   MyResponse(this.count, this.message);
 }
 
@@ -27,7 +27,7 @@ class MyRequest extends ApiMessage {
   description: 'My Awesome Dart Cloud Endpoint'
 )
 class MyApi extends Api {
-  
+
   @ApiMethod(
     name: 'test.get',
     path: 'get',
@@ -36,7 +36,7 @@ class MyApi extends Api {
   MyResponse get() {
     return new MyResponse(1, "test");
   }
-  
+
   @ApiMethod(
     name: 'test.echo',
     method: 'POST',
@@ -46,7 +46,7 @@ class MyApi extends Api {
   Future<MyResponse> echo(MyRequest request) {
     return new Future.value(new MyResponse(1, request.message));
   }
-  
+
   @ApiMethod(
     name: 'test.silence',
     method: 'GET',
