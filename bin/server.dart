@@ -29,7 +29,7 @@ class MyRequest extends ApiMessage {
 class MyApi extends Api {
   
   @ApiMethod(
-    name: 'myApi.get',
+    name: 'test.get',
     path: 'get',
     description: 'Testing get method'
   )
@@ -38,7 +38,7 @@ class MyApi extends Api {
   }
   
   @ApiMethod(
-    name: 'myApi.echo',
+    name: 'test.echo',
     method: 'POST',
     path: 'echo',
     description: 'Echos whatever you send to it'
@@ -48,13 +48,13 @@ class MyApi extends Api {
   }
   
   @ApiMethod(
-    name: 'myApi.silence',
+    name: 'test.silence',
     method: 'GET',
     path: 'silence',
     description: 'Returns nothing'
   )
   void silence() {
-    
+
   }
 }
 

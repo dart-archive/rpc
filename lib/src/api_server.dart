@@ -32,7 +32,14 @@ class ApiServer {
     request.readAsString().then((value) {
       // TODO: check app_revision if provided in value
       context.services.logging.debug(value);
-      var configs = _apis.map((apiInfo) => apiInfo.toString()).toList();
+      var configs = new List<String>();
+      _apis.forEach((apiInfo) {
+        if (apiInfo.isValid) {
+          configs.add(apiInfo.toString());
+        } else {
+          context.services.logging.error(apiInfo.errors);
+        }
+      });
       var response = JSON.encode({'items': configs});
       completer.complete(
         new Response.ok(response, headers: {'Content-Type' : 'application/json'})

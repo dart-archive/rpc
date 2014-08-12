@@ -7,89 +7,45 @@ import 'dart:async';
 import 'dart:mirrors';
 import 'dart:convert' show JSON;
 
-class ApiConfigMethod {
-  Symbol _methodName;
-  String _name;
-  String _path;
-  String _method;
-  ClassMirror _requestMessage;
-  ClassMirror _responseMessage;
-  
-  ApiConfigMethod(MethodMirror mm) {
-    ApiMethod metadata = mm.metadata.first.reflectee;
-    _methodName = mm.simpleName;
-    _name = metadata.name;
-    _path = metadata.path;
-    _method = metadata.method.toUpperCase();
+part 'api_config/method.dart';
+part 'api_config/schema.dart';
 
-    var type = mm.returnType;
-    if (type.simpleName == new Symbol('void')) {
-      _responseMessage = reflectType(VoidMessage);
-    } else {
-      if (type.isSubtypeOf(reflectType(Future))) {
-        var types = type.typeArguments;
-        if (types.length == 1) {
-          if (types[0].simpleName != new Symbol('dynamic') && types[0].isSubtypeOf(reflectType(ApiMessage))) {
-            _responseMessage = types[0];
-          }
-        }
-      } else {
-        if (type.simpleName != new Symbol('dynamic') && type.isSubtypeOf(reflectType(ApiMessage))) {
-          _responseMessage = type;
-        }
-      }
-    }
-    if (_responseMessage == null) {
-      throw new ArgumentError("API Method return type has to be ApiMessage or Future<ApiMessage>");
-    }
-    if (mm.parameters.length > 1) {
-      throw new ArgumentError("API Methods can only accept at one ApiMessage as parameter");
-    }
-    if (mm.parameters.length == 0) {
-      _requestMessage = reflectType(VoidMessage);
-    } else {
-      var param = mm.parameters[0];
-      if (param.isNamed || param.isOptional) {
-        throw new ArgumentError("API Method parameter can't be optional or named");
-      }
-      type = param.type;
-      if (type.simpleName != new Symbol('dynamic') && type.isSubtypeOf(reflectType(ApiMessage))) {
-        _requestMessage = type;
-      } else {
-        throw new ArgumentError("API Method parameter has to be a sub-class of ApiMessage");
-      }
-    }
-  }
-  
-  ClassMirror get requestMessage => _requestMessage;
-  ClassMirror get responseMessage => _responseMessage;
+class ApiConfigError extends Error {
+  final String message;
+  ApiConfigError(this.message);
+  String toString() => message;
 }
 
 class ApiConfig {
 
+  InstanceMirror _api;
+  ClassMirror _apiClass;
+
   String _name;
   String _version;
   String _description;
-  String _prefix;
+  String _apiClassName;
 
-  InstanceMirror _api;
+  List<ApiConfigError> _errors = [];
   Map<String, ApiConfigMethod> _methodMap = {};
+  Map<String, ApiConfigSchema> _schemaMap = {};
 
   ApiConfig(Api api) {
     _api = reflect(api);
+    _apiClass = _api.type;
+    _apiClassName = MirrorSystem.getName(_apiClass.simpleName);
 
-    var apiMirror = _api.type;
-    if (apiMirror.metadata.length == 0 || apiMirror.metadata.first.reflectee.runtimeType != ApiClass) {
-      throw new ArgumentError("Api class needs to have @ApiClass annotation");
+    if (_apiClass.metadata.length == 0 || _apiClass.metadata.first.reflectee.runtimeType != ApiClass) {
+      _errors.add(new ApiConfigError('API Class needs to have @ApiClass annotation'));
+      return;
     }
 
-    ApiClass metaData = apiMirror.metadata.first.reflectee;
+    ApiClass metaData = _apiClass.metadata.first.reflectee;
     _name = metaData.name;
     _version = metaData.version;
     _description = metaData.description;
-    _prefix = apiMirror.simpleName.toString();
 
-    var methods = apiMirror.declarations.values.where(
+    var methods = _apiClass.declarations.values.where(
       (dm) => dm is MethodMirror &&
               dm.isRegularMethod &&
               dm.metadata.length > 0 &&
@@ -97,10 +53,30 @@ class ApiConfig {
     );
 
     methods.forEach((MethodMirror mm) {
-      var method = new ApiConfigMethod(mm);
-      _methodMap[mm.simpleName.toString()] = method;
+      ApiConfigMethod method;
+      try {
+        method = new ApiConfigMethod(mm, _apiClassName);
+      } on ApiConfigError catch (e) {
+        _errors.add(e);
+        return;
+      }
+      _methodMap[method.methodName] = method;
+      _addSchema(method.requestSchema);
+      _addSchema(method.responseSchema);
     });
   }
+
+  _addSchema(ApiConfigSchema schema) {
+    if (schema != null) {
+      if (!_schemaMap.containsKey(schema.schemaName)) {
+        _schemaMap[schema.schemaName] = schema;
+      }
+    }
+  }
+
+  bool get isValid => _errors.isEmpty;
+
+  String get errors => '$_apiClassName:\n' + _errors.join('\n');
 
   Map toJson() {
     Map json = {};
@@ -122,6 +98,20 @@ class ApiConfig {
       'type': 'lily',
       'deadline': 10.0
     };
+    json['methods'] = {};
+    json['descriptor'] = {
+      'methods': {},
+      'schemas' : {}
+    };
+
+    _methodMap.values.forEach((method) {
+      json['descriptor']['methods'][method.methodName] = method.descriptor;
+      json['methods']['${_name}.${method.name}'] = method.resourceMethod;
+    });
+
+    _schemaMap.values.forEach((schema) {
+      json['descriptor']['schemas'][schema.schemaName] = schema.descriptor;
+    });
 
     return json;
   }

@@ -1,3 +1,4 @@
+application: dart-endpoints
 version: 1
 runtime: contrib-dart
 vm: true
