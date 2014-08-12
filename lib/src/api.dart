@@ -1,5 +1,9 @@
 library endpoints.api;
 
+/**
+ * Use as annotation for your main API class.
+ * [name] and [version] are required.
+ */
 class ApiClass {
   final String name;
   final String version;
@@ -8,6 +12,10 @@ class ApiClass {
   const ApiClass({this.name, this.version, this.description});
 }
 
+/**
+ * Use as annotation for your API methods inside of the API class.
+ * [name] and [path] are required.
+ */
 class ApiMethod {
   final String name;
   final String path;
@@ -17,6 +25,9 @@ class ApiMethod {
   const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
 }
 
+/**
+ * Optional annotation for parameters inside of API request/response messages.
+ */
 class ApiParameter {
   final String description;
   
@@ -28,9 +39,16 @@ class ApiParameter {
   const ApiParameter({this.required, this.description, this.defaultValue, this.maxValue, this.minValue});
 }
 
+/// Base class for all API Classes
 abstract class Api {}
+
+/// Base class for API response/request messages
 abstract class ApiMessage {}
 
+/**
+ * Special [ApiMessage] to show that a method
+ * doesn't need a request or doesn't return a response
+ */
 class VoidMessage extends ApiMessage {
   VoidMessage();
 }
