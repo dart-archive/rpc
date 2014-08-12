@@ -17,6 +17,17 @@ class ApiMethod {
   const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
 }
 
+class ApiParameter {
+  final String description;
+  
+  final bool required;
+  final defaultValue;
+  final int maxValue;
+  final int minValue;
+
+  const ApiParameter({this.required, this.description, this.defaultValue, this.maxValue, this.minValue});
+}
+
 abstract class Api {}
 abstract class ApiMessage {}
 

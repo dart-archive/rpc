@@ -22,7 +22,7 @@ class MyRequest extends ApiMessage {
 }
 
 @ApiClass(
-  name: 'myApi',
+  name: 'myDartApi',
   version: 'v1',
   description: 'My Awesome Dart Cloud Endpoint'
 )
