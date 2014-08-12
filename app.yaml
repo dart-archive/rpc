@@ -1,4 +1,3 @@
-application: dart-endpoints
 version: 1
 runtime: contrib-dart
 vm: true
@@ -9,5 +8,9 @@ manual_scaling:
   instances: 1
 
 handlers:
+- url: /_ah/spi/.*
+  script: bin/server.dart
+
 - url: /.*
   script: bin/server.dart
+
