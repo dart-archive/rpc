@@ -13,7 +13,7 @@ class ApiConfigMethod {
   ApiConfigSchema _requestSchema;
   ApiConfigSchema _responseSchema;
 
-  ApiConfigMethod(MethodMirror mm, String this._apiClass) {
+  ApiConfigMethod(MethodMirror mm, String this._apiClass, ApiConfig parent) {
     ApiMethod metadata = mm.metadata.first.reflectee;
     _symbol = mm.simpleName;
     _methodName = _apiClass + "." + MirrorSystem.getName(_symbol);
@@ -68,10 +68,16 @@ class ApiConfigMethod {
     }
 
     if (_requestMessage.reflectedType != VoidMessage) {
-      _requestSchema = new ApiConfigSchema(_requestMessage);
+      _requestSchema = parent._getSchema(MirrorSystem.getName(_requestMessage.simpleName));
+      if (_requestSchema == null) {
+        _requestSchema = new ApiConfigSchema(_requestMessage, parent);
+      }
     }
     if (_responseMessage.reflectedType != VoidMessage) {
-      _responseSchema = new ApiConfigSchema(_responseMessage);
+      _responseSchema = parent._getSchema(MirrorSystem.getName(_responseMessage.simpleName));
+      if (_responseMessage == null) {
+        _responseSchema = new ApiConfigSchema(_responseMessage, parent);
+      }
     }
   }
 
@@ -115,7 +121,7 @@ class ApiConfigMethod {
       method['request']['bodyName'] = 'resource';
     }
 
-    //TODO: Request parameters
+    //TODO: Request & path parameters
     method['request']['parameters'] = {};
 
     method['response'] = {};

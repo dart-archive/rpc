@@ -28,15 +28,16 @@ class ApiMethod {
 /**
  * Optional annotation for parameters inside of API request/response messages.
  */
-class ApiParameter {
+class ApiProperty {
   final String description;
   
   final bool required;
   final defaultValue;
   final int maxValue;
   final int minValue;
+  final String variant;
 
-  const ApiParameter({this.required, this.description, this.defaultValue, this.maxValue, this.minValue});
+  const ApiProperty({this.required, this.description, this.defaultValue, this.maxValue, this.minValue, this.variant});
 }
 
 /// Base class for all API Classes

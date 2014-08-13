@@ -5,9 +5,10 @@ class ApiConfigSchema {
   String _schemaName;
   Map<Symbol, ApiConfigSchemaProperty> _properties = {};
 
-  ApiConfigSchema(this._schemaClass) {
+  ApiConfigSchema(this._schemaClass, ApiConfig parent) {
     _schemaName = MirrorSystem.getName(_schemaClass.simpleName);
-
+    parent._addSchema(this);
+    
     var declarations = _schemaClass.declarations;
 
     var properties = _schemaClass.declarations.values.where(
@@ -16,17 +17,11 @@ class ApiConfigSchema {
     );
 
     properties.forEach((VariableMirror vm) {
-      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, _schemaName);
+      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, _schemaName, parent);
     });
   }
 
   String get schemaName => _schemaName;
-
-  List<ApiConfigSchema> get subSchemas {
-    List schemas = [];
-    _properties.values.forEach((prop) => schemas.addAll(prop.subSchemas));
-    return schemas;
-  }
 
   Map get descriptor {
     var descriptor = {};

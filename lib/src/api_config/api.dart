@@ -19,15 +19,24 @@ class ApiConfig {
     _apiClass = _api.type;
     _apiClassName = MirrorSystem.getName(_apiClass.simpleName);
 
-    if (_apiClass.metadata.length == 0 || _apiClass.metadata.first.reflectee.runtimeType != ApiClass) {
+    var metas = _apiClass.metadata.where((m) => m.reflectee.runtimeType == ApiClass);
+    
+    if (metas.length == 0) {
       _errors.add(new ApiConfigError('API Class needs to have @ApiClass annotation'));
       return;
     }
-
-    ApiClass metaData = _apiClass.metadata.first.reflectee;
+    
+    ApiClass metaData = metas.first.reflectee;
     _name = metaData.name;
     _version = metaData.version;
     _description = metaData.description;
+
+    if (_name == null || _name == '') {
+      _errors.add(new ApiConfigError('ApiClass.name is required'));
+    }
+    if (_version == null || _version == '') {
+      _errors.add(new ApiConfigError('ApiClass.version is required'));
+    }
 
     var methods = _apiClass.declarations.values.where(
       (dm) => dm is MethodMirror &&
@@ -39,22 +48,21 @@ class ApiConfig {
     methods.forEach((MethodMirror mm) {
       ApiConfigMethod method;
       try {
-        method = new ApiConfigMethod(mm, _apiClassName);
+        method = new ApiConfigMethod(mm, _apiClassName, this);
       } on ApiConfigError catch (e) {
         _errors.add(e);
         return;
       }
       _methodMap[method.methodName] = method;
-      _addSchema(method.requestSchema);
-      _addSchema(method.responseSchema);
     });
   }
 
+  ApiConfigSchema _getSchema(name) => _schemaMap[name];
+  
   _addSchema(ApiConfigSchema schema) {
     if (schema != null) {
       if (!_schemaMap.containsKey(schema.schemaName)) {
         _schemaMap[schema.schemaName] = schema;
-        schema.subSchemas.forEach((schema) => _addSchema(schema));
       }
     }
   }
