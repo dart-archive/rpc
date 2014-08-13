@@ -16,7 +16,7 @@ class ApiConfigSchema {
     );
 
     properties.forEach((VariableMirror vm) {
-      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm);
+      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, _schemaName);
     });
   }
 
