@@ -1,7 +1,7 @@
 import 'package:unittest/unittest.dart';
 
-import 'package:dart_endpoints/endpoints.dart';
-import 'package:dart_endpoints/src/api_config.dart';
+import 'package:endpoints/endpoints.dart';
+import 'package:endpoints/src/api_config.dart';
 
 import 'dart:mirrors';
 

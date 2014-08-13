@@ -1,6 +1,11 @@
-name: dart_endpoints
+name: endpoints
 version: 0.0.1
 author: Gerwin Sturm
+description: Implementation of Google Cloud Endpoints
+homepage: https://dart-endpoints.appspot.com/
+
+environment:
+  sdk: '>=1.0.0 <2.0.0'
 
 dependencies:
   shelf_appengine: any

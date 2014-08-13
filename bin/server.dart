@@ -1,4 +1,4 @@
-import 'package:dart_endpoints/endpoints.dart';
+import 'package:endpoints/endpoints.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
 import 'dart:async';
