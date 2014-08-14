@@ -7,7 +7,7 @@ class ApiConfigSchema {
 
   ApiConfigSchema(this._schemaClass, ApiConfig parent) {
     _schemaName = MirrorSystem.getName(_schemaClass.simpleName);
-    parent._addSchema(this);
+    parent._addSchema(_schemaName, this);
     
     var declarations = _schemaClass.declarations;
 
@@ -29,10 +29,9 @@ class ApiConfigSchema {
     descriptor['type'] = 'object';
     descriptor['properties'] = {};
 
-    //TODO add actual properties
-    descriptor['properties']['debug'] = {
-      'type': 'string'
-    };
+    _properties.values.forEach((prop) {
+      descriptor['properties'][prop.propertyName] = prop.descriptor;
+    });
 
     return descriptor;
   }

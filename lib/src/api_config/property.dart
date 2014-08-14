@@ -1,29 +1,45 @@
 part of endpoints.api_config;
 
 const Map _typeMap = const {
-  const [int, null]: 'integer',
-  const [int, 'int32']: 'integer',
-  const [int, 'uint32']: 'integer',
-  const [int, 'int64']: 'string',
-  const [int, 'uint64']: 'string',
-  const [String, null]: 'string',
-  const [double, null]: 'number',
-  const [double, 'double']: 'number',
-  const [double, 'float']: 'number',
-  const [bool, null]: 'boolean',
-  const [DateTime, null]: 'string' 
+  int: const {
+   '': 'integer',
+   'int32': 'integer',
+   'uint32': 'integer',
+   'int64': 'string',
+   'uint64': 'string'
+  },
+  String: const {
+    '': 'string'
+  },
+  double: const {
+    '': 'number',
+    'double': 'number',
+    'float': 'number'
+  },
+  bool: const {
+    '': 'boolean'
+  },
+  DateTime: const {
+    '': 'string'
+  } 
 };
 
 const Map _formatMap = const {
-  const [int, null]: 'int32',
-  const [int, 'int32']: 'int32',
-  const [int, 'uint32']: 'uint32',
-  const [int, 'int64']: 'int64',
-  const [int, 'uint64']: 'uint64',
-  const [double, null]: 'double',
-  const [double, 'double']: 'double',
-  const [double, 'float']: 'float',
-  const [DateTime, null]: 'date-time'
+  int: const {
+   '': 'int32',
+   'int32': 'int32',
+   'uint32': 'uint32',
+   'int64': 'int64',
+   'uint64': 'uint64'
+  },
+  double: const {
+    '': 'double',
+    'double': 'double',
+    'float': 'float'
+  },
+  DateTime: const {
+    '': 'date-time'
+  } 
 };
 
 class ApiConfigSchemaProperty {
@@ -65,12 +81,19 @@ class ApiConfigSchemaProperty {
         _ref = new ApiConfigSchema(_type, parent);
       }
     } else {
-      var variant;
-      if (_meta != null) {
+      var variant = '';
+      var _tmp = null;
+      if (_meta != null && _meta.variant != null) {
         variant = _meta.variant;
       }
-      _apiType = _typeMap[[_type.reflectedType, variant]];
-      _apiFormat = _formatMap[[_type.reflectedType, variant]];
+      _tmp = _typeMap[_type.reflectedType];
+      if (_tmp != null) {
+        _apiType = _tmp[variant];
+      }
+      _tmp = _formatMap[_type.reflectedType];
+      if (_tmp != null) {
+        _apiFormat = _tmp[variant];
+      }
     }
 
     if (_ref == null && _apiType == null) {
@@ -80,4 +103,25 @@ class ApiConfigSchemaProperty {
 
   String get propertyName => _propertyName;
 
+  Map get descriptor {
+    var property = {};
+    if (_apiType != null) {
+      property['type'] = _apiType;
+    }
+    if (_apiFormat != null) {
+      property['format'] = _apiFormat;
+    }
+    if (_ref != null) {
+      property['\$ref'] = _ref.schemaName;
+    }
+    
+    if (_repeated) {
+      return {
+        'type': 'array',
+        'items': property
+      };
+    }
+    return property;
+  }
+  
 }

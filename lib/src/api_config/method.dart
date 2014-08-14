@@ -75,7 +75,7 @@ class ApiConfigMethod {
     }
     if (_responseMessage.reflectedType != VoidMessage) {
       _responseSchema = parent._getSchema(MirrorSystem.getName(_responseMessage.simpleName));
-      if (_responseMessage == null) {
+      if (_responseSchema == null) {
         _responseSchema = new ApiConfigSchema(_responseMessage, parent);
       }
     }

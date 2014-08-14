@@ -59,10 +59,10 @@ class ApiConfig {
 
   ApiConfigSchema _getSchema(name) => _schemaMap[name];
   
-  _addSchema(ApiConfigSchema schema) {
+  _addSchema(schemaName, ApiConfigSchema schema) {
     if (schema != null) {
-      if (!_schemaMap.containsKey(schema.schemaName)) {
-        _schemaMap[schema.schemaName] = schema;
+      if (!_schemaMap.containsKey(schemaName)) {
+        _schemaMap[schemaName] = schema;
       }
     }
   }
