@@ -134,4 +134,26 @@ class ApiConfigMethod {
 
     return method;
   }
+  
+  Future<Map> invoke(InstanceMirror api, Map request) {
+    var completer = new Completer();
+    new Future.sync(() {
+      var params = [];
+      if (_requestMessage.reflectedType != VoidMessage) {
+        params.add(_requestSchema.fromRequest(request));
+      }
+      var response = api.invoke(_symbol, params).reflectee;
+      if (response is! Future) {
+        response = new Future.value(response);
+      }
+      response.then((message) {
+        if (_responseMessage.reflectedType == VoidMessage || message == null) {
+          completer.complete({});
+          return;
+        }
+        completer.complete(_responseSchema.toResponse(message));
+      });
+    });
+    return completer.future;
+  }
 }

@@ -82,17 +82,17 @@ class ApiConfigSchemaProperty {
       }
     } else {
       var variant = '';
-      var _tmp = null;
+      var tmp = null;
       if (_meta != null && _meta.variant != null) {
         variant = _meta.variant;
       }
-      _tmp = _typeMap[_type.reflectedType];
-      if (_tmp != null) {
-        _apiType = _tmp[variant];
-      }
-      _tmp = _formatMap[_type.reflectedType];
-      if (_tmp != null) {
-        _apiFormat = _tmp[variant];
+      tmp = _typeMap[_type.reflectedType];
+      if (tmp != null) {
+        _apiType = tmp[variant];
+        tmp = _formatMap[_type.reflectedType];
+        if (tmp != null) {
+          _apiFormat = tmp[variant];
+        }
       }
     }
 
@@ -122,6 +122,82 @@ class ApiConfigSchemaProperty {
       };
     }
     return property;
+  }
+  
+  _singleRequestValue(value) {
+    if (_ref != null) {
+      return _ref.fromRequest(value);
+    }
+    if (_type.reflectedType == String) {
+      return value;
+    }
+    if (_type.reflectedType == int) {
+      if (value is int) {
+        return value;
+      }
+      return int.parse(value);
+    }
+    if (_type.reflectedType == double) {
+      if (value is num) {
+        return value;
+      }
+      return double.parse(value);
+    }
+    if (_type.reflectedType == bool) {
+      if (value is bool) {
+        return value;
+      }
+    }
+    // TODO: dateTime
+    return null;
+  }
+  
+  fromRequest(value) {
+    var response = null;
+    if (_repeated) {
+      if (value is! List) {
+        throw new ApiError(400, 'Bad request', 'Invalid request');
+      }
+      response = [];
+      value.forEach((v) => response.add(_singleRequestValue(v)));
+    } else {
+      response = _singleRequestValue(value);
+    }
+    return response;
+  }
+
+  _singleResponseValue(value) {
+    if (_ref != null) {
+      return _ref.fromRequest(value);
+    }
+    if ([String, double, bool].contains(_type.reflectedType)) {
+      return value;
+    }
+    if (_type.reflectedType == int) {
+      if (_apiFormat == 'string') {
+        return value.toString();
+      }
+      return value;
+    }
+    // TODO: DateTime
+    return null;
+  }
+  
+  toResponse(value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (_repeated) {
+      if (value is! List) {
+        throw new ApiError(500, 'Bad response', 'Invalid response');
+      }
+      var response = [];
+      value.forEach((v) => response.add(_singleResponseValue(v)));
+      return response;
+    }
+
+    return _singleResponseValue(value);
   }
   
 }

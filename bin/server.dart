@@ -6,6 +6,11 @@ import 'dart:async';
 _handler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
 
+  
+  if (request.url.toString() != '/') {
+    return ApiServer.cascadeResponse;
+  }
+  
   return new Response.ok('Hello World!!', headers: headers);
 }
 
@@ -13,12 +18,12 @@ class MyResponse extends ApiMessage {
   int count;
   String message;
 
-  MyResponse(this.count, this.message);
+  MyResponse({this.count, this.message});
 }
 
 class MyRequest extends ApiMessage {
   String message;
-  MyRequest(this.message);
+  MyRequest({this.message});
 }
 
 @ApiClass(
@@ -34,7 +39,7 @@ class MyApi extends Api {
     description: 'Testing get method'
   )
   MyResponse get() {
-    return new MyResponse(1, "test");
+    return new MyResponse(count: 1, message: "test");
   }
 
   @ApiMethod(
@@ -44,7 +49,7 @@ class MyApi extends Api {
     description: 'Echos whatever you send to it'
   )
   Future<MyResponse> echo(MyRequest request) {
-    return new Future.value(new MyResponse(1, request.message));
+    return new Future.value(new MyResponse(count: 1, message: request.message));
   }
 
   @ApiMethod(
@@ -54,7 +59,7 @@ class MyApi extends Api {
     description: 'Returns nothing'
   )
   void silence() {
-
+ 
   }
 }
 
@@ -62,7 +67,7 @@ class MyApi extends Api {
 void main() {
   var api_server = new ApiServer();
   api_server.addApi(new MyApi());
-  var cascade = new Cascade()
+  var cascade = new Cascade(shouldCascade: ApiServer.checkCascade)
     .add(api_server.handler)
     .add(_handler)
     .add(shelf_ae.assetHandler);

@@ -21,7 +21,7 @@ dependency_overrides:
   appengine:
     git:
       url: git@github.com:dart-lang/appengine.git
-      ref: staging
+      ref: v0.1
   cloud_datastore:
     git:
       url: git@github.com:dart-lang/cloud_datastore.git

@@ -35,4 +35,30 @@ class ApiConfigSchema {
 
     return descriptor;
   }
+  
+  ApiMessage fromRequest(Map request) {
+    InstanceMirror api = _schemaClass.newInstance(new Symbol(''), []);
+    request.forEach((name, value) {
+      if (value != null) {
+        var sym = new Symbol(name);
+        var prop = _properties[sym];
+        if (prop != null) {
+          api.setField(sym, prop.fromRequest(value));
+        }
+      }
+    });
+    return api.reflectee;
+  }
+  
+  Map toResponse(ApiMessage message) {
+    var response = {};
+    InstanceMirror mirror = reflect(message);
+    _properties.forEach((sym, prop) {
+      var value = prop.toResponse(mirror.getField(sym).reflectee);
+      if (value != null) {
+        response[prop.propertyName] = value;
+      }
+    });
+    return response;
+  }
 }

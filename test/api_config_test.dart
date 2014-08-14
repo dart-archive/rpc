@@ -44,6 +44,22 @@ class RecursiveMessage3 extends ApiMessage {
   RecursiveMessage2 item;
 }
 
+class TestMessage1 extends ApiMessage {
+  int count;
+  String message;
+  double value;
+  bool check;
+  List<String> messages;
+  TestMessage2 submessage;
+  List<TestMessage2> submessages;
+  
+  TestMessage1({this.count});
+}
+
+class TestMessage2 extends ApiMessage {
+  int count;  
+}
+
 main () {
   group('api_config', () {
     test('misconfig', () {
@@ -96,6 +112,33 @@ main () {
         var m2 = new ApiConfigSchema(reflectClass(RecursiveMessage2), tester);
         var m3 = new ApiConfigSchema(reflectClass(RecursiveMessage3), tester);
       }), completes);
+    });
+    
+    test('request-parsing', () {
+      var tester = new ApiConfig(new Tester());
+      var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
+      var instance = m1.fromRequest({});
+      expect(instance, new isInstanceOf<TestMessage1>());
+      instance = m1.fromRequest({
+        'count': 1,
+        'message': 'message'
+      });
+      expect(instance, new isInstanceOf<TestMessage1>());
+      expect(instance.count, 1);
+      expect(instance.message, 'message');
+    });
+    
+    test('response-creation', () {
+      var tester = new ApiConfig(new Tester());
+      var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
+      var instance = new TestMessage1();
+      instance.count = 1;
+      instance.message = 'message';
+      
+      var response = m1.toResponse(instance);
+      expect(response, new isInstanceOf<Map>());
+      expect(response['count'], 1);
+      expect(response['message'], 'message');
     });
   });
 }

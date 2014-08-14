@@ -1,5 +1,7 @@
 library endpoints.api;
 
+import 'dart:convert' show JSON;
+
 /**
  * Use as annotation for your main API class.
  * [name] and [version] are required.
@@ -54,3 +56,27 @@ class VoidMessage extends ApiMessage {
   VoidMessage();
 }
 
+
+class ApiError extends Error {
+  final String state = 'APPLICATION_ERROR';
+  String name;
+  String msg;
+  int code;
+ 
+  ApiError(this.code, this.name, [this.msg]);
+  
+  Map toJson() {
+    var json = {};
+    json['state'] = state;
+    json['error_name'] = name;
+    json['code'] = code;
+    if (msg != null) {
+      json['error_message'] = msg;
+    }
+    return json;
+  }
+  
+  String toString() {
+    return JSON.encode(toJson());   
+  }
+}

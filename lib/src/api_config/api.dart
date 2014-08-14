@@ -71,16 +71,16 @@ class ApiConfig {
 
   String get errors => '$_apiClassName:\n' + _errors.join('\n');
 
-  Map toJson() {
+  bool canHandleCall(String method) => _methodMap.containsKey(method);
+  
+  Future<Map> handleCall(String method, Map request) {
+    return _methodMap[method].invoke(_api, request);
+  }
+  
+  Map toJson([String root = 'localhost:8080']) {
     Map json = {};
-    // TODO: better way to determine root URL
-    Map env = Platform.environment;
-    String root = 'https://${env['GAE_LONG_APP_ID']}.appspot.com';
-    if (env['GAE_PARTITION'] == 'dev') {
-      root = 'https://localhost:${env['GAE_SERVER_PORT']}';
-    }
     json['extends'] = 'thirdParty.api';
-    json['root'] = '$root/_ah/api';
+    json['root'] = 'https://$root/_ah/api';
     json['name'] = _name;
     json['version'] = _version;
     json['description'] = _description;
@@ -109,5 +109,5 @@ class ApiConfig {
     return json;
   }
 
-  String toString() => JSON.encode(toJson());
+  String toString([String root = 'localhost:8080']) => JSON.encode(toJson(root));
 }
