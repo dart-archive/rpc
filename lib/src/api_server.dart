@@ -6,7 +6,7 @@ import 'api_config.dart';
 import 'package:shelf/shelf.dart';
 import 'dart:async';
 import 'dart:convert' show JSON;
-
+import 'dart:io' show Platform;
 
 import 'package:appengine/appengine.dart';
 
@@ -81,7 +81,9 @@ class ApiServer {
     Completer completer = new Completer();
 
     request.readAsString().then((value) {
-      context.services.logging.debug("Request: $value");
+      context.services.logging.debug('Request: $value');
+      context.services.logging.debug('Headers: ${JSON.encode(request.headers)}');
+
       var requestMap;
       try {
         requestMap = JSON.decode(value);   
