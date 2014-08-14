@@ -37,6 +37,7 @@ class ApiServer {
       // TODO: check app_revision if provided in value
       context.services.logging.debug('getApiConfigs request: $value');
       context.services.modules.hostname().then((root) {
+        root = root.replaceFirst('.', '-dot-');
         var configs = new List<String>();
         _apis.forEach((apiInfo) {
           if (apiInfo.isValid) {

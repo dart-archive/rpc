@@ -87,7 +87,7 @@ class ApiConfig {
     json['defaultVersion'] = 'true';
     json['abstract'] = 'false';
     json['adapter'] = {
-      'bns': '$root/_ah/spi',
+      'bns': 'https://$root/_ah/spi',
       'type': 'lily',
       'deadline': 10.0
     };
