@@ -158,7 +158,7 @@ class ApiConfigSchemaProperty {
     var response = null;
     if (_repeated) {
       if (value is! List) {
-        throw new ApiError(400, 'Bad request', 'Invalid request');
+        throw new ApiException(400, 'Bad request', 'Invalid request');
       }
       response = [];
       value.forEach((v) => response.add(_singleRequestValue(v)));
@@ -192,7 +192,7 @@ class ApiConfigSchemaProperty {
 
     if (_repeated) {
       if (value is! List) {
-        throw new ApiError(500, 'Bad response', 'Invalid response');
+        throw new ApiException(500, 'Bad response', 'Invalid response');
       }
       var response = [];
       value.forEach((v) => response.add(_singleResponseValue(v)));

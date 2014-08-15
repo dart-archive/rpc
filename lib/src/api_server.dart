@@ -75,7 +75,7 @@ class ApiServer {
       }
     }
     if (api == null) {
-      return new Response.notFound(new ApiError(404, 'Not found.').toString(), headers: headers);
+      return new Response.notFound(new ApiException(404, 'Not found', 'No configured API can handle this request').toString(), headers: headers);
     }
 
     Completer completer = new Completer();
@@ -89,8 +89,9 @@ class ApiServer {
         requestMap = JSON.decode(value);
       } on FormatException catch (e) {
         completer.complete(
-          new Response.notFound(
-            new ApiError(
+          new Response(
+            400,
+            body: new ApiException(
               400,
               'Bad Request',
               'Request data couldn\'t be decoded'
@@ -104,10 +105,10 @@ class ApiServer {
         .then((response) => completer.complete(new Response.ok(JSON.encode(response), headers: headers)))
         .catchError((e) {
           print("HandleCall Error: $e");
-          if (e is ApiError) {
+          if (e is ApiException) {
             completer.complete(new Response(e.code, body: e.toString(), headers: headers));
           } else {
-            completer.complete(new Response(500, body: new ApiError(500, 'Unknown Error', 'Unknown Error').toString(), headers: headers));
+            completer.complete(new Response(500, body: new ApiException(500, 'Unknown Error', 'Unknown API Error').toString(), headers: headers));
           }
           return true;
         });

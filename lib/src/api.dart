@@ -57,22 +57,21 @@ class VoidMessage extends ApiMessage {
 }
 
 
-class ApiError extends Error {
+class ApiException implements Exception {
+  
   final String state = 'APPLICATION_ERROR';
-  String name;
-  String msg;
-  int code;
+  final String name;
+  final String msg;
+  final int code;
 
-  ApiError(this.code, this.name, [this.msg]);
+  ApiException(this.code, this.name, this.msg);
 
   Map toJson() {
     var json = {};
     json['state'] = state;
     json['error_name'] = name;
     json['code'] = code;
-    if (msg != null) {
-      json['error_message'] = msg;
-    }
+    json['error_message'] = msg;
     return json;
   }
 

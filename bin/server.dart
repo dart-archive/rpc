@@ -6,11 +6,11 @@ import 'dart:async';
 _handler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
 
-  
+
   if (request.url.toString() != '/') {
     return ApiServer.cascadeResponse;
   }
-  
+
   return new Response.ok('Hello World!!', headers: headers);
 }
 
@@ -59,7 +59,7 @@ class MyApi extends Api {
     description: 'Returns nothing'
   )
   void silence() {
- 
+
   }
 }
 
