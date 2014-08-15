@@ -8,7 +8,7 @@ class ApiConfigSchema {
   ApiConfigSchema(this._schemaClass, ApiConfig parent) {
     _schemaName = MirrorSystem.getName(_schemaClass.simpleName);
     parent._addSchema(_schemaName, this);
-    
+
     var declarations = _schemaClass.declarations;
 
     var properties = _schemaClass.declarations.values.where(
@@ -35,7 +35,7 @@ class ApiConfigSchema {
 
     return descriptor;
   }
-  
+
   ApiMessage fromRequest(Map request) {
     InstanceMirror api = _schemaClass.newInstance(new Symbol(''), []);
     request.forEach((name, value) {
@@ -49,7 +49,7 @@ class ApiConfigSchema {
     });
     return api.reflectee;
   }
-  
+
   Map toResponse(ApiMessage message) {
     var response = {};
     InstanceMirror mirror = reflect(message);

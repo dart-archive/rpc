@@ -49,14 +49,18 @@ class MyRequest extends ApiMessage {
 }
 ```
 
-All public properties of this class will be used to construct an according JSON object. Allowed types are `int`, `double`, `bool`, `string`, another `ApiMessage` class, or a `List<T>` using one of those types.
+All public properties of this class will be used to construct an according JSON object. Allowed types are `int`, `double`, `bool`, `string`, `DateTime`, another `ApiMessage` class, or a `List<T>` using one of those types.
+
+(TODO: info about @ApiProperty and variants)
 
 
-(TODO: info about @ApiMessage...)
+(TODO: info about @ApiMethod...)
 
 
 In `bin/server.dart` create a new instance of ApiServer and add your Api class instances.
 ApiServer exposes a shelf handler which you can add to a shelf cascade, best before all your other handlers.
+
+(TODO: info about proper Cascade options, since ApiServer can return 404 as a valid response)
 
 ```
 void main() {
@@ -70,3 +74,5 @@ void main() {
   shelf_ae.serve(cascade.handler);
 }
 ```
+
+(TODO: info about Api Explorer for testing and Client Library generation)

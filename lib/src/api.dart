@@ -32,7 +32,7 @@ class ApiMethod {
  */
 class ApiProperty {
   final String description;
-  
+
   final bool required;
   final defaultValue;
   final int maxValue;
@@ -62,9 +62,9 @@ class ApiError extends Error {
   String name;
   String msg;
   int code;
- 
+
   ApiError(this.code, this.name, [this.msg]);
-  
+
   Map toJson() {
     var json = {};
     json['state'] = state;
@@ -75,8 +75,8 @@ class ApiError extends Error {
     }
     return json;
   }
-  
+
   String toString() {
-    return JSON.encode(toJson());   
+    return JSON.encode(toJson());
   }
 }

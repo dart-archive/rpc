@@ -21,7 +21,7 @@ const Map _typeMap = const {
   },
   DateTime: const {
     '': 'string'
-  } 
+  }
 };
 
 const Map _formatMap = const {
@@ -39,7 +39,7 @@ const Map _formatMap = const {
   },
   DateTime: const {
     '': 'date-time'
-  } 
+  }
 };
 
 class ApiConfigSchemaProperty {
@@ -96,6 +96,8 @@ class ApiConfigSchemaProperty {
       }
     }
 
+    // TODO: extra information from _meta
+
     if (_ref == null && _apiType == null) {
       throw new ApiConfigError('${schemaName}.${_propertyName}: Invalid type.');
     }
@@ -114,7 +116,7 @@ class ApiConfigSchemaProperty {
     if (_ref != null) {
       property['\$ref'] = _ref.schemaName;
     }
-    
+
     if (_repeated) {
       return {
         'type': 'array',
@@ -123,7 +125,7 @@ class ApiConfigSchemaProperty {
     }
     return property;
   }
-  
+
   _singleRequestValue(value) {
     if (_ref != null) {
       return _ref.fromRequest(value);
@@ -151,7 +153,7 @@ class ApiConfigSchemaProperty {
     // TODO: dateTime
     return null;
   }
-  
+
   fromRequest(value) {
     var response = null;
     if (_repeated) {
@@ -182,7 +184,7 @@ class ApiConfigSchemaProperty {
     // TODO: DateTime
     return null;
   }
-  
+
   toResponse(value) {
     if (value == null) {
       return null;
@@ -199,5 +201,5 @@ class ApiConfigSchemaProperty {
 
     return _singleResponseValue(value);
   }
-  
+
 }

@@ -14,15 +14,15 @@ class ApiServer {
 
   List<ApiConfig> _apis = [];
   Cascade _cascade;
-  
+
   static final _cascadeResponse = new Response(501);
   static Response get cascadeResponse => _cascadeResponse;
   static bool checkCascade(Response r) => (r == _cascadeResponse);
-  
+
   ApiServer() {
     _cascade = new Cascade(shouldCascade: checkCascade).add(_getApiConfigs).add(_executeApiMethod);
   }
-  
+
   _getApiConfigs(Request request) {
     if (request.method != 'POST') {
       return _cascadeResponse;
@@ -49,7 +49,7 @@ class ApiServer {
         var response = JSON.encode({'items': configs});
         completer.complete(
           new Response.ok(response, headers: {'Content-Type' : 'application/json'})
-        );        
+        );
       });
     });
 
@@ -65,7 +65,7 @@ class ApiServer {
     }
 
     var headers = {'Content-Type' : 'application/json'};
-    
+
     var api = null;
     var method = request.url.pathSegments.last;
     for (var a in _apis) {
@@ -77,7 +77,7 @@ class ApiServer {
     if (api == null) {
       return new Response.notFound(new ApiError(404, 'Not found.').toString(), headers: headers);
     }
-    
+
     Completer completer = new Completer();
 
     request.readAsString().then((value) {
@@ -86,7 +86,7 @@ class ApiServer {
 
       var requestMap;
       try {
-        requestMap = JSON.decode(value);   
+        requestMap = JSON.decode(value);
       } on FormatException catch (e) {
         completer.complete(
           new Response.notFound(
@@ -105,9 +105,9 @@ class ApiServer {
         .catchError((e) {
           print("HandleCall Error: $e");
           if (e is ApiError) {
-            completer.complete(new Response(e.code, body: e.toString(), headers: headers)); 
+            completer.complete(new Response(e.code, body: e.toString(), headers: headers));
           } else {
-            completer.complete(new Response(500, body: new ApiError(500, 'Unknown Error', 'Unknown Error').toString(), headers: headers));      
+            completer.complete(new Response(500, body: new ApiError(500, 'Unknown Error', 'Unknown Error').toString(), headers: headers));
           }
           return true;
         });

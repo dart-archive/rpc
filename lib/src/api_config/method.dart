@@ -134,7 +134,7 @@ class ApiConfigMethod {
 
     return method;
   }
-  
+
   Future<Map> invoke(InstanceMirror api, Map request) {
     var completer = new Completer();
     new Future.sync(() {

@@ -1,4 +1,4 @@
-part of endpoints.api_config; 
+part of endpoints.api_config;
 
 class ApiConfig {
 
@@ -20,12 +20,12 @@ class ApiConfig {
     _apiClassName = MirrorSystem.getName(_apiClass.simpleName);
 
     var metas = _apiClass.metadata.where((m) => m.reflectee.runtimeType == ApiClass);
-    
+
     if (metas.length == 0) {
       _errors.add(new ApiConfigError('API Class needs to have @ApiClass annotation'));
       return;
     }
-    
+
     ApiClass metaData = metas.first.reflectee;
     _name = metaData.name;
     _version = metaData.version;
@@ -58,7 +58,7 @@ class ApiConfig {
   }
 
   ApiConfigSchema _getSchema(name) => _schemaMap[name];
-  
+
   _addSchema(schemaName, ApiConfigSchema schema) {
     if (schema != null) {
       if (!_schemaMap.containsKey(schemaName)) {
@@ -72,11 +72,11 @@ class ApiConfig {
   String get errors => '$_apiClassName:\n' + _errors.join('\n');
 
   bool canHandleCall(String method) => _methodMap.containsKey(method);
-  
+
   Future<Map> handleCall(String method, Map request) {
     return _methodMap[method].invoke(_api, request);
   }
-  
+
   Map toJson([String root = 'localhost:8080']) {
     Map json = {};
     json['extends'] = 'thirdParty.api';
