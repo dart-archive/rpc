@@ -18,6 +18,27 @@ class Misconfig1 extends Api {
 
   @ApiMethod(name: 'test3', path: 'test3')
   void doubleUser(ApiUser user1, [ApiUser user2]) {}
+
+  @ApiMethod(name: 'test4', path: 'test4')
+  void wrongOrder(ApiUser user1, TestMessage1 request) {}
+
+  @ApiMethod(name: 'test5', path: 'test5')
+  void wrongParameter(String test) {}
+
+  @ApiMethod(name: 'test6', path: 'test6')
+  bool wrongResponse() {
+    return true;
+  }
+
+  @ApiMethod(name: 'test7', path: 'test7')
+  Future<bool> wrongFutureResponse() {
+    return new Future.value(true);
+  }
+
+  @ApiMethod(name: 'test8', path: 'test8')
+  Future genericFutureResponse() {
+    return new Future.value(true);
+  }
 }
 
 class CorrectMethods extends Api {
