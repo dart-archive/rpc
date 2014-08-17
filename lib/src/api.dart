@@ -88,3 +88,29 @@ class ApiException implements Exception {
     );
   }
 }
+
+class ApiNotFoundException extends ApiException {
+  ApiNotFoundException([String msg = "Not found."]) : super(404, 'Not Found', msg);
+}
+
+class ApiBadRequestException extends ApiException {
+  ApiBadRequestException([String msg = "Bad request."]) : super(400, 'Bad Request', msg);
+}
+
+class ApiUnauthorizedException extends ApiException {
+  ApiUnauthorizedException([String msg = "Unauthorized."]) : super(401, 'Unauthorized', msg);
+}
+
+class ApiForbiddenException extends ApiException {
+  ApiForbiddenException([String msg = "Forbidden."]) : super(403, 'Forbidden', msg);
+}
+
+class ApiInternalServerException extends ApiException {
+  ApiInternalServerException([String msg = "Internal Server Error."]) : super(500, 'Internal Server Error', msg);
+}
+
+class ApiUser {
+  final String id;
+  final String email;
+  ApiUser(this.id, this.email);
+}

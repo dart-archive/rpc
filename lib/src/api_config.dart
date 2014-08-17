@@ -2,12 +2,9 @@ library endpoints.api_config;
 
 import 'api.dart';
 
-import 'dart:io' show Platform;
 import 'dart:async';
 import 'dart:mirrors';
 import 'dart:convert' show JSON;
-
-import 'package:appengine/appengine.dart';
 
 part 'api_config/api.dart';
 part 'api_config/method.dart';

@@ -73,8 +73,8 @@ class ApiConfig {
 
   bool canHandleCall(String method) => _methodMap.containsKey(method);
 
-  Future<Map> handleCall(String method, Map request) {
-    return _methodMap[method].invoke(_api, request);
+  Future<Map> handleCall(String method, Map request, [ApiUser user]) {
+    return _methodMap[method].invoke(_api, request, user);
   }
 
   Map toJson([String root = 'localhost:8080']) {

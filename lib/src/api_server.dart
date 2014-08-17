@@ -73,7 +73,7 @@ class ApiServer {
       }
     }
     if (api == null) {
-      return new ApiException(404, 'Not found', 'No configured API can handle this request').toResponse();
+      return new ApiNotFoundException('No configured API can handle this request').toResponse();
     }
 
     Completer completer = new Completer();
@@ -87,11 +87,7 @@ class ApiServer {
         requestMap = JSON.decode(value);
       } on FormatException catch (e) {
         completer.complete(
-          new ApiException(
-            400,
-            'Bad Request',
-            'Request data couldn\'t be decoded'
-          ).toResponse()
+          new ApiBadRequestException('Request data couldn\'t be decoded').toResponse()
         );
       }
 
@@ -102,7 +98,7 @@ class ApiServer {
           if (e is ApiException) {
             completer.complete(e.toResponse());
           } else {
-            completer.complete(new ApiException(500, 'Unknown Error', 'Unknown API Error').toResponse());
+            completer.complete(new ApiInternalServerException('Unknown API Error').toResponse());
           }
           return true;
         });

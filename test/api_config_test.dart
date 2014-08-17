@@ -10,11 +10,49 @@ class Misconfig1 extends Api {
   @ApiMethod()
   void missingAnnotations1() {}
 
-  @ApiMethod(name: 'test')
+  @ApiMethod(name: 'test1')
   void missingAnnotations2() {}
 
-  @ApiMethod(path: 'test')
+  @ApiMethod(path: 'test2')
   void missingAnnotations3() {}
+
+  @ApiMethod(name: 'test3', path: 'test3')
+  void doubleUser(ApiUser user1, [ApiUser user2]) {}
+}
+
+class CorrectMethods extends Api {
+  @ApiMethod(name: 'test1', path: 'test1')
+  void method1() {}
+
+  @ApiMethod(name: 'test2', path: 'test2')
+  TestMessage1 method2() {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test3', path: 'test3')
+  TestMessage1 method3(TestMessage1 request) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test4', path: 'test4')
+  TestMessage1 method4(TestMessage1 request, [ApiUser user]) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test5', path: 'test5')
+  TestMessage1 method5(TestMessage1 request, ApiUser user) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test6', path: 'test6')
+  TestMessage1 method6(ApiUser user) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test7', path: 'test7')
+  TestMessage1 method7([ApiUser user]) {
+    return new TestMessage1();
+  }
 }
 
 @ApiClass()
@@ -52,12 +90,12 @@ class TestMessage1 extends ApiMessage {
   List<String> messages;
   TestMessage2 submessage;
   List<TestMessage2> submessages;
-  
+
   TestMessage1({this.count});
 }
 
 class TestMessage2 extends ApiMessage {
-  int count;  
+  int count;
 }
 
 main () {
@@ -66,7 +104,7 @@ main () {
       List _misconfig_apis = [new Misconfig1(), new Misconfig2(), new Misconfig3(), new Misconfig4()];
       _misconfig_apis.forEach((Api api) {
         var api_config = new ApiConfig(api);
-        expect(api_config.isValid, false);  
+        expect(api_config.isValid, false);
       });
     });
     test('correct', () {
@@ -91,8 +129,21 @@ main () {
         expect(() => new ApiConfigMethod(mm, 'Test', tester), throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError')));
       });
     });
+    test('correct', () {
+      var test_mirror = reflectClass(CorrectMethods);
+      var tester = new ApiConfig(new Tester());
+      var methods = test_mirror.declarations.values.where(
+        (dm) => dm is MethodMirror &&
+                dm.isRegularMethod &&
+                dm.metadata.length > 0 &&
+                dm.metadata.first.reflectee.runtimeType == ApiMethod
+      );
+      methods.forEach((MethodMirror mm) {
+        expect(() => new ApiConfigMethod(mm, 'Test', tester), returnsNormally);
+      });
+    });
   });
-  
+
   group('api_config_schema', () {
     test('recursion', () {
       expect(new Future.sync(() {
@@ -113,7 +164,7 @@ main () {
         var m3 = new ApiConfigSchema(reflectClass(RecursiveMessage3), tester);
       }), completes);
     });
-    
+
     test('request-parsing', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
@@ -132,7 +183,7 @@ main () {
       expect(instance.value, 12.3);
       expect(instance.messages, ['1', '2', '3']);
     });
-    
+
     test('response-creation', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
@@ -142,7 +193,7 @@ main () {
       instance.value = 12.3;
       instance.check = true;
       instance.messages = ['1', '2', '3'];
-      
+
       var response = m1.toResponse(instance);
       expect(response, new isInstanceOf<Map>());
       expect(response['count'], 1);
