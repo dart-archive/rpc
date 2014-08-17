@@ -67,7 +67,7 @@ class MyApi extends Api {
 void main() {
   var api_server = new ApiServer();
   api_server.addApi(new MyApi());
-  var cascade = new Cascade(shouldCascade: ApiServer.checkCascade)
+  var cascade = new Cascade(statusCodes: [501])
     .add(api_server.handler)
     .add(_handler)
     .add(shelf_ae.assetHandler);

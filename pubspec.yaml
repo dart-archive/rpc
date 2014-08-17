@@ -12,6 +12,9 @@ dependencies:
 
 dev_dependencies:
   unittest: '>=0.11.0 <0.12.0'
+  browser: any
+  mydartapi_v1_api:
+    path: ../deps/dart_mydartapi_v1_api_client
 
 dependency_overrides:
   shelf_appengine:

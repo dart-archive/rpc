@@ -121,11 +121,16 @@ main () {
       expect(instance, new isInstanceOf<TestMessage1>());
       instance = m1.fromRequest({
         'count': 1,
-        'message': 'message'
+        'message': 'message',
+        'value': 12.3,
+        'check': true,
+        'messages': ['1', '2', '3']
       });
       expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
       expect(instance.message, 'message');
+      expect(instance.value, 12.3);
+      expect(instance.messages, ['1', '2', '3']);
     });
     
     test('response-creation', () {
@@ -134,11 +139,17 @@ main () {
       var instance = new TestMessage1();
       instance.count = 1;
       instance.message = 'message';
+      instance.value = 12.3;
+      instance.check = true;
+      instance.messages = ['1', '2', '3'];
       
       var response = m1.toResponse(instance);
       expect(response, new isInstanceOf<Map>());
       expect(response['count'], 1);
       expect(response['message'], 'message');
+      expect(response['value'], 12.3);
+      expect(response['check'], true);
+      expect(response['messages'], ['1', '2', '3']);
     });
   });
 }

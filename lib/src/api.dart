@@ -1,6 +1,7 @@
 library endpoints.api;
 
 import 'dart:convert' show JSON;
+import 'package:shelf/shelf.dart' show Response;
 
 /**
  * Use as annotation for your main API class.
@@ -58,7 +59,7 @@ class VoidMessage extends ApiMessage {
 
 
 class ApiException implements Exception {
-  
+
   final String state = 'APPLICATION_ERROR';
   final String name;
   final String msg;
@@ -77,5 +78,13 @@ class ApiException implements Exception {
 
   String toString() {
     return JSON.encode(toJson());
+  }
+
+  Response toResponse() {
+    return new Response(
+      code,
+      body: toString(),
+      headers: {'Content-Type' : 'application/json'}
+    );
   }
 }

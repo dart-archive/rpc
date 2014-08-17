@@ -6,7 +6,6 @@ import 'api_config.dart';
 import 'package:shelf/shelf.dart';
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:io' show Platform;
 
 import 'package:appengine/appengine.dart';
 
@@ -17,10 +16,9 @@ class ApiServer {
 
   static final _cascadeResponse = new Response(501);
   static Response get cascadeResponse => _cascadeResponse;
-  static bool checkCascade(Response r) => (r == _cascadeResponse);
 
   ApiServer() {
-    _cascade = new Cascade(shouldCascade: checkCascade).add(_getApiConfigs).add(_executeApiMethod);
+    _cascade = new Cascade(statusCodes: [501]).add(_getApiConfigs).add(_executeApiMethod);
   }
 
   _getApiConfigs(Request request) {
@@ -75,7 +73,7 @@ class ApiServer {
       }
     }
     if (api == null) {
-      return new Response.notFound(new ApiException(404, 'Not found', 'No configured API can handle this request').toString(), headers: headers);
+      return new ApiException(404, 'Not found', 'No configured API can handle this request').toResponse();
     }
 
     Completer completer = new Completer();
@@ -89,15 +87,11 @@ class ApiServer {
         requestMap = JSON.decode(value);
       } on FormatException catch (e) {
         completer.complete(
-          new Response(
+          new ApiException(
             400,
-            body: new ApiException(
-              400,
-              'Bad Request',
-              'Request data couldn\'t be decoded'
-            ).toString(),
-            headers: headers
-          )
+            'Bad Request',
+            'Request data couldn\'t be decoded'
+          ).toResponse()
         );
       }
 
@@ -106,9 +100,9 @@ class ApiServer {
         .catchError((e) {
           print("HandleCall Error: $e");
           if (e is ApiException) {
-            completer.complete(new Response(e.code, body: e.toString(), headers: headers));
+            completer.complete(e.toResponse());
           } else {
-            completer.complete(new Response(500, body: new ApiException(500, 'Unknown Error', 'Unknown API Error').toString(), headers: headers));
+            completer.complete(new ApiException(500, 'Unknown Error', 'Unknown API Error').toResponse());
           }
           return true;
         });
