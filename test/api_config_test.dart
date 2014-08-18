@@ -155,6 +155,20 @@ class TestMessage2 extends ApiMessage {
   int count;
 }
 
+class TestMessage3 extends ApiMessage {
+  @ApiProperty(variant: 'int64')
+  int count64;
+
+  @ApiProperty(variant: 'uint64')
+  int count64u;
+
+  @ApiProperty(variant: 'int32')
+  int count32;
+
+  @ApiProperty(variant: 'uint32')
+  int count32u;
+}
+
 main () {
   group('api_config', () {
     test('misconfig', () {
@@ -220,6 +234,21 @@ main () {
         var m2 = new ApiConfigSchema(reflectClass(RecursiveMessage2), tester);
         var m3 = new ApiConfigSchema(reflectClass(RecursiveMessage3), tester);
       }), completes);
+    });
+
+    test('variants', () {
+      var tester = new ApiConfig(new Tester());
+      var message = new ApiConfigSchema(reflectClass(TestMessage3), tester);
+      var instance = message.fromRequest({'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
+      expect(instance.count32, 1);
+      expect(instance.count32u, 2);
+      expect(instance.count64, 3);
+      expect(instance.count64u, 4);
+      var json = message.toResponse(instance);
+      expect(json['count32'], 1);
+      expect(json['count32u'], 2);
+      expect(json['count64'], '3');
+      expect(json['count64u'], '4');
     });
 
     test('request-parsing', () {

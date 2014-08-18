@@ -164,6 +164,7 @@ class ApiConfigSchemaProperty {
       } on FormatException catch (e) {
         throw new ApiBadRequestException('Invalid integer format: $e');
       }
+      return v;
     }
     if (_type.reflectedType == double) {
       if (value is num) {
@@ -220,7 +221,7 @@ class ApiConfigSchemaProperty {
       return value;
     }
     if (_type.reflectedType == int) {
-      if (_apiFormat == 'string') {
+      if (_apiType == 'string') {
         return value.toString();
       }
       return value;
