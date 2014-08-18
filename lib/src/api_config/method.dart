@@ -175,7 +175,14 @@ class ApiConfigMethod {
         }
         params.add(user);
       }
-      var response = api.invoke(_symbol, params).reflectee;
+      var response;
+      try {
+        response = api.invoke(_symbol, params).reflectee;
+      } on ApiException catch (e) {
+        completer.completeError(e);
+      } catch (e) {
+        completer.completeError(new ApiInternalServerException('Unhandled Error in API Method: $e'));
+      }
       if (response is! Future) {
         response = new Future.value(response);
       }
