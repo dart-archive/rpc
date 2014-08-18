@@ -131,6 +131,9 @@ class ApiConfigSchemaProperty {
       return null;
     }
     if (_ref != null) {
+      if (value is! Map) {
+        throw new ApiBadRequestException('Invalid request message');
+      }
       return _ref.fromRequest(value);
     }
     if (_type.reflectedType == String) {
@@ -140,27 +143,39 @@ class ApiConfigSchemaProperty {
       if (value is int) {
         return value;
       }
-      return int.parse(value);
+      var v;
+      try {
+        v = int.parse(value);
+      } on FormatException catch (e) {
+        throw new ApiBadRequestException('Invalid integer format: $e');
+      }
     }
     if (_type.reflectedType == double) {
       if (value is num) {
         return value;
       }
-      return double.parse(value);
+      var v;
+      try {
+        v = double.parse(value);
+      } on FormatException catch (e) {
+        throw new ApiBadRequestException('Invalid number format: $e');
+      }
+      return v;
     }
     if (_type.reflectedType == bool) {
       if (value is bool) {
         return value;
       }
+      throw new ApiBadRequestException('Invalid boolean value');
     }
     if (_type.reflectedType == DateTime) {
-      var date;
+      var v;
       try {
-        date = DateTime.parse(value);
+        v = DateTime.parse(value);
       } on FormatException catch (e) {
         throw new ApiBadRequestException('Invalid date format: $e');
       }
-      return date;
+      return v;
     }
     return null;
   }

@@ -265,6 +265,19 @@ main () {
       expect(instance.submessages[2].count, 7);
     });
 
+    test('bad-request-creation', () {
+      var tester = new ApiConfig(new Tester());
+      var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
+      expect(() => m1.fromRequest({'count': 'x'}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'date': 'x'}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'value': 'x'}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'messages': 'x'}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'submessage': 'x'}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'submessage': {'count': 'x'}}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'submessages': ['x']}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+      expect(() => m1.fromRequest({'submessages': [{'count': 'x'}]}), throwsA(new isInstanceOf<ApiBadRequestException>()));
+    });
+
     test('response-creation', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
