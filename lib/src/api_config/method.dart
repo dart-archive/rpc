@@ -1,6 +1,8 @@
 part of endpoints.api_config;
 
-RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
+final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
+const List<String> _allowedMethods = const ['GET', 'DELETE', 'PUT', 'POST', 'PATCH'];
+const List<String> _bodyLessMethods = const ['GET', 'DELETE'];
 
 class ApiConfigMethod {
   Symbol _symbol;
@@ -9,6 +11,7 @@ class ApiConfigMethod {
   String _name;
   String _path;
   List<String> _pathParams = [];
+  Map<String, ApiConfigSchemaProperty> _parameters = {};
   String _httpMethod;
   String _description;
   ClassMirror _requestMessage;
@@ -33,6 +36,10 @@ class ApiConfigMethod {
     }
     if (_path == null || _path == '') {
       throw new ApiConfigError('$_methodName: missing method path');
+    }
+
+    if (!_allowedMethods.contains(_httpMethod)) {
+      throw new ApiConfigError('$_methodName: Unknown HTTP method');
     }
 
     var type = mm.returnType;
@@ -141,15 +148,15 @@ class ApiConfigMethod {
     method['scopes'] = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'];
     method['description'] = _description;
     method['request'] = {};
-    if (_requestMessage == null) {
+    if (_requestMessage == null || _bodyLessMethods.contains(_httpMethod)) {
       method['request']['body'] = 'empty';
     } else {
       method['request']['body'] = 'autoTemplate(backendRequest)';
       method['request']['bodyName'] = 'resource';
     }
 
-    if (['GET', 'DELETE'].contains(_httpMethod)) {
-      //TODO: all request parameters, set path parameters to required
+    if (_bodyLessMethods.contains(_httpMethod)) {
+      //TODO: all request parameters, set path parameters to required, location: query for others
       method['request']['parameters'] = {};
     } else {
       //TODO: Request & path parameters

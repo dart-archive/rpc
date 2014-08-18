@@ -54,6 +54,9 @@ class ApiConfig {
       } on ApiConfigError catch (e) {
         _errors.add(e);
         return;
+      } catch (e) {
+        _errors.add(new ApiConfigError('Unknown API Config error: $e'));
+        return;
       }
       _methodMap[method.methodName] = method;
     });

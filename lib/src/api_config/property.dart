@@ -127,6 +127,9 @@ class ApiConfigSchemaProperty {
   }
 
   _singleRequestValue(value) {
+    if (value == null) {
+      return null;
+    }
     if (_ref != null) {
       return _ref.fromRequest(value);
     }
@@ -150,15 +153,26 @@ class ApiConfigSchemaProperty {
         return value;
       }
     }
-    // TODO: dateTime
+    if (_type.reflectedType == DateTime) {
+      var date;
+      try {
+        date = DateTime.parse(value);
+      } on FormatException catch (e) {
+        throw new ApiBadRequestException('Invalid date format: $e');
+      }
+      return date;
+    }
     return null;
   }
 
   fromRequest(value) {
     var response = null;
+    if (value == null) {
+      return null;
+    }
     if (_repeated) {
       if (value is! List) {
-        throw new ApiException(400, 'Bad request', 'Invalid request');
+        throw new ApiBadRequestException('Expected repeated value to be List');
       }
       response = [];
       value.forEach((v) => response.add(_singleRequestValue(v)));
@@ -170,7 +184,7 @@ class ApiConfigSchemaProperty {
 
   _singleResponseValue(value) {
     if (_ref != null) {
-      return _ref.fromRequest(value);
+      return _ref.toResponse(value);
     }
     if ([String, double, bool].contains(_type.reflectedType)) {
       return value;
@@ -181,7 +195,9 @@ class ApiConfigSchemaProperty {
       }
       return value;
     }
-    // TODO: DateTime
+    if (_type.reflectedType == DateTime) {
+      return (value as DateTime).toUtc().toIso8601String();
+    }
     return null;
   }
 

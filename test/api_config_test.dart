@@ -143,6 +143,7 @@ class TestMessage1 extends ApiMessage {
   String message;
   double value;
   bool check;
+  DateTime date;
   List<String> messages;
   TestMessage2 submessage;
   List<TestMessage2> submessages;
@@ -231,13 +232,37 @@ main () {
         'message': 'message',
         'value': 12.3,
         'check': true,
-        'messages': ['1', '2', '3']
+        'messages': ['1', '2', '3'],
+        'date': '2014-01-23T11:12:13.456Z',
+        'submessage': {
+          'count': 4
+        },
+        'submessages': [
+          {'count': 5},
+          {'count': 6},
+          {'count': 7}
+        ]
       });
       expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
       expect(instance.message, 'message');
       expect(instance.value, 12.3);
       expect(instance.messages, ['1', '2', '3']);
+      expect(instance.date.isUtc, true);
+      expect(instance.date.year, 2014);
+      expect(instance.date.month, 1);
+      expect(instance.date.day, 23);
+      expect(instance.date.hour, 11);
+      expect(instance.date.minute, 12);
+      expect(instance.date.second, 13);
+      expect(instance.date.millisecond, 456);
+      expect(instance.submessage, new isInstanceOf<TestMessage2>());
+      expect(instance.submessage.count, 4);
+      expect(instance.submessages, new isInstanceOf<List<TestMessage2>>());
+      expect(instance.submessages.length, 3);
+      expect(instance.submessages[0].count, 5);
+      expect(instance.submessages[1].count, 6);
+      expect(instance.submessages[2].count, 7);
     });
 
     test('response-creation', () {
@@ -249,6 +274,19 @@ main () {
       instance.value = 12.3;
       instance.check = true;
       instance.messages = ['1', '2', '3'];
+      var date = new DateTime.now();
+      var utcDate = date.toUtc();
+      instance.date = date;
+      var instance2 = new TestMessage2();
+      instance2.count = 4;
+      instance.submessage = instance2;
+      var instance3 = new TestMessage2();
+      instance3.count = 5;
+      var instance4 = new TestMessage2();
+      instance4.count = 6;
+      var instance5 = new TestMessage2();
+      instance5.count = 7;
+      instance.submessages = [instance3, instance4, instance5];
 
       var response = m1.toResponse(instance);
       expect(response, new isInstanceOf<Map>());
@@ -257,6 +295,14 @@ main () {
       expect(response['value'], 12.3);
       expect(response['check'], true);
       expect(response['messages'], ['1', '2', '3']);
+      expect(response['date'], utcDate.toIso8601String());
+      expect(response['submessage'], new isInstanceOf<Map>());
+      expect(response['submessage']['count'], 4);
+      expect(response['submessages'], new isInstanceOf<List>());
+      expect(response['submessages'].length, 3);
+      expect(response['submessages'][0]['count'], 5);
+      expect(response['submessages'][1]['count'], 6);
+      expect(response['submessages'][2]['count'], 7);
     });
   });
 }
