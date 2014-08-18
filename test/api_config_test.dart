@@ -85,6 +85,16 @@ class CorrectMethods extends Api {
   TestMessage1 method8(TestMessage1 request) {
     return new TestMessage1();
   }
+
+  @ApiMethod(name: 'test9', path: 'test9')
+  Future<TestMessage1> method9() {
+    return new Future.value(new TestMessage1());
+  }
+
+  @ApiMethod(name: 'test10', path: 'test10')
+  Future<VoidMessage> method10() {
+    return new Future.value(new VoidMessage());
+  }
 }
 
 @ApiClass()
