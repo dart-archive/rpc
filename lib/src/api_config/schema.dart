@@ -63,6 +63,24 @@ class ApiConfigSchema {
     return descriptor;
   }
 
+  Map<String, Map> getParameters({String prefix: '', bool repeated: false}) {
+    var parameters = {};
+    _properties.values.forEach((property) {
+      if (property._ref == null) {
+        parameters['$prefix${property.propertyName}'] = property.parameter;
+        if (repeated || property._repeated) {
+          parameters['$prefix${property.propertyName}']['repeated'] = true;
+        }
+      } else {
+        parameters.addAll(property._ref.getParameters(
+          prefix: '$prefix${property.propertyName}.',
+          repeated: repeated || property._repeated
+        ));
+      }
+    });
+    return parameters;
+  }
+
   ApiMessage fromRequest(Map request) {
     InstanceMirror api = _schemaClass.newInstance(new Symbol(''), []);
     request.forEach((name, value) {

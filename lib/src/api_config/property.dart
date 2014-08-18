@@ -126,6 +126,21 @@ class ApiConfigSchemaProperty {
     return property;
   }
 
+  Map get parameter {
+    var parameter = {};
+    if (_ref != null) {
+      return null;
+    }
+    if (_type.reflectedType == int || _type.reflectedType == double) {
+      parameter['type'] = _apiFormat;
+    } else {
+      parameter['type'] = _apiType;
+    }
+
+    // TODO: extra information from _meta
+    return parameter;
+  }
+
   _singleRequestValue(value) {
     if (value == null) {
       return null;

@@ -156,11 +156,24 @@ class ApiConfigMethod {
     }
 
     if (_bodyLessMethods.contains(_httpMethod)) {
-      //TODO: all request parameters, set path parameters to required, location: query for others
-      method['request']['parameters'] = {};
+      //TODO: all request parameters, set path parameters to required
+
+      if (_requestMessage == null) {
+        method['request']['parameters'] = {};
+      } else {
+        method['request']['parameters'] = _requestSchema.getParameters();
+        _pathParams.forEach((paramName) {
+          method['request']['parameters'][paramName]['required'] = true;
+        });
+      }
     } else {
-      //TODO: Request & path parameters
       method['request']['parameters'] = {};
+      _pathParams.forEach((paramName) {
+        var param = _requestSchema.getProperty(paramName.split('.')).parameter;
+        param['required'] = true;
+        // TODO param['repeated'];
+        method['request']['parameters'][paramName] = param;
+      });
     }
     if (_pathParams.length > 0) {
       method['request']['parameterOrder'] = _pathParams;

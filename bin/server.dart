@@ -55,13 +55,41 @@ class MyApi extends Api {
     name: 'test.echo',
     method: 'POST',
     path: 'echo',
-    description: 'Echos whatever you send to it'
+    description: 'Echos whatever you send to it as POST'
   )
   Future<MyResponse> echo(MyRequest request, [ApiUser user]) {
     if (user != null) {
       return new Future.value(new MyResponse(count: 1, message: '${user.email}: request.message'));
     } else {
       return new Future.value(new MyResponse(count: 1, message: request.message));
+    }
+  }
+
+  @ApiMethod(
+    name: 'test.echo2',
+    method: 'GET',
+    path: 'echo2/{message}',
+    description: 'Echos whatever you send to it as GET'
+  )
+  Future<MyResponse> echo2(MyResponse request, [ApiUser user]) {
+    if (user != null) {
+      return new Future.value(new MyResponse(count: request.count, message: '${user.email}: request.message'));
+    } else {
+      return new Future.value(new MyResponse(count: request.count, message: request.message));
+    }
+  }
+
+  @ApiMethod(
+    name: 'test.echo3',
+    method: 'POST',
+    path: 'echo3/{count}',
+    description: 'Echos whatever you send to it as POST with Path parameter'
+  )
+  Future<MyResponse> echo3(MyResponse request, [ApiUser user]) {
+    if (user != null) {
+      return new Future.value(new MyResponse(count: request.count, message: '${user.email}: request.message'));
+    } else {
+      return new Future.value(new MyResponse(count: request.count, message: request.message));
     }
   }
 
