@@ -9,6 +9,14 @@ import 'dart:convert' show JSON;
 
 import 'package:appengine/appengine.dart';
 
+const _logLevelMap = const {
+  'debug': LogLevel.DEBUG,
+  'info': LogLevel.INFO,
+  'warning': LogLevel.WARNING,
+  'error': LogLevel.ERROR,
+  'criticial': LogLevel.CRITICAL
+};
+
 class ApiServer {
 
   List<ApiConfig> _apis = [];
@@ -18,7 +26,10 @@ class ApiServer {
   static Response get cascadeResponse => _cascadeResponse;
 
   ApiServer() {
-    _cascade = new Cascade(statusCodes: [501]).add(_getApiConfigs).add(_executeApiMethod);
+    _cascade = new Cascade(statusCodes: [501])
+      .add(_getApiConfigs)
+      .add(_logMessages)
+      .add(_executeApiMethod);
   }
 
   _getApiConfigs(Request request) {
@@ -49,6 +60,29 @@ class ApiServer {
           new Response.ok(response, headers: {'Content-Type' : 'application/json'})
         );
       });
+    });
+
+    return completer.future;
+  }
+
+  _logMessages(Request request) {
+    if (request.method != 'POST') {
+      return _cascadeResponse;
+    }
+    if (request.url.toString() != '/_ah/spi/BackendService.logMessages') {
+      return _cascadeResponse;
+    }
+
+    Completer completer = new Completer();
+
+    request.readAsString().then((value) {
+      context.services.logging.debug('logMessages request: $value');
+      List messages = JSON.decode(value)['messages'];
+      messages.forEach((Map message) {
+        context.services.logging.log(_logLevelMap[message['level']], message['message']);
+      });
+
+      completer.complete(new Response.ok(''));
     });
 
     return completer.future;

@@ -117,12 +117,6 @@ class ApiConfigMethod {
   String get methodName => _methodName;
   String get name => _name;
 
-  ClassMirror get requestMessage => _requestMessage;
-  ClassMirror get responseMessage => _responseMessage;
-
-  ApiConfigSchema get requestSchema => _requestSchema;
-  ApiConfigSchema get responseSchema => _responseSchema;
-
   Map get descriptor {
     var descriptor = {};
     if (_requestMessage.reflectedType != VoidMessage) {
