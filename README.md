@@ -31,8 +31,7 @@ handlers:
 
 ##### Main API Class
 
-Each API is represented by a class extending `Api`.
-Additionally the class needs an `@ApiClass` annotation,
+Each API is defined by a class with an `@ApiClass` annotation,
 specifying at least a `name` and a `version`.
 
 ```
@@ -41,7 +40,7 @@ specifying at least a `name` and a `version`.
   version: 'v1',
   description: 'My Awesome Dart Cloud Endpoint'
 )
-class MyApi extends Api {
+class MyApi {
   (...)
 }
 ```

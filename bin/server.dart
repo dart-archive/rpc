@@ -31,7 +31,7 @@ class MyRequest extends ApiMessage {
   description: 'My Awesome Dart Cloud Endpoint',
   allowedClientIds: const [API_EXPLORER_CLIENT_ID]
 )
-class MyApi extends Api {
+class MyApi {
 
   @ApiMethod(
     name: 'test.get',

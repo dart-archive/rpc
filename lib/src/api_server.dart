@@ -155,7 +155,7 @@ class ApiServer {
 
   Handler get handler => _cascade.handler;
 
-  void addApi(Api api) {
+  void addApi(api) {
     _apis.add(new ApiConfig(api));
   }
 }

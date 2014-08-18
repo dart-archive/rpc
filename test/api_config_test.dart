@@ -6,7 +6,7 @@ import 'package:endpoints/src/api_config.dart';
 import 'dart:async';
 import 'dart:mirrors';
 
-class Misconfig1 extends Api {
+class Misconfig1 {
   @ApiMethod()
   void missingAnnotations1() {}
 
@@ -56,7 +56,7 @@ class Misconfig1 extends Api {
   VoidMessage genericRequest(request) { return null; }
 }
 
-class CorrectMethods extends Api {
+class CorrectMethods {
   @ApiMethod(name: 'test1', path: 'test1')
   VoidMessage method1(VoidMessage _) { return null; }
 
@@ -112,16 +112,16 @@ class CorrectMethods extends Api {
 }
 
 @ApiClass()
-class Misconfig2 extends Api {}
+class Misconfig2 {}
 
 @ApiClass(name: 'test')
-class Misconfig3 extends Api {}
+class Misconfig3 {}
 
 @ApiClass(version: 'test')
-class Misconfig4 extends Api {}
+class Misconfig4 {}
 
 @ApiClass(name: 'Tester', version: 'v1test')
-class Tester extends Api {}
+class Tester {}
 
 class RecursiveMessage1 extends ApiMessage {
   String message;
@@ -159,7 +159,7 @@ main () {
   group('api_config', () {
     test('misconfig', () {
       List _misconfig_apis = [new Misconfig1(), new Misconfig2(), new Misconfig3(), new Misconfig4()];
-      _misconfig_apis.forEach((Api api) {
+      _misconfig_apis.forEach((api) {
         var api_config = new ApiConfig(api);
         expect(api_config.isValid, false);
       });

@@ -15,7 +15,7 @@ class ApiConfig {
   Map<String, ApiConfigMethod> _methodMap = {};
   Map<String, ApiConfigSchema> _schemaMap = {};
 
-  ApiConfig(Api api) {
+  ApiConfig(api) {
     _api = reflect(api);
     _apiClass = _api.type;
     _apiClassName = MirrorSystem.getName(_apiClass.simpleName);

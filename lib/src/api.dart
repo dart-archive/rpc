@@ -39,9 +39,6 @@ class ApiProperty {
   const ApiProperty({this.description, this.variant});
 }
 
-/// Base class for all API Classes
-abstract class Api {}
-
 /// Base class for API response/request messages
 abstract class ApiMessage {}
 
