@@ -1,7 +1,6 @@
 library endpoints.api;
 
-import 'dart:convert' show JSON;
-import 'package:shelf/shelf.dart' show Response;
+const String API_EXPLORER_CLIENT_ID = '292824132082.apps.googleusercontent.com';
 
 /**
  * Use as annotation for your main API class.
@@ -11,8 +10,9 @@ class ApiClass {
   final String name;
   final String version;
   final String description;
+  final List<String> allowedClientIds;
 
-  const ApiClass({this.name, this.version, this.description});
+  const ApiClass({this.name, this.version, this.description, this.allowedClientIds: const []});
 }
 
 /**

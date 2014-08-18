@@ -98,7 +98,7 @@ class ApiServer {
       return _cascadeResponse;
     }
 
-    var api = null;
+    ApiConfig api = null;
     var method = request.url.pathSegments.last;
     for (var a in _apis) {
       if (a.isValid && a.canHandleCall(method)) {
@@ -124,7 +124,7 @@ class ApiServer {
         );
       }
 
-      checkAuth(request.headers)
+      checkAuth(request.headers, api.clientIds)
         .then((user) {
           api.handleCall(method, requestMap, user)
             .then((response) => completer.complete(new Response.ok(JSON.encode(response), headers: {'Content-Type' : 'application/json'})))

@@ -9,6 +9,7 @@ class ApiConfig {
   String _version;
   String _description;
   String _apiClassName;
+  List<String> _clientIds = [];
 
   List<ApiConfigError> _errors = [];
   Map<String, ApiConfigMethod> _methodMap = {};
@@ -30,6 +31,7 @@ class ApiConfig {
     _name = metaData.name;
     _version = metaData.version;
     _description = metaData.description;
+    _clientIds = metaData.allowedClientIds;
 
     if (_name == null || _name == '') {
       _errors.add(new ApiConfigError('ApiClass.name is required'));
@@ -70,6 +72,8 @@ class ApiConfig {
   bool get isValid => _errors.isEmpty;
 
   String get errors => '$_apiClassName:\n' + _errors.join('\n');
+
+  List<String> get clientIds => _clientIds;
 
   bool canHandleCall(String method) => _methodMap.containsKey(method);
 

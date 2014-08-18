@@ -10,7 +10,7 @@ import 'package:google_oauth2_v2_api/oauth2_v2_api_client.dart';
 
 List<String> _authSchemes = ['OAUTH', 'BEARER'];
 
-Future<ApiUser> checkAuth(Map<String, String> headers) {
+Future<ApiUser> checkAuth(Map<String, String> headers, List<String> clientIds) {
   var auth_header = headers['Authorization'];
   if (auth_header == null) {
     return new Future.value(null);
@@ -39,9 +39,16 @@ Future<ApiUser> checkAuth(Map<String, String> headers) {
   }
   request
     .then((Tokeninfo info) {
-      // TODO: check if info.issued_to matches allowed client_ids
-      // TODO: memcache the result for quicker future results? potential security issue?
+
       context.services.logging.debug('Token Info retrieved successfully: ${info.toString()}');
+      if (clientIds != null && clientIds.length > 0) {
+        if (!clientIds.contains(info.issued_to)) {
+          context.services.logging.info('Client ID not allowed for this API');
+          completer.complete(null);
+          return;
+        }
+      }
+      // TODO: memcache the result for quicker future results? potential security issue?
       completer.complete(new ApiUser(info.user_id, info.email));
     })
     .catchError((e) {

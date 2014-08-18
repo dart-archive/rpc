@@ -170,7 +170,8 @@ class ApiConfigMethod {
       }
       if (_checkAuth) {
         if (_authRequired && user == null) {
-          throw new ApiUnauthorizedException("User authentication required.");
+          completer.completeError(new ApiUnauthorizedException("User authentication required."));
+          return;
         }
         params.add(user);
       }

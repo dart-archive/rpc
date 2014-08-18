@@ -6,7 +6,6 @@ import 'dart:async';
 _handler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
 
-
   if (request.url.toString() != '/') {
     return ApiServer.cascadeResponse;
   }
@@ -29,7 +28,8 @@ class MyRequest extends ApiMessage {
 @ApiClass(
   name: 'myDartApi',
   version: 'v1',
-  description: 'My Awesome Dart Cloud Endpoint'
+  description: 'My Awesome Dart Cloud Endpoint',
+  allowedClientIds: const [API_EXPLORER_CLIENT_ID]
 )
 class MyApi extends Api {
 
@@ -43,13 +43,26 @@ class MyApi extends Api {
   }
 
   @ApiMethod(
+    name: 'test.authGet',
+    path: 'authGet',
+    description: 'Testing authorized get method'
+  )
+  MyResponse authGet(ApiUser user) {
+    return new MyResponse(count: 1, message: user.email);
+  }
+
+  @ApiMethod(
     name: 'test.echo',
     method: 'POST',
     path: 'echo',
     description: 'Echos whatever you send to it'
   )
-  Future<MyResponse> echo(MyRequest request) {
-    return new Future.value(new MyResponse(count: 1, message: request.message));
+  Future<MyResponse> echo(MyRequest request, [ApiUser user]) {
+    if (user != null) {
+      return new Future.value(new MyResponse(count: 1, message: '${user.email}: request.message'));
+    } else {
+      return new Future.value(new MyResponse(count: 1, message: request.message));
+    }
   }
 
   @ApiMethod(
