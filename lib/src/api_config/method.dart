@@ -156,8 +156,6 @@ class ApiConfigMethod {
     }
 
     if (_bodyLessMethods.contains(_httpMethod)) {
-      //TODO: all request parameters, set path parameters to required
-
       if (_requestMessage == null) {
         method['request']['parameters'] = {};
       } else {
@@ -169,9 +167,8 @@ class ApiConfigMethod {
     } else {
       method['request']['parameters'] = {};
       _pathParams.forEach((paramName) {
-        var param = _requestSchema.getProperty(paramName.split('.')).parameter;
+        var param = _requestSchema.getParameter(paramName.split('.'));
         param['required'] = true;
-        // TODO param['repeated'];
         method['request']['parameters'][paramName] = param;
       });
     }

@@ -36,16 +36,20 @@ class ApiConfigSchema {
     return property._ref.hasSimpleProperty(path);
   }
 
-  ApiConfigSchemaProperty getProperty(List<String> path) {
+  Map getParameter(List<String> path, {bool repeated: false}) {
     var property = _properties[new Symbol(path[0])];
     if (path.length == 1) {
-      return property;
+      var param = property.parameter;
+      if (param != null) {
+        param['repeated'] = repeated || property._repeated;
+      }
+      return param;
     }
     if (property._ref == null) {
       return null;
     }
     path.removeAt(0);
-    return property._ref.getProperty(path);
+    return property._ref.getParameter(path, repeated: repeated || property._repeated);
   }
 
   String get schemaName => _schemaName;
