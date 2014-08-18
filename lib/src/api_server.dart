@@ -1,6 +1,8 @@
 library endpoints.api_server;
 
 import 'api.dart';
+import 'errors.dart';
+import 'auth.dart';
 import 'api_config.dart';
 
 import 'package:shelf/shelf.dart';
@@ -96,8 +98,6 @@ class ApiServer {
       return _cascadeResponse;
     }
 
-    var headers = {'Content-Type' : 'application/json'};
-
     var api = null;
     var method = request.url.pathSegments.last;
     for (var a in _apis) {
@@ -114,7 +114,6 @@ class ApiServer {
 
     request.readAsString().then((value) {
       context.services.logging.debug('Request: $value');
-      context.services.logging.debug('Headers: ${JSON.encode(request.headers)}');
 
       var requestMap;
       try {
@@ -125,14 +124,24 @@ class ApiServer {
         );
       }
 
-      api.handleCall(method, requestMap)
-        .then((response) => completer.complete(new Response.ok(JSON.encode(response), headers: headers)))
+      checkAuth(request.headers)
+        .then((user) {
+          api.handleCall(method, requestMap, user)
+            .then((response) => completer.complete(new Response.ok(JSON.encode(response), headers: {'Content-Type' : 'application/json'})))
+            .catchError((e) {
+              if (e is ApiException) {
+                completer.complete(e.toResponse());
+              } else {
+                completer.complete(new ApiInternalServerException('Unknown API Error').toResponse());
+              }
+              return true;
+            });
+        })
         .catchError((e) {
-          print("HandleCall Error: $e");
           if (e is ApiException) {
             completer.complete(e.toResponse());
           } else {
-            completer.complete(new ApiInternalServerException('Unknown API Error').toResponse());
+            completer.complete(new ApiInternalServerException('Unknown User Authentication Error').toResponse());
           }
           return true;
         });

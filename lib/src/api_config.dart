@@ -1,6 +1,7 @@
 library endpoints.api_config;
 
 import 'api.dart';
+import 'errors.dart';
 
 import 'dart:async';
 import 'dart:mirrors';
