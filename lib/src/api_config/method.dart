@@ -37,73 +37,57 @@ class ApiConfigMethod {
 
     var type = mm.returnType;
     if (type.simpleName == new Symbol('void')) {
-      _responseMessage = null;
-    } else {
-      if (type.isSubtypeOf(reflectType(Future))) {
-        var types = type.typeArguments;
-        if (types.length == 1) {
-          type = types[0];
-        } else {
-          throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
-        }
-      }
-      if (type.simpleName != #dynamic && type.isSubtypeOf(reflectType(ApiMessage))) {
-        if (type.reflectedType == VoidMessage) {
-          _responseMessage = null;
-        } else {
-          _responseMessage = type;
-        }
+      throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
+    }
+    if (type.isSubtypeOf(reflectType(Future))) {
+      var types = type.typeArguments;
+      if (types.length == 1) {
+        type = types[0];
       } else {
         throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
       }
     }
+    if (type.simpleName != #dynamic && type.isSubtypeOf(reflectType(ApiMessage))) {
+      if (type.reflectedType == VoidMessage) {
+        _responseMessage = null;
+      } else {
+        _responseMessage = type;
+      }
+    } else {
+      throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
+    }
+
     if (mm.parameters.length > 2) {
       throw new ApiConfigError('$_methodName: API Methods can only accept at most one ApiMessage and one ApiUser as parameter');
     }
     if (mm.parameters.length == 0) {
-      _requestMessage = null;
-    } else {
-      var param = mm.parameters[0];
-      var userParam;
-      type = param.type;
-      if (type.simpleName == #dynamic) {
-        throw new ApiConfigError('$_methodName: API Method parameters can\'t be dynamic');
-      }
-      if (type.isSubtypeOf(reflectType(ApiMessage))) {
-        if (param.isNamed || param.isOptional) {
-          throw new ApiConfigError('$_methodName: API Method Request parameter can\'t be optional or named');
-        }
-        if (type.reflectedType == VoidMessage) {
-          _requestMessage = null;
-        } else {
-          _requestMessage = type;
-        }
+      throw new ApiConfigError('$_methodName: ApiMessage request parameter needs to be specified');
+    }
+    var param = mm.parameters[0];
+    if (param.isNamed || param.isOptional) {
+      throw new ApiConfigError('$_methodName: Request parameter can\'t be optional or named');
+    }
+    type = param.type;
+    if (type.simpleName != #dynamic && type.isSubtypeOf(reflectType(ApiMessage))) {
+      if (type.reflectedType == VoidMessage) {
+        _requestMessage = null;
       } else {
-        if (type.reflectedType == ApiUser) {
-          _requestMessage = null;
-          userParam = param;
-        } else {
-          throw new ApiConfigError('$_methodName: API Method parameter has to be a sub-class of ApiMessage');
-        }
+        _requestMessage = type;
       }
-      if (mm.parameters.length == 2) {
-        if (userParam != null) {
-          throw new ApiConfigError('$_methodName: Only on API User parameter allowed.');
-        }
-        userParam = mm.parameters[1];
+    } else {
+      throw new ApiConfigError('$_methodName: API Method parameter has to be a sub-class of ApiMessage');
+    }
+    if (mm.parameters.length == 2) {
+      var userParam = mm.parameters[1];
+      if (userParam.isNamed) {
+        throw new ApiConfigError('$_methodName: API Method User parameter can\'t be named');
       }
-      if (userParam != null) {
-        if (userParam.isNamed) {
-          throw new ApiConfigError('$_methodName: API Method User parameter can\'t be named');
-        }
-        type = userParam.type;
-        if (type.reflectedType != ApiUser) {
-          throw new ApiConfigError('$_methodName: Second API Method parameter must be of type ApiUser');
-        }
-        _checkAuth = true;
-        if (!userParam.isOptional) {
-          _authRequired = true;
-        }
+      if (userParam.type.reflectedType != ApiUser) {
+        throw new ApiConfigError('$_methodName: Second API Method parameter must be of type ApiUser');
+      }
+      _checkAuth = true;
+      if (!userParam.isOptional) {
+        _authRequired = true;
       }
     }
 
@@ -123,8 +107,8 @@ class ApiConfigMethod {
     var pathParams = _pathMatcher.allMatches(_path);
     pathParams.forEach((Match m) {
       var param = m.group(1);
-      if (_requestSchema == null || !_requestSchema.hasProperty(param)) {
-        throw new ApiConfigError('$_methodName: Path parameters must be properties of the request message.');
+      if (_requestSchema == null || !_requestSchema.hasSimpleProperty(param.split('.'))) {
+        throw new ApiConfigError('$_methodName: Path parameters must be simple properties of the request message.');
       }
       _pathParams.add(param);
     });
@@ -192,6 +176,8 @@ class ApiConfigMethod {
       var params = [];
       if (_requestMessage != null) {
         params.add(_requestSchema.fromRequest(request));
+      } else {
+        params.add(null);
       }
       if (_checkAuth) {
         if (_authRequired && user == null) {
@@ -205,8 +191,11 @@ class ApiConfigMethod {
         response = api.invoke(_symbol, params).reflectee;
       } on ApiException catch (e) {
         completer.completeError(e);
+        return;
       } catch (e) {
+        context.services.logging.error('Unhandled Error in API Method: $e');
         completer.completeError(new ApiInternalServerException('Unhandled Error in API Method: $e'));
+        return;
       }
       if (response is! Future) {
         response = new Future.value(response);

@@ -127,7 +127,10 @@ class ApiServer {
       checkAuth(request.headers, api.clientIds)
         .then((user) {
           api.handleCall(method, requestMap, user)
-            .then((response) => completer.complete(new Response.ok(JSON.encode(response), headers: {'Content-Type' : 'application/json'})))
+            .then((response) {
+              print('Call handled.');
+              completer.complete(new Response.ok(JSON.encode(response), headers: {'Content-Type' : 'application/json'}));
+            })
             .catchError((e) {
               if (e is ApiException) {
                 completer.complete(e.toResponse());

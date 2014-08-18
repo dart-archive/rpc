@@ -17,42 +17,51 @@ class Misconfig1 extends Api {
   void missingAnnotations3() {}
 
   @ApiMethod(name: 'test3', path: 'test3')
-  void doubleUser(ApiUser user1, [ApiUser user2]) {}
+  VoidMessage doubleUser(ApiUser user1, [ApiUser user2]) { return null; }
 
   @ApiMethod(name: 'test4', path: 'test4')
-  void wrongOrder(ApiUser user1, TestMessage1 request) {}
+  VoidMessage wrongOrder(ApiUser user1, TestMessage1 request) { return null;}
 
   @ApiMethod(name: 'test5', path: 'test5')
-  void wrongParameter(String test) {}
+  VoidMessage wrongParameter(String test) { return null; }
 
   @ApiMethod(name: 'test6', path: 'test6')
-  bool wrongResponse() {
+  bool wrongResponse(VoidMessage _) {
     return true;
   }
 
   @ApiMethod(name: 'test7', path: 'test7')
-  Future<bool> wrongFutureResponse() {
+  Future<bool> wrongFutureResponse(VoidMessage ) {
     return new Future.value(true);
   }
 
   @ApiMethod(name: 'test8', path: 'test8')
-  Future genericFutureResponse() {
+  Future genericFutureResponse(VoidMessage _) {
     return new Future.value(true);
   }
 
   @ApiMethod(name: 'test9', path: 'test9/{id}')
-  void missingPathParam1() {}
+  VoidMessage missingPathParam1(VoidMessage _) { return null; }
 
   @ApiMethod(name: 'test10', path: 'test10/{id}')
-  void missingPathParam2(TestMessage1 request) {}
+  VoidMessage missingPathParam2(TestMessage1 request) { return null; }
+
+  @ApiMethod(name: 'test11', path: 'test11')
+  void voidResponse(VoidMessage _) {}
+
+  @ApiMethod(name: 'test12', path: 'test12')
+  VoidMessage noRequest() { return null; }
+
+  @ApiMethod(name: 'test13', path: 'test13')
+  VoidMessage genericRequest(request) { return null; }
 }
 
 class CorrectMethods extends Api {
   @ApiMethod(name: 'test1', path: 'test1')
-  void method1() {}
+  VoidMessage method1(VoidMessage _) { return null; }
 
   @ApiMethod(name: 'test2', path: 'test2')
-  TestMessage1 method2() {
+  TestMessage1 method2(VoidMessage _) {
     return new TestMessage1();
   }
 
@@ -72,12 +81,12 @@ class CorrectMethods extends Api {
   }
 
   @ApiMethod(name: 'test6', path: 'test6')
-  TestMessage1 method6(ApiUser user) {
+  TestMessage1 method6(VoidMessage _, ApiUser user) {
     return new TestMessage1();
   }
 
   @ApiMethod(name: 'test7', path: 'test7')
-  TestMessage1 method7([ApiUser user]) {
+  TestMessage1 method7(VoidMessage _, [ApiUser user]) {
     return new TestMessage1();
   }
 
@@ -87,13 +96,18 @@ class CorrectMethods extends Api {
   }
 
   @ApiMethod(name: 'test9', path: 'test9')
-  Future<TestMessage1> method9() {
+  Future<TestMessage1> method9(VoidMessage _) {
     return new Future.value(new TestMessage1());
   }
 
   @ApiMethod(name: 'test10', path: 'test10')
-  Future<VoidMessage> method10() {
+  Future<VoidMessage> method10(VoidMessage _) {
     return new Future.value(new VoidMessage());
+  }
+
+  @ApiMethod(name: 'test11', path: 'test11/{submessage.count}')
+  TestMessage1 method11(TestMessage1 request) {
+    return new TestMessage1();
   }
 }
 

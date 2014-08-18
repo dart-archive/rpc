@@ -38,7 +38,7 @@ class MyApi extends Api {
     path: 'get',
     description: 'Testing get method'
   )
-  MyResponse get() {
+  MyResponse get(VoidMessage _) {
     return new MyResponse(count: 1, message: "test");
   }
 
@@ -47,7 +47,7 @@ class MyApi extends Api {
     path: 'authGet',
     description: 'Testing authorized get method'
   )
-  MyResponse authGet(ApiUser user) {
+  MyResponse authGet(VoidMessage _, ApiUser user) {
     return new MyResponse(count: 1, message: user.email);
   }
 
@@ -71,8 +71,8 @@ class MyApi extends Api {
     path: 'silence',
     description: 'Returns nothing'
   )
-  void silence() {
-
+  VoidMessage silence(VoidMessage _) {
+    return null;
   }
 }
 

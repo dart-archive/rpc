@@ -21,9 +21,32 @@ class ApiConfigSchema {
     });
   }
 
-  bool hasProperty(String name) => _properties.containsKey(new Symbol(name));
+  bool hasSimpleProperty(List<String> path) {
+    var property = _properties[new Symbol(path[0])];
+    if (property == null) {
+      return false;
+    }
+    if (path.length == 1) {
+      return (property._ref == null);
+    }
+    if (property._ref == null) {
+      return false;
+    }
+    path.removeAt(0);
+    return property._ref.hasSimpleProperty(path);
+  }
 
-  ApiConfigSchemaProperty getProperty(String name) => _properties[new Symbol(name)];
+  ApiConfigSchemaProperty getProperty(List<String> path) {
+    var property = _properties[new Symbol(path[0])];
+    if (path.length == 1) {
+      return property;
+    }
+    if (property._ref == null) {
+      return null;
+    }
+    path.removeAt(0);
+    return property._ref.getProperty(path);
+  }
 
   String get schemaName => _schemaName;
 
