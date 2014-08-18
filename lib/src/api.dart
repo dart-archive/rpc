@@ -34,13 +34,9 @@ class ApiMethod {
 class ApiProperty {
   final String description;
 
-  final bool required;
-  final defaultValue;
-  final int maxValue;
-  final int minValue;
   final String variant;
 
-  const ApiProperty({this.required, this.description, this.defaultValue, this.maxValue, this.minValue, this.variant});
+  const ApiProperty({this.description, this.variant});
 }
 
 /// Base class for all API Classes

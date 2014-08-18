@@ -39,6 +39,12 @@ class Misconfig1 extends Api {
   Future genericFutureResponse() {
     return new Future.value(true);
   }
+
+  @ApiMethod(name: 'test9', path: 'test9/{id}')
+  void missingPathParam1() {}
+
+  @ApiMethod(name: 'test10', path: 'test10/{id}')
+  void missingPathParam2(TestMessage1 request) {}
 }
 
 class CorrectMethods extends Api {
@@ -72,6 +78,11 @@ class CorrectMethods extends Api {
 
   @ApiMethod(name: 'test7', path: 'test7')
   TestMessage1 method7([ApiUser user]) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test8', path: 'test8/{count}')
+  TestMessage1 method8(TestMessage1 request) {
     return new TestMessage1();
   }
 }

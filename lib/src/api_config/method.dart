@@ -1,11 +1,14 @@
 part of endpoints.api_config;
 
+RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
+
 class ApiConfigMethod {
   Symbol _symbol;
   String _apiClass;
   String _methodName;
   String _name;
   String _path;
+  List<String> _pathParams = [];
   String _httpMethod;
   String _description;
   ClassMirror _requestMessage;
@@ -111,6 +114,15 @@ class ApiConfigMethod {
         _responseSchema = new ApiConfigSchema(_responseMessage, parent);
       }
     }
+
+    var pathParams = _pathMatcher.allMatches(_path);
+    pathParams.forEach((Match m) {
+      var param = m.group(1);
+      if (_requestSchema == null || !_requestSchema.hasProperty(param)) {
+        throw new ApiConfigError('$_methodName: Path parameters must be properties of the request message.');
+      }
+      _pathParams.add(param);
+    });
   }
 
   Symbol get symbol => _symbol;
@@ -147,8 +159,16 @@ class ApiConfigMethod {
       method['request']['bodyName'] = 'resource';
     }
 
-    //TODO: Request & path parameters
-    method['request']['parameters'] = {};
+    if (['GET', 'DELETE'].contains(_httpMethod)) {
+      //TODO: all request parameters, set path parameters to required
+      method['request']['parameters'] = {};
+    } else {
+      //TODO: Request & path parameters
+      method['request']['parameters'] = {};
+    }
+    if (_pathParams.length > 0) {
+      method['request']['parameterOrder'] = _pathParams;
+    }
 
     method['response'] = {};
     if (_responseMessage.reflectedType == VoidMessage) {

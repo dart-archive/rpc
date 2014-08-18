@@ -21,6 +21,10 @@ class ApiConfigSchema {
     });
   }
 
+  bool hasProperty(String name) => _properties.containsKey(new Symbol(name));
+
+  ApiConfigSchemaProperty getProperty(String name) => _properties[new Symbol(name)];
+
   String get schemaName => _schemaName;
 
   Map get descriptor {
