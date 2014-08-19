@@ -2,6 +2,7 @@ import 'package:endpoints/endpoints.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
 import 'dart:async';
+import 'db_api.dart';
 
 _handler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
@@ -113,6 +114,7 @@ class MyApi {
 void main() {
   var api_server = new ApiServer();
   api_server.addApi(new MyApi());
+  api_server.addApi(new DartDBApi());
   var cascade = new Cascade(statusCodes: [501])
     .add(api_server.handler)
     .add(_handler)
