@@ -109,7 +109,7 @@ class ApiConfig {
       json['methods']['${_name}.${method.name}'] = method.resourceMethod;
     });
 
-    _schemaMap.values.where((schema) => (schema.propertyCount > 0)).forEach((schema) {
+    _schemaMap.values.where((schema) => (schema.hasProperties)).forEach((schema) {
       json['descriptor']['schemas'][schema.schemaName] = schema.descriptor;
     });
 

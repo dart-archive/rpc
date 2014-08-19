@@ -58,6 +58,7 @@ class Misconfig1 {
   VoidMessage genericRequest(request) { return null; }
 }
 
+@ApiClass(name: 'correct', version: 'v1')
 class CorrectMethods {
   @ApiMethod(name: 'test1', path: 'test1')
   VoidMessage method1(VoidMessage _) { return null; }
@@ -171,20 +172,32 @@ class TestMessage3 {
   int count32u;
 }
 
+class WrongSchema1 {
+  WrongSchema1.myConstructor();
+}
+
 main () {
-  group('api_config', () {
-    test('misconfig', () {
-      List _misconfig_apis = [new Misconfig1(), new Misconfig2(), new Misconfig3(), new Misconfig4()];
-      _misconfig_apis.forEach((api) {
+  group('api_config_misconfig', () {
+    List _misconfig_apis = [new Misconfig1(), new Misconfig2(), new Misconfig3(), new Misconfig4()];
+    _misconfig_apis.forEach((api) {
+      test(api.toString(), () {
         var api_config = new ApiConfig(api);
         expect(api_config.isValid, false);
       });
     });
-    test('correct', () {
+  });
+  group('api_config_correct', () {
+    test('correct_simple', () {
       var api_config = new ApiConfig(new Tester());
       expect(api_config.isValid, true);
       expect(api_config.toJson()['name'], 'Tester');
       expect(api_config.toJson()['version'], 'v1test');
+    });
+    test('correct_extended', () {
+      var api_config = new ApiConfig(new CorrectMethods());
+      expect(api_config.isValid, true);
+      expect(api_config.toJson()['name'], 'correct');
+      expect(api_config.toJson()['version'], 'v1');
     });
   });
 
@@ -199,7 +212,7 @@ main () {
                 dm.metadata.first.reflectee.runtimeType == ApiMethod
       );
       methods.forEach((MethodMirror mm) {
-        expect(() => print(new ApiConfigMethod(mm, 'Test', tester).resourceMethod), throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError')));
+        expect(() => new ApiConfigMethod(mm, 'Test', tester), throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError')));
       });
     });
     test('correct', () {
@@ -213,6 +226,16 @@ main () {
       );
       methods.forEach((MethodMirror mm) {
         expect(() => new ApiConfigMethod(mm, 'Test', tester), returnsNormally);
+      });
+    });
+  });
+
+  group('api_config_schema_misconfig', () {
+    var tester = new ApiConfig(new Tester());
+    List _wrong_schemas = [WrongSchema1];
+    _wrong_schemas.forEach((schema) {
+      test(schema.toString(), () {
+        expect(() => new ApiConfigSchema(reflectClass(schema), tester), throwsA(new isInstanceOf<ApiConfigError>()));
       });
     });
   });
