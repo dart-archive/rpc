@@ -151,7 +151,63 @@ MyModel update(MyModel request) {...}
 
 ##### Authentication
 
-(TODO: info about ApiUser, API method format and allowedClientIds)
+If you want to use OAuth authentication in your API, you will first have to
+get a Client ID from the [Google Developers Console](https://console.developers.google.com/).
+You then add this Client ID to the `allowedClientIds` property of the
+`@ApiClass` annotation.
+
+```
+@ApiClass(
+  name: 'myDartApi',
+  version: 'v1',
+  description: 'My Awesome Dart Cloud Endpoint'
+  allowedClientIds: const ['MY_CLIENT_ID']
+)
+```
+
+If you want to test your API using the [Google APIs Explorer](https://developers.google.com/apis-explorer/)
+(see below) you can also add the `API_EXPLORER_CLIENT_ID`.
+
+```
+@ApiClass(
+  name: 'myDartApi',
+  version: 'v1',
+  description: 'My Awesome Dart Cloud Endpoint'
+  allowedClientIds: const ['MY_CLIENT_ID', API_EXPLORER_CLIENT_ID]
+)
+```
+
+For the methods where you need authentication you add an extra `ApiUser` parameter.
+
+```
+@ApiMethod(
+  name: 'resource.auth_get',
+  path: 'resource/{id}',
+  description: 'get model' 
+)
+MyModel authGet(MyModelRequest request, ApiUser user) {...}
+```
+
+If no valid user can be retrieved from the HTTP request, a 401 Unauthorized error will be
+automatically returned before actually calling your method. Otherwise you can access the
+user's Google ID and email adress (if authentication included the `email` scope).
+
+If you want to check successful authentication yourself, or authentication is optional
+for your method you can include the `ApiUser` parameter as optional parameter.
+
+```
+@ApiMethod(
+  name: 'resource.auth_get',
+  path: 'resource/{id}',
+  description: 'get model' 
+)
+MyModel authGet(MyModelRequest request, [ApiUser user]) {...}
+```
+
+In this case `user` will be `null` if no authentication happened,
+or the authentication wasn't for one of your specified Client IDs.
+If the authentication failed because of invalid or expired tokens,
+this will still trigger a 401 error.
 
 ##### Errors
 
