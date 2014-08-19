@@ -73,7 +73,81 @@ For `double` properties the `variant` parameter can take the value `double` or `
 
 ##### Methods
 
-(TODO: info about @ApiMethod...)
+Inside of your API class you can define public methods that will
+correspond to methods that can be called on your API.
+
+API Methods take one non-optional request message class as parameter and return
+a response message class or a Future of a response message class.
+
+```
+MyResponse myMethod(MyRequest request) {
+  
+  return new MyResponse();
+}
+```
+
+```
+Future<MyResponse> myFutureMethod(MyRequest request) {
+  ...
+    completer.complete(new MyResponse();
+  ...
+  return completer.future;
+}
+```
+
+If your method doesn't need a request or doesn't return a response you can
+use the `VoidMessage` class instead.
+
+```
+VoidMessage hearNoEvilSpeakNoEvil(VoidMessage _) {
+  return null;
+}
+```
+
+To turn your methods into actual API methods you will need to add an
+`@ApiMethod` annotation, specifying at least a `name` and a `path`.
+You can also define the HTTP-`method` if it is different from the default `GET`
+and a `description` to be displayed in the discovery document, API Explorer and
+generated client libraries.
+
+Some examples:
+```
+@ApiMethod(
+  name: 'resource.list',
+  path: 'resource',
+  description: 'list models' 
+)
+MyModelList list(VoidMessage _) {...}
+```
+
+```
+@ApiMethod(
+  name: 'resource.insert',
+  path: 'resource',
+  method: 'POST',
+  description: 'insert model' 
+)
+MyModel insert(MyModel request) {...}
+```
+
+```
+@ApiMethod(
+  name: 'resource.get',
+  path: 'resource/{id}',
+  description: 'get model' 
+)
+MyModel get(MyModelRequest request) {...}
+```
+
+```
+@ApiMethod(
+  name: 'resource.update',
+  path: 'resource/{id}',
+  method: 'PUT',
+  description: 'update model' 
+)
+MyModel update(MyModel request) {...}
+```
 
 ##### Authentication
 
