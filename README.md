@@ -211,7 +211,18 @@ this will still trigger a 401 error.
 
 ##### Errors
 
-(TODO: info about Errors)
+If you want to return errors to users of your API, e.g. if a requested entity wasn't found,
+you can throw and `EndpointsError` in your method.
+
+It's recommended to use one of the predefined error classes:
+
+-  400 `throw new BadRequestError('You sent some data we don't understand.');`
+-  401 `throw new UnauthorizedError('You need to be authenticated.')`
+-  403 `throw new ForbiddenError('You are not allowed to do this!')` 
+-  404 `throw new NotFoundError('We didn't find what you are looking for.');`
+-  500 `throw new InternalServerError('We did something wrong...');`
+
+Any uncaught errors happening in your API method will be returned as `InternalServerError`.
 
 
 ##### API Server
