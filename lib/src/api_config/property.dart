@@ -147,7 +147,7 @@ class ApiConfigSchemaProperty {
     }
     if (_ref != null) {
       if (value is! Map) {
-        throw new ApiBadRequestException('Invalid request message');
+        throw new BadRequestError('Invalid request message');
       }
       return _ref.fromRequest(value);
     }
@@ -162,7 +162,7 @@ class ApiConfigSchemaProperty {
       try {
         v = int.parse(value);
       } on FormatException catch (e) {
-        throw new ApiBadRequestException('Invalid integer format: $e');
+        throw new BadRequestError('Invalid integer format: $e');
       }
       return v;
     }
@@ -174,7 +174,7 @@ class ApiConfigSchemaProperty {
       try {
         v = double.parse(value);
       } on FormatException catch (e) {
-        throw new ApiBadRequestException('Invalid number format: $e');
+        throw new BadRequestError('Invalid number format: $e');
       }
       return v;
     }
@@ -182,14 +182,14 @@ class ApiConfigSchemaProperty {
       if (value is bool) {
         return value;
       }
-      throw new ApiBadRequestException('Invalid boolean value');
+      throw new BadRequestError('Invalid boolean value');
     }
     if (_type.reflectedType == DateTime) {
       var v;
       try {
         v = DateTime.parse(value);
       } on FormatException catch (e) {
-        throw new ApiBadRequestException('Invalid date format: $e');
+        throw new BadRequestError('Invalid date format: $e');
       }
       return v;
     }
@@ -203,7 +203,7 @@ class ApiConfigSchemaProperty {
     }
     if (_repeated) {
       if (value is! List) {
-        throw new ApiBadRequestException('Expected repeated value to be List');
+        throw new BadRequestError('Expected repeated value to be List');
       }
       response = [];
       value.forEach((v) => response.add(_singleRequestValue(v)));
@@ -239,7 +239,7 @@ class ApiConfigSchemaProperty {
 
     if (_repeated) {
       if (value is! List) {
-        throw new ApiException(500, 'Bad response', 'Invalid response');
+        throw new EndpointsError(500, 'Bad response', 'Invalid response');
       }
       var response = [];
       value.forEach((v) => response.add(_singleResponseValue(v)));

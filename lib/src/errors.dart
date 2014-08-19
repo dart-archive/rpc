@@ -3,14 +3,14 @@ library endpoints.errors;
 import 'dart:convert' show JSON;
 import 'package:shelf/shelf.dart' show Response;
 
-class ApiException implements Exception {
+class EndpointsError implements Exception {
 
   final String state = 'APPLICATION_ERROR';
   final String name;
   final String msg;
   final int code;
 
-  ApiException(this.code, this.name, this.msg);
+  EndpointsError(this.code, this.name, this.msg);
 
   Map toJson() {
     var json = {};
@@ -34,22 +34,22 @@ class ApiException implements Exception {
   }
 }
 
-class ApiNotFoundException extends ApiException {
-  ApiNotFoundException([String msg = "Not found."]) : super(404, 'Not Found', msg);
+class NotFoundError extends EndpointsError {
+  NotFoundError([String msg = "Not found."]) : super(404, 'Not Found', msg);
 }
 
-class ApiBadRequestException extends ApiException {
-  ApiBadRequestException([String msg = "Bad request."]) : super(400, 'Bad Request', msg);
+class BadRequestError extends EndpointsError {
+  BadRequestError([String msg = "Bad request."]) : super(400, 'Bad Request', msg);
 }
 
-class ApiUnauthorizedException extends ApiException {
-  ApiUnauthorizedException([String msg = "Unauthorized."]) : super(401, 'Unauthorized', msg);
+class UnauthorizedError extends EndpointsError {
+  UnauthorizedError([String msg = "Unauthorized."]) : super(401, 'Unauthorized', msg);
 }
 
-class ApiForbiddenException extends ApiException {
-  ApiForbiddenException([String msg = "Forbidden."]) : super(403, 'Forbidden', msg);
+class ForbiddenError extends EndpointsError {
+  ForbiddenError([String msg = "Forbidden."]) : super(403, 'Forbidden', msg);
 }
 
-class ApiInternalServerException extends ApiException {
-  ApiInternalServerException([String msg = "Internal Server Error."]) : super(500, 'Internal Server Error', msg);
+class InternalServerError extends EndpointsError {
+  InternalServerError([String msg = "Internal Server Error."]) : super(500, 'Internal Server Error', msg);
 }

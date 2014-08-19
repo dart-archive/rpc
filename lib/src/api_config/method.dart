@@ -187,7 +187,7 @@ class ApiConfigMethod {
       }
       if (_checkAuth) {
         if (_authRequired && user == null) {
-          completer.completeError(new ApiUnauthorizedException("User authentication required."));
+          completer.completeError(new UnauthorizedError("User authentication required."));
           return;
         }
         params.add(user);
@@ -195,12 +195,12 @@ class ApiConfigMethod {
       var response;
       try {
         response = api.invoke(_symbol, params).reflectee;
-      } on ApiException catch (e) {
+      } on EndpointsError catch (e) {
         completer.completeError(e);
         return;
       } catch (e) {
         context.services.logging.error('Unhandled Error in API Method: $e');
-        completer.completeError(new ApiInternalServerException('Unhandled Error in API Method: $e'));
+        completer.completeError(new InternalServerError('Unhandled Error in API Method: $e'));
         return;
       }
       if (response is! Future) {

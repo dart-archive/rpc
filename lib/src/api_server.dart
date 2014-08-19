@@ -106,7 +106,7 @@ class ApiServer {
       }
     }
     if (api == null) {
-      return new ApiNotFoundException('No configured API can handle this request').toResponse();
+      return new NotFoundError('No configured API can handle this request').toResponse();
     }
 
     Completer completer = new Completer();
@@ -119,7 +119,7 @@ class ApiServer {
         requestMap = JSON.decode(value);
       } on FormatException catch (e) {
         completer.complete(
-          new ApiBadRequestException('Request data couldn\'t be decoded').toResponse()
+          new BadRequestError('Request data couldn\'t be decoded').toResponse()
         );
       }
 
@@ -131,19 +131,19 @@ class ApiServer {
               completer.complete(new Response.ok(JSON.encode(response), headers: {'Content-Type' : 'application/json'}));
             })
             .catchError((e) {
-              if (e is ApiException) {
+              if (e is EndpointsError) {
                 completer.complete(e.toResponse());
               } else {
-                completer.complete(new ApiInternalServerException('Unknown API Error').toResponse());
+                completer.complete(new InternalServerError('Unknown API Error').toResponse());
               }
               return true;
             });
         })
         .catchError((e) {
-          if (e is ApiException) {
+          if (e is EndpointsError) {
             completer.complete(e.toResponse());
           } else {
-            completer.complete(new ApiInternalServerException('Unknown User Authentication Error').toResponse());
+            completer.complete(new InternalServerError('Unknown User Authentication Error').toResponse());
           }
           return true;
         });

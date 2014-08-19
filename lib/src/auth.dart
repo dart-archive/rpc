@@ -18,11 +18,11 @@ Future<ApiUser> checkAuth(Map<String, String> headers, List<String> clientIds) {
   var auth_parts = auth_header.split(' ');
   if (auth_parts.length != 2) {
     context.services.logging.error('Invalid Authorization header');
-    return new Future.error(new ApiUnauthorizedException('Invalid Authorization header'));
+    return new Future.error(new UnauthorizedError('Invalid Authorization header'));
   }
   if (!_authSchemes.contains(auth_parts[0].toUpperCase())) {
     context.services.logging.error('Invalid Authorization header');
-    return new Future.error(new ApiUnauthorizedException('Invalid Authorization header'));
+    return new Future.error(new UnauthorizedError('Invalid Authorization header'));
   }
 
   var client = new Oauth2();
@@ -53,7 +53,7 @@ Future<ApiUser> checkAuth(Map<String, String> headers, List<String> clientIds) {
     })
     .catchError((e) {
       context.services.logging.error('Failed to verify authorization token: $e');
-      completer.completeError(new ApiUnauthorizedException('Failed to verify authorization token: $e'));
+      completer.completeError(new UnauthorizedError('Failed to verify authorization token: $e'));
       return true;
     });
 
