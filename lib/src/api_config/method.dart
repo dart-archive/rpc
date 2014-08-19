@@ -14,8 +14,6 @@ class ApiConfigMethod {
   Map<String, ApiConfigSchemaProperty> _parameters = {};
   String _httpMethod;
   String _description;
-  ClassMirror _requestMessage;
-  ClassMirror _responseMessage;
   ApiConfigSchema _requestSchema;
   ApiConfigSchema _responseSchema;
 
@@ -44,28 +42,23 @@ class ApiConfigMethod {
 
     var type = mm.returnType;
     if (type.simpleName == new Symbol('void')) {
-      throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
+      throw new ApiConfigError('$_methodName: API Method can\'t be void, use VoidMessage as return type instead.');
     }
     if (type.isSubtypeOf(reflectType(Future))) {
       var types = type.typeArguments;
       if (types.length == 1) {
         type = types[0];
       } else {
-        throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
+        throw new ApiConfigError('$_methodName: Future return type has to have one specific type defined');
       }
     }
-    if (type.simpleName != #dynamic && type.isSubtypeOf(reflectType(ApiMessage))) {
-      if (type.reflectedType == VoidMessage) {
-        _responseMessage = null;
-      } else {
-        _responseMessage = type;
-      }
-    } else {
-      throw new ApiConfigError('$_methodName: API Method return type has to be a sub-class of ApiMessage or Future<ApiMessage>');
+    if (type is! ClassMirror || type.simpleName == #dynamic || type.isAbstract) {
+      throw new ApiConfigError('$_methodName: API Method return type has to be a instantiable class');
     }
+    ClassMirror responseMessage = type;
 
     if (mm.parameters.length > 2) {
-      throw new ApiConfigError('$_methodName: API Methods can only accept at most one ApiMessage and one ApiUser as parameter');
+      throw new ApiConfigError('$_methodName: API Methods can only accept at most one request message and one ApiUser as parameter');
     }
     if (mm.parameters.length == 0) {
       throw new ApiConfigError('$_methodName: ApiMessage request parameter needs to be specified');
@@ -75,15 +68,11 @@ class ApiConfigMethod {
       throw new ApiConfigError('$_methodName: Request parameter can\'t be optional or named');
     }
     type = param.type;
-    if (type.simpleName != #dynamic && type.isSubtypeOf(reflectType(ApiMessage))) {
-      if (type.reflectedType == VoidMessage) {
-        _requestMessage = null;
-      } else {
-        _requestMessage = type;
-      }
-    } else {
-      throw new ApiConfigError('$_methodName: API Method parameter has to be a sub-class of ApiMessage');
+    if (type is! ClassMirror || type.simpleName == #dynamic || type.isAbstract) {
+      throw new ApiConfigError('$_methodName: API Method parameter has to be a instantiable class');
     }
+    ClassMirror requestMessage = type;
+
     if (mm.parameters.length == 2) {
       var userParam = mm.parameters[1];
       if (userParam.isNamed) {
@@ -98,16 +87,16 @@ class ApiConfigMethod {
       }
     }
 
-    if (_requestMessage != null) {
-      _requestSchema = parent._getSchema(MirrorSystem.getName(_requestMessage.simpleName));
+    if (requestMessage != null) {
+      _requestSchema = parent._getSchema(MirrorSystem.getName(requestMessage.simpleName));
       if (_requestSchema == null) {
-        _requestSchema = new ApiConfigSchema(_requestMessage, parent);
+        _requestSchema = new ApiConfigSchema(requestMessage, parent);
       }
     }
-    if (_responseMessage != null) {
-      _responseSchema = parent._getSchema(MirrorSystem.getName(_responseMessage.simpleName));
+    if (responseMessage != null) {
+      _responseSchema = parent._getSchema(MirrorSystem.getName(responseMessage.simpleName));
       if (_responseSchema == null) {
-        _responseSchema = new ApiConfigSchema(_responseMessage, parent);
+        _responseSchema = new ApiConfigSchema(responseMessage, parent);
       }
     }
 
@@ -127,14 +116,14 @@ class ApiConfigMethod {
 
   Map get descriptor {
     var descriptor = {};
-    if (_requestMessage != null) {
+    if (_requestSchema != null && _requestSchema.hasProperties) {
       descriptor['request'] = {
-        '\$ref': MirrorSystem.getName(_requestMessage.simpleName)
+        '\$ref': _requestSchema.schemaName
       };
     }
-    if (_responseMessage != null) {
+    if (_responseSchema != null && _responseSchema.hasProperties) {
       descriptor['response'] = {
-        '\$ref': MirrorSystem.getName(_responseMessage.simpleName)
+        '\$ref': _requestSchema.schemaName
       };
     }
     return descriptor;
@@ -148,7 +137,7 @@ class ApiConfigMethod {
     method['scopes'] = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'];
     method['description'] = _description;
     method['request'] = {};
-    if (_requestMessage == null || _bodyLessMethods.contains(_httpMethod)) {
+    if (_requestSchema == null || !_requestSchema.hasProperties || _bodyLessMethods.contains(_httpMethod)) {
       method['request']['body'] = 'empty';
     } else {
       method['request']['body'] = 'autoTemplate(backendRequest)';
@@ -156,7 +145,7 @@ class ApiConfigMethod {
     }
 
     if (_bodyLessMethods.contains(_httpMethod)) {
-      if (_requestMessage == null) {
+      if (_requestSchema == null  || !_requestSchema.hasProperties) {
         method['request']['parameters'] = {};
       } else {
         method['request']['parameters'] = _requestSchema.getParameters();
@@ -177,7 +166,7 @@ class ApiConfigMethod {
     }
 
     method['response'] = {};
-    if (_responseMessage == null) {
+    if (_responseSchema == null || !_responseSchema.hasProperties) {
       method['response']['body'] = 'empty';
     } else {
       method['response']['body'] = 'autoTemplate(backendResponse)';
@@ -191,7 +180,7 @@ class ApiConfigMethod {
     var completer = new Completer();
     new Future.sync(() {
       var params = [];
-      if (_requestMessage != null) {
+      if (_requestSchema != null && _requestSchema.hasProperties) {
         params.add(_requestSchema.fromRequest(request));
       } else {
         params.add(null);
@@ -218,7 +207,7 @@ class ApiConfigMethod {
         response = new Future.value(response);
       }
       response.then((message) {
-        if (_responseMessage == null || message == null) {
+        if (_responseSchema == null || message == null || !_responseSchema.hasProperties) {
           completer.complete({});
           return;
         }

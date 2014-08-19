@@ -7,6 +7,14 @@ class ApiConfigSchema {
 
   ApiConfigSchema(this._schemaClass, ApiConfig parent) {
     _schemaName = MirrorSystem.getName(_schemaClass.simpleName);
+
+    var methods = _schemaClass.declarations.values.where(
+      (mm) => mm is MethodMirror && mm.isConstructor
+    );
+    if (!methods.isEmpty && methods.where((mm) => mm.simpleName == _schemaClass.simpleName).isEmpty) {
+      throw new ApiConfigError('${schemaName} needs to have an unnamed constructor');
+    }
+
     parent._addSchema(_schemaName, this);
 
     var declarations = _schemaClass.declarations;
@@ -20,6 +28,8 @@ class ApiConfigSchema {
       _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, _schemaName, parent);
     });
   }
+
+  bool get hasProperties => !_properties.isEmpty;
 
   bool hasSimpleProperty(List<String> path) {
     var property = _properties[new Symbol(path[0])];
@@ -85,7 +95,7 @@ class ApiConfigSchema {
     return parameters;
   }
 
-  ApiMessage fromRequest(Map request) {
+  fromRequest(Map request) {
     InstanceMirror api = _schemaClass.newInstance(new Symbol(''), []);
     request.forEach((name, value) {
       if (value != null) {
@@ -99,7 +109,7 @@ class ApiConfigSchema {
     return api.reflectee;
   }
 
-  Map toResponse(ApiMessage message) {
+  Map toResponse(message) {
     var response = {};
     InstanceMirror mirror = reflect(message);
     _properties.forEach((sym, prop) {

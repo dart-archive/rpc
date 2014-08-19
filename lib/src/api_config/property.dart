@@ -72,23 +72,25 @@ class ApiConfigSchemaProperty {
       _meta = metas.first.reflectee;
     }
 
-    if (_type.isSubtypeOf(reflectType(ApiMessage))) {
-      _ref = parent._getSchema(MirrorSystem.getName(_type.simpleName));
-      if (_ref == null) {
-        _ref = new ApiConfigSchema(_type, parent);
-      }
-    } else {
-      var variant = '';
-      var tmp = null;
-      if (_meta != null && _meta.variant != null) {
-        variant = _meta.variant;
-      }
-      tmp = _typeMap[_type.reflectedType];
+    var variant = '';
+    var tmp = null;
+    if (_meta != null && _meta.variant != null) {
+      variant = _meta.variant;
+    }
+    tmp = _typeMap[_type.reflectedType];
+    if (tmp != null) {
+      _apiType = tmp[variant];
+      tmp = _formatMap[_type.reflectedType];
       if (tmp != null) {
-        _apiType = tmp[variant];
-        tmp = _formatMap[_type.reflectedType];
-        if (tmp != null) {
-          _apiFormat = tmp[variant];
+        _apiFormat = tmp[variant];
+      }
+    }
+
+    if (_apiType == null) {
+      if (_type is ClassMirror && !(_type as ClassMirror).isAbstract) {
+        _ref = parent._getSchema(MirrorSystem.getName(_type.simpleName));
+        if (_ref == null) {
+          _ref = new ApiConfigSchema(_type, parent);
         }
       }
     }

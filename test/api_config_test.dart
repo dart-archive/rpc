@@ -17,16 +17,18 @@ class Misconfig1 {
   void missingAnnotations3() {}
 
   @ApiMethod(name: 'test3', path: 'test3')
-  VoidMessage doubleUser(ApiUser user1, [ApiUser user2]) { return null; }
+  VoidMessage wrongUserParam(VoidMessage_, VoidMessage user) { return null;}
 
   @ApiMethod(name: 'test4', path: 'test4')
-  VoidMessage wrongOrder(ApiUser user1, TestMessage1 request) { return null;}
-
-  @ApiMethod(name: 'test5', path: 'test5')
   VoidMessage wrongParameter(String test) { return null; }
 
+  @ApiMethod(name: 'test5', path: 'test5')
+  String wrongResponse1(VoidMessage _) {
+    return '';
+  }
+
   @ApiMethod(name: 'test6', path: 'test6')
-  bool wrongResponse(VoidMessage _) {
+  bool wrongResponse2(VoidMessage _) {
     return true;
   }
 
@@ -123,22 +125,22 @@ class Misconfig4 {}
 @ApiClass(name: 'Tester', version: 'v1test')
 class Tester {}
 
-class RecursiveMessage1 extends ApiMessage {
+class RecursiveMessage1 {
   String message;
   RecursiveMessage1 item;
 }
 
-class RecursiveMessage2 extends ApiMessage {
+class RecursiveMessage2 {
   String message;
   RecursiveMessage3 item;
 }
 
-class RecursiveMessage3 extends ApiMessage {
+class RecursiveMessage3 {
   String message;
   RecursiveMessage2 item;
 }
 
-class TestMessage1 extends ApiMessage {
+class TestMessage1 {
   int count;
   String message;
   double value;
@@ -151,11 +153,11 @@ class TestMessage1 extends ApiMessage {
   TestMessage1({this.count});
 }
 
-class TestMessage2 extends ApiMessage {
+class TestMessage2 {
   int count;
 }
 
-class TestMessage3 extends ApiMessage {
+class TestMessage3 {
   @ApiProperty(variant: 'int64')
   int count64;
 
@@ -197,7 +199,7 @@ main () {
                 dm.metadata.first.reflectee.runtimeType == ApiMethod
       );
       methods.forEach((MethodMirror mm) {
-        expect(() => new ApiConfigMethod(mm, 'Test', tester), throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError')));
+        expect(() => print(new ApiConfigMethod(mm, 'Test', tester).resourceMethod), throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError')));
       });
     });
     test('correct', () {

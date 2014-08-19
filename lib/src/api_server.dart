@@ -1,6 +1,5 @@
 library endpoints.api_server;
 
-import 'api.dart';
 import 'errors.dart';
 import 'auth.dart';
 import 'api_config.dart';

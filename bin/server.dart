@@ -13,14 +13,14 @@ _handler(Request request) {
   return new Response.ok('Hello World!!', headers: headers);
 }
 
-class MyResponse extends ApiMessage {
+class MyResponse {
   int count;
   String message;
 
   MyResponse({this.count, this.message});
 }
 
-class MyRequest extends ApiMessage {
+class MyRequest {
   String message;
   MyRequest({this.message});
 }

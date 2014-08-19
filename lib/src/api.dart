@@ -41,14 +41,11 @@ class ApiProperty {
   // TODO: add default, required, min/max values, enum
 }
 
-/// Base class for API response/request messages
-abstract class ApiMessage {}
-
 /**
- * Special [ApiMessage] to show that a method
+ * Special API Message to show that a method
  * doesn't need a request or doesn't return a response
  */
-class VoidMessage extends ApiMessage {
+class VoidMessage {
   VoidMessage();
 }
 

@@ -47,12 +47,12 @@ class MyApi {
 
 ##### Request/Response Messages
 
-The data that is sent to/from the API is defined as classes extending `ApiMessage`.
-This class needs to have an unnamed constructor that doesn't require any parameters.
+The data that is sent to/from the API is defined in (non-abstract) classes.
+These classes need to have an unnamed constructor that doesn't require any parameters.
 The API Backend will call `new MyRequest()` and then set the properties one by one.
 
 ```
-class MyRequest extends ApiMessage {
+class MyRequest {
   String message;
   MyRequest([this.message]);
 }
@@ -60,7 +60,7 @@ class MyRequest extends ApiMessage {
 
 All public properties of this class will be used to construct an according
 JSON object. Allowed types are `int`, `double`, `bool`, `string`, `DateTime`,
-another `ApiMessage` class, or a `List<T>` using one of those types.
+another message class, or a `List<T>` using one of those types.
 
 You can define extra options for the properties by using an @ApiProperty annotation.
 
