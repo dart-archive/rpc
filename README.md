@@ -212,7 +212,7 @@ this will still trigger a 401 error.
 ##### Errors
 
 If you want to return errors to users of your API, e.g. if a requested entity wasn't found,
-you can throw and `EndpointsError` in your method.
+you can throw an `EndpointsError` in your method.
 
 It's recommended to use one of the predefined error classes:
 
