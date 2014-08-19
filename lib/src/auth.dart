@@ -15,6 +15,10 @@ Future<ApiUser> checkAuth(Map<String, String> headers, List<String> clientIds) {
   if (auth_header == null) {
     return new Future.value(null);
   }
+  if (clientIds == null || clientIds.length == 0) {
+    context.services.logging.info('No Client IDs specified, authorization won\'t be checked.');
+    return new Future.value(null);
+  }
   var auth_parts = auth_header.split(' ');
   if (auth_parts.length != 2) {
     context.services.logging.error('Invalid Authorization header');
@@ -39,14 +43,11 @@ Future<ApiUser> checkAuth(Map<String, String> headers, List<String> clientIds) {
   }
   request
     .then((Tokeninfo info) {
-
       context.services.logging.debug('Token Info retrieved successfully: ${info.toString()}');
-      if (clientIds != null && clientIds.length > 0) {
-        if (!clientIds.contains(info.issued_to)) {
-          context.services.logging.info('Client ID not allowed for this API');
-          completer.complete(null);
-          return;
-        }
+      if (!clientIds.contains(info.issued_to)) {
+        context.services.logging.info('Client ID not allowed for this API');
+        completer.complete(null);
+        return;
       }
       // TODO: memcache the result for quicker future results? potential security issue?
       completer.complete(new ApiUser(info.user_id, info.email));
