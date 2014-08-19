@@ -25,7 +25,7 @@ class EndpointsError implements Exception {
     return JSON.encode(toJson());
   }
 
-  Response toResponse() {
+  Response get response {
     return new Response(
       code,
       body: toString(),
