@@ -37,6 +37,8 @@ class ApiProperty {
   final String variant;
 
   const ApiProperty({this.description, this.variant});
+
+  // TODO: add default, required, min/max values, enum
 }
 
 /// Base class for API response/request messages

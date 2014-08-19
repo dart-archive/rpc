@@ -61,13 +61,10 @@ class ApiConfigSchemaProperty {
     if (_type.isSubtypeOf(reflectType(List))) {
       _repeated = true;
       var types = _type.typeArguments;
-      if (types.length != 1) {
+      if (types.length != 1 || types[0].simpleName == #dynamic) {
         throw new ApiConfigError('${schemaName}.${_propertyName}: List property must specify exactly one type parameter');
       }
       _type = types[0];
-      if(_type.simpleName == #dynamic) {
-        throw new ApiConfigError('${schemaName}.${_propertyName}: List property must specify exactly one type parameter');
-      }
     }
 
     var metas = _property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
@@ -97,6 +94,7 @@ class ApiConfigSchemaProperty {
     }
 
     // TODO: extra information from _meta
+    // TODO: add default, required, min/max values, enum
 
     if (_ref == null && _apiType == null) {
       throw new ApiConfigError('${schemaName}.${_propertyName}: Invalid type.');
