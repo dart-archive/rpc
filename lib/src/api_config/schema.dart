@@ -25,7 +25,7 @@ class ApiConfigSchema {
     );
 
     properties.forEach((VariableMirror vm) {
-      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, _schemaName, parent);
+      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, parent);
     });
   }
 
@@ -37,9 +37,9 @@ class ApiConfigSchema {
       return false;
     }
     if (path.length == 1) {
-      return (property._ref == null);
+      return (property.isSimple);
     }
-    if (property._ref == null) {
+    if (property is! SchemaProperty) {
       return false;
     }
     path.removeAt(0);
@@ -55,7 +55,7 @@ class ApiConfigSchema {
       }
       return param;
     }
-    if (property._ref == null) {
+    if (property is! SchemaProperty) {
       return null;
     }
     path.removeAt(0);
@@ -80,7 +80,7 @@ class ApiConfigSchema {
   Map<String, Map> getParameters({String prefix: '', bool repeated: false}) {
     var parameters = {};
     _properties.values.forEach((property) {
-      if (property._ref == null) {
+      if (property is! SchemaProperty) {
         parameters['$prefix${property.propertyName}'] = property.parameter;
         if (repeated || property._repeated) {
           parameters['$prefix${property.propertyName}']['repeated'] = true;

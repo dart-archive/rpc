@@ -123,7 +123,7 @@ class ApiConfigMethod {
     }
     if (_responseSchema != null && _responseSchema.hasProperties) {
       descriptor['response'] = {
-        '\$ref': _requestSchema.schemaName
+        '\$ref': _responseSchema.schemaName
       };
     }
     return descriptor;
