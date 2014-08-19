@@ -14,14 +14,19 @@ _handler(Request request) {
 }
 
 class MyResponse {
+  @ApiProperty(description: 'Counting something, or not...')
   int count;
+
+  @ApiProperty(description: 'Some text')
   String message;
 
   MyResponse({this.count, this.message});
 }
 
 class MyRequest {
+  @ApiProperty(description: 'Some more text')
   String message;
+
   MyRequest({this.message});
 }
 

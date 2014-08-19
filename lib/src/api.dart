@@ -42,13 +42,16 @@ class ApiProperty {
 }
 
 /**
- * Special API Message to show that a method
+ * Special API Message to use when a method
  * doesn't need a request or doesn't return a response
  */
-class VoidMessage {
-  VoidMessage();
-}
+class VoidMessage {}
 
+/**
+ * Currently authenticated user.
+ * `email` is only available if the email-scope was
+ * included during authentication.
+ */
 class ApiUser {
   final String id;
   final String email;

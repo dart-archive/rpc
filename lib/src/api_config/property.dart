@@ -2,10 +2,10 @@ part of endpoints.api_config;
 
 class ApiConfigSchemaProperty {
   String _propertyName;
-  TypeMirror _type;
   bool _repeated = false;
   String _apiType;
   String _apiFormat;
+  String _apiParameterType;
   ApiProperty _meta;
 
   factory ApiConfigSchemaProperty(VariableMirror property, ApiConfig parent) {
@@ -35,15 +35,9 @@ class ApiConfigSchemaProperty {
 
   ApiConfigSchemaProperty._internal(VariableMirror property, ApiConfig parent) {
     _propertyName = MirrorSystem.getName(property.simpleName);
-    _type = property.type;
 
-    if (_type.isSubtypeOf(reflectType(List))) {
+    if (property.type.isSubtypeOf(reflectType(List))) {
       _repeated = true;
-      var types = _type.typeArguments;
-      if (types.length != 1 || types[0].simpleName == #dynamic) {
-        throw new ApiConfigError('${_propertyName}: List property must specify exactly one type parameter');
-      }
-      _type = types[0];
     }
 
     var metas = property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
@@ -71,6 +65,10 @@ class ApiConfigSchemaProperty {
   Map get descriptor {
     var property = typeDescriptor;
 
+    if (_meta != null && _meta.description != null) {
+      property['description'] = _meta.description;
+    }
+
     if (_repeated) {
       return {
         'type': 'array',
@@ -85,10 +83,9 @@ class ApiConfigSchemaProperty {
   Map get parameter {
     var parameter = {};
     if (!isSimple) { return null; }
-    if (_type.reflectedType == int || _type.reflectedType == double) {
-      parameter['type'] = _apiFormat;
-    } else {
-      parameter['type'] = _apiType;
+    parameter['type'] = _apiParameterType;
+    if (_meta != null && _meta.description != null) {
+      parameter['description'] = _meta.description;
     }
 
     // TODO: extra information from _meta
@@ -151,6 +148,7 @@ class IntegerProperty extends ApiConfigSchemaProperty {
     } else {
       throw new ApiConfigError('${_propertyName}: Invalid integer variant.');
     }
+    _apiParameterType = _apiFormat;
   }
 
   _singleResponseValue(value) {
@@ -183,6 +181,7 @@ class DoubleProperty extends ApiConfigSchemaProperty {
     if (_apiFormat != 'double' && _apiFormat != 'float') {
       throw new ApiConfigError('${_propertyName}: Invalid double variant.');
     }
+    _apiParameterType = _apiFormat;
   }
 
   _singleRequestValue(value) {
@@ -200,6 +199,7 @@ class StringProperty extends ApiConfigSchemaProperty {
   StringProperty._internal(property, parent): super._internal(property, parent) {
     _apiType = 'string';
     _apiFormat = null;
+    _apiParameterType = _apiType;
   }
 }
 
@@ -208,6 +208,7 @@ class BooleanProperty extends ApiConfigSchemaProperty {
   BooleanProperty._internal(property, parent): super._internal(property, parent) {
     _apiType = 'boolean';
     _apiFormat = null;
+    _apiParameterType = _apiType;
   }
 
   _singleRequestValue(value) {
@@ -221,6 +222,7 @@ class DateTimeProperty extends ApiConfigSchemaProperty {
   DateTimeProperty._internal(property, parent): super._internal(property, parent) {
     _apiType = 'string';
     _apiFormat = 'date-time';
+    _apiParameterType = _apiType;
   }
 
   _singleResponseValue(value) {
@@ -242,13 +244,18 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 
   ApiConfigSchema _ref;
 
-  SchemaProperty._internal(property, parent): super._internal(property, parent) {
-    _ref = parent._getSchema(MirrorSystem.getName(_type.simpleName));
+  SchemaProperty._internal(VariableMirror property, parent): super._internal(property, parent) {
+    var type = property.type;
+    if (type.isSubtypeOf(reflectType(List))) {
+      type = type.typeArguments[0];
+    }
+    _ref = parent._getSchema(MirrorSystem.getName(type.simpleName));
     if (_ref == null) {
-      _ref = new ApiConfigSchema(_type, parent);
+      _ref = new ApiConfigSchema(type, parent);
     }
     _apiType = null;
     _apiFormat = null;
+    _apiParameterType = null;
   }
 
   _singleResponseValue(value) {
