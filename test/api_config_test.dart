@@ -151,6 +151,15 @@ class TestMessage1 {
   TestMessage2 submessage;
   List<TestMessage2> submessages;
 
+  @ApiProperty(
+      values: const {
+        'test1': 'test1',
+        'test2': 'test2',
+        'test3': 'test3'
+      }
+  )
+  String enumValue;
+
   TestMessage1({this.count});
 }
 
@@ -295,7 +304,8 @@ main () {
           {'count': 5},
           {'count': 6},
           {'count': 7}
-        ]
+        ],
+        'enumValue': 'test1'
       });
       expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
@@ -317,6 +327,7 @@ main () {
       expect(instance.submessages[0].count, 5);
       expect(instance.submessages[1].count, 6);
       expect(instance.submessages[2].count, 7);
+      expect(instance.enumValue, 'test1');
     });
 
     test('bad-request-creation', () {
@@ -330,6 +341,7 @@ main () {
       expect(() => m1.fromRequest({'submessage': {'count': 'x'}}), throwsA(new isInstanceOf<BadRequestError>()));
       expect(() => m1.fromRequest({'submessages': ['x']}), throwsA(new isInstanceOf<BadRequestError>()));
       expect(() => m1.fromRequest({'submessages': [{'count': 'x'}]}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'enumValue': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
     });
 
     test('response-creation', () {
@@ -341,6 +353,7 @@ main () {
       instance.value = 12.3;
       instance.check = true;
       instance.messages = ['1', '2', '3'];
+      instance.enumValue = 'test1';
       var date = new DateTime.now();
       var utcDate = date.toUtc();
       instance.date = date;
@@ -370,6 +383,7 @@ main () {
       expect(response['submessages'][0]['count'], 5);
       expect(response['submessages'][1]['count'], 6);
       expect(response['submessages'][2]['count'], 7);
+      expect(response['enumValue'], 'test1');
     });
   });
 }

@@ -36,9 +36,15 @@ class ApiProperty {
 
   final String variant;
 
-  const ApiProperty({this.description, this.variant});
+  /**
+   * Possible values for enum properties, as value - description pairs.
+   * Properties using this will have to be String
+   */
+  final Map<String, String> values;
 
-  // TODO: add default, required, min/max values, enum
+  const ApiProperty({this.description, this.variant, this.values});
+
+  // TODO: add default, required, min/max values
 }
 
 /**

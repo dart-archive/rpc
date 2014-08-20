@@ -34,6 +34,18 @@ class MessageList {
   MessageList([this.items = const []]);
 }
 
+class MessageListRequest {
+  int limit;
+
+  @ApiProperty(
+    values: const {
+      'text': 'Sort by message text',
+      'date': 'Sort by message date'
+    }
+  )
+  String order;
+}
+
 @ApiClass(
   name: 'dartDBApi',
   version: 'v1',
@@ -45,9 +57,15 @@ class DartDBApi {
     path: 'messages',
     description: 'Retrieve list of messages'
   )
-  Future<MessageList> list(VoidMessage _) {
-    return context.services.db.query(Message).run()
-             .then((List<Message> list) => new MessageList(list));
+  Future<MessageList> list(MessageListRequest request) {
+    var query = context.services.db.query(Message);
+    if (request.order != null) {
+      query.order(request.order);
+    }
+    if (request.limit != null) {
+      query.limit(request.limit);
+    }
+    return query.run().then((List<Message> list) => new MessageList(list));
   }
 
   @ApiMethod(

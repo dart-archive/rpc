@@ -10,40 +10,42 @@ class ApiConfigSchemaProperty {
 
   factory ApiConfigSchemaProperty(VariableMirror property, ApiConfig parent) {
     var type = property.type;
+    var repeated = false;
+    ApiProperty meta = null;
     if(type.simpleName == #dynamic) {
       throw new ApiConfigError('${property.simpleName}: Property needs to have a type defined.');
     }
     if (type.isSubtypeOf(reflectType(List))) {
+      repeated = true;
       var types = type.typeArguments;
       if (types.length != 1 || types[0].simpleName == #dynamic) {
         throw new ApiConfigError('${property.simpleName}: List property must specify exactly one type parameter');
       }
       type = types[0];
     }
+    var metas = property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
+    if (metas.length > 0) {
+      meta = metas.first.reflectee;
+    }
     switch (type.reflectedType) {
-      case int: return new IntegerProperty._internal(property, parent);
-      case double: return new DoubleProperty._internal(property, parent);
-      case bool: return new BooleanProperty._internal(property, parent);
-      case String: return new StringProperty._internal(property, parent);
-      case DateTime: return new DateTimeProperty._internal(property, parent);
+      case int: return new IntegerProperty._internal(property, repeated, meta, parent);
+      case double: return new DoubleProperty._internal(property, repeated, meta, parent);
+      case bool: return new BooleanProperty._internal(property, repeated, meta, parent);
+      case String:
+        if (meta != null && meta.values != null && meta.values.isNotEmpty) {
+          return new EnumProperty._internal(property, repeated, meta, parent);
+        }
+        return new StringProperty._internal(property, repeated, meta, parent);
+      case DateTime: return new DateTimeProperty._internal(property, repeated, meta, parent);
     }
     if (type is ClassMirror && !(type as ClassMirror).isAbstract) {
-      return new SchemaProperty._internal(property, parent);
+      return new SchemaProperty._internal(property, type, repeated, meta, parent);
     }
     throw new ApiConfigError('${property.simpleName}: Invalid type.');
   }
 
-  ApiConfigSchemaProperty._internal(VariableMirror property, ApiConfig parent) {
+  ApiConfigSchemaProperty._internal(VariableMirror property, bool this._repeated, this._meta, ApiConfig parent) {
     _propertyName = MirrorSystem.getName(property.simpleName);
-
-    if (property.type.isSubtypeOf(reflectType(List))) {
-      _repeated = true;
-    }
-
-    var metas = property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
-    if (metas.length > 0) {
-      _meta = metas.first.reflectee;
-    }
 
     // TODO: extra information from _meta
     // TODO: add default, required, min/max values, enum
@@ -136,7 +138,7 @@ class ApiConfigSchemaProperty {
 
 class IntegerProperty extends ApiConfigSchemaProperty {
 
-  IntegerProperty._internal(property, parent): super._internal(property, parent) {
+  IntegerProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     if (_meta != null) {
       _apiFormat = _meta.variant;
     }
@@ -170,7 +172,7 @@ class IntegerProperty extends ApiConfigSchemaProperty {
 
 class DoubleProperty extends ApiConfigSchemaProperty {
 
-  DoubleProperty._internal(property, parent): super._internal(property, parent) {
+  DoubleProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     _apiType = 'number';
     if (_meta != null) {
       _apiFormat = _meta.variant;
@@ -196,16 +198,44 @@ class DoubleProperty extends ApiConfigSchemaProperty {
 
 class StringProperty extends ApiConfigSchemaProperty {
 
-  StringProperty._internal(property, parent): super._internal(property, parent) {
+  StringProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     _apiType = 'string';
     _apiFormat = null;
     _apiParameterType = _apiType;
   }
 }
 
+class EnumProperty extends ApiConfigSchemaProperty {
+
+  EnumProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+    _apiType = 'string';
+    _apiFormat = null;
+    _apiParameterType = _apiType;
+  }
+
+  Map get parameter {
+    var parameter = super.parameter;
+
+    parameter['enum'] = {};
+    _meta.values.forEach((value, description) {
+      parameter['enum'][value] = {
+        'backendValue': value,
+        'description': description
+      };
+    });
+
+    return parameter;
+  }
+
+  _singleRequestValue(value) {
+    if (value == null || _meta.values.containsKey(value)) { return value; }
+    throw new BadRequestError('Value is not a valid enum value');
+  }
+}
+
 class BooleanProperty extends ApiConfigSchemaProperty {
 
-  BooleanProperty._internal(property, parent): super._internal(property, parent) {
+  BooleanProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     _apiType = 'boolean';
     _apiFormat = null;
     _apiParameterType = _apiType;
@@ -219,7 +249,7 @@ class BooleanProperty extends ApiConfigSchemaProperty {
 
 class DateTimeProperty extends ApiConfigSchemaProperty {
 
-  DateTimeProperty._internal(property, parent): super._internal(property, parent) {
+  DateTimeProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     _apiType = 'string';
     _apiFormat = 'date-time';
     _apiParameterType = _apiType;
@@ -244,11 +274,7 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 
   ApiConfigSchema _ref;
 
-  SchemaProperty._internal(VariableMirror property, parent): super._internal(property, parent) {
-    var type = property.type;
-    if (type.isSubtypeOf(reflectType(List))) {
-      type = type.typeArguments[0];
-    }
+  SchemaProperty._internal(property, ClassMirror type, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     _ref = parent._getSchema(MirrorSystem.getName(type.simpleName));
     if (_ref == null) {
       _ref = new ApiConfigSchema(type, parent);
