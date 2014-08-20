@@ -1,8 +1,8 @@
-# dart_endpoints
+# endpoints
 
 ### Description
 
-Implementation of Google Cloud Endpoints in Dart.
+Implementation of [Google Cloud Endpoints](https://developers.google.com/appengine/docs/python/endpoints/) in Dart.
 
 ### Usage
 
@@ -251,8 +251,33 @@ void main() {
 
 ##### Testing
 
-(TODO: info about Api Explorer)
+Once you have started the dev server you can access the API Explorer at
+`http://localhost:8080/_ah/api/explorer`
+
+Using the explorer you can test out all the methods to see if they work like expected.
+If there are errors in generating and or calling your API they will be displayed in the log.
+
+After deploying the app to App Engine you can access the API Explorer at
+`https://your_api_id.appspot.com/_ah/api/explorer`
+
 
 ##### Using your API
 
-(TODO: info about client library generation)
+Once your API is deployed you can use the [Discovery API Client Generator](https://github.com/dart-lang/discovery_api_dart_client_generator)
+to generate client and server-side libraries to access your API.
+
+For this you have to download the discovery document and use it with the generator
+
+```
+URL='https://your_app_id.appspot.com/_ah/api/discovery/v1/apis/yourApi/v1/rest'
+curl -s -o myapi.discovery $URL
+bin/generate.dart --no-prefix -i myapi.discovery -o ../
+```
+
+You can then include the library in your project.
+The libraries can be used like any of the other Google Client API libraries, [some samples here](https://github.com/dart-gde/dart_api_client_examples).
+
+You can also use client libraries in other languages to access your API.
+See the official [Google Cloud Endpoints docs](https://developers.google.com/appengine/docs/python/endpoints/)
+for more information about this and Endpoints in general.
+
