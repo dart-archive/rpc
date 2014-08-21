@@ -1,10 +1,14 @@
 import 'package:endpoints/endpoints.dart';
-import 'package:shelf/shelf.dart';
-import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
+import 'package:appengine/appengine.dart';
+//import 'package:shelf/shelf.dart';
+//import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
 import 'dart:async';
+import 'dart:io';
 import 'db_api.dart';
 
-_handler(Request request) {
+ApiServer api_server;
+
+/*_shelfHandler(Request request) {
   var headers = {'Content-Type' : 'text/plain'};
 
   if (request.url.toString() != '/') {
@@ -12,6 +16,14 @@ _handler(Request request) {
   }
 
   return new Response.ok('Hello World!!', headers: headers);
+}*/
+
+void _handler(HttpRequest request) {
+  if (request.uri.path.startsWith('/_ah/spi/')) {
+    api_server.handleRequest(request);
+    return;
+  }
+  context.assets.serve(request.response, request.uri.path);
 }
 
 class MyResponse {
@@ -112,13 +124,19 @@ class MyApi {
 
 
 void main() {
-  var api_server = new ApiServer();
+  api_server = new ApiServer();
   api_server.addApi(new MyApi());
   api_server.addApi(new DartDBApi());
+
+  /*
   var cascade = new Cascade(statusCodes: [501])
     .add(api_server.handler)
     .add(_handler)
     .add(shelf_ae.assetHandler);
 
-  shelf_ae.serve(cascade.handler);
+  shelf_ae.serve(cascade.handler);*/
+
+  runAppEngine(_handler).then((_) {
+    // Server running.
+  });
 }

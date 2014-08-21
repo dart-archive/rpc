@@ -81,7 +81,7 @@ a response message class or a Future of a response message class.
 
 ```
 MyResponse myMethod(MyRequest request) {
-  
+
   return new MyResponse();
 }
 ```
@@ -115,7 +115,7 @@ Some examples:
 @ApiMethod(
   name: 'resource.list',
   path: 'resource',
-  description: 'list models' 
+  description: 'list models'
 )
 MyModelList list(VoidMessage _) {...}
 ```
@@ -125,7 +125,7 @@ MyModelList list(VoidMessage _) {...}
   name: 'resource.insert',
   path: 'resource',
   method: 'POST',
-  description: 'insert model' 
+  description: 'insert model'
 )
 MyModel insert(MyModel request) {...}
 ```
@@ -134,7 +134,7 @@ MyModel insert(MyModel request) {...}
 @ApiMethod(
   name: 'resource.get',
   path: 'resource/{id}',
-  description: 'get model' 
+  description: 'get model'
 )
 MyModel get(MyModelRequest request) {...}
 ```
@@ -144,7 +144,7 @@ MyModel get(MyModelRequest request) {...}
   name: 'resource.update',
   path: 'resource/{id}',
   method: 'PUT',
-  description: 'update model' 
+  description: 'update model'
 )
 MyModel update(MyModel request) {...}
 ```
@@ -183,7 +183,7 @@ For the methods where you need authentication you add an extra `ApiUser` paramet
 @ApiMethod(
   name: 'resource.auth_get',
   path: 'resource/{id}',
-  description: 'get model' 
+  description: 'get model'
 )
 MyModel authGet(MyModelRequest request, ApiUser user) {...}
 ```
@@ -199,7 +199,7 @@ for your method you can include the `ApiUser` parameter as optional parameter.
 @ApiMethod(
   name: 'resource.auth_get',
   path: 'resource/{id}',
-  description: 'get model' 
+  description: 'get model'
 )
 MyModel authGet(MyModelRequest request, [ApiUser user]) {...}
 ```
@@ -218,7 +218,7 @@ It's recommended to use one of the predefined error classes:
 
 -  400 `throw new BadRequestError('You sent some data we don't understand.');`
 -  401 `throw new UnauthorizedError('You need to be authenticated.')`
--  403 `throw new ForbiddenError('You are not allowed to do this!')` 
+-  403 `throw new ForbiddenError('You are not allowed to do this!')`
 -  404 `throw new NotFoundError('We didn't find what you are looking for.');`
 -  500 `throw new InternalServerError('We did something wrong...');`
 
@@ -228,6 +228,40 @@ Any uncaught errors happening in your API method will be returned as `InternalSe
 ##### API Server
 
 In `bin/server.dart` create a new instance of ApiServer and add your Api class instances.
+You then have two options to use the API Server to serve API responses.
+
+1. `handleRequest`
+
+This method takes a `HttpRequest` and handles it accordingly.
+You should only call it for requests to `/_ah/spi/*`.
+For other requests the method will do nothing and return `false`.
+
+```
+ApiServer api_server;
+
+void _handler(HttpRequest request) {
+  if (request.uri.path.startsWith('/_ah/spi/')) {
+    api_server.handleRequest(request);
+    return;
+  }
+
+  // Do your normal request handling here
+
+  context.assets.serve(request.response, request.uri.path);
+}
+
+void main() {
+  api_server = new ApiServer();
+  api_server.addApi(new MyApi());
+
+  runAppEngine(_handler).then((_) {
+    // Server running.
+  });
+}
+```
+
+2. Shelf `handler`
+
 ApiServer exposes a shelf handler which you can add to a shelf cascade,
 best before all your other handlers.
 
