@@ -2,7 +2,16 @@ part of endpoints.api_config;
 
 class ApiConfigSchemaProperty {
   String _propertyName;
+  String get propertyName => _propertyName;
+
   bool _repeated = false;
+  bool get repeated => _repeated;
+
+  bool _required = false;
+  bool get required => _required;
+
+  var _defaultValue;
+
   String _apiType;
   String _apiFormat;
   String _apiParameterType;
@@ -47,11 +56,11 @@ class ApiConfigSchemaProperty {
   ApiConfigSchemaProperty._internal(VariableMirror property, bool this._repeated, this._meta, ApiConfig parent) {
     _propertyName = MirrorSystem.getName(property.simpleName);
 
-    // TODO: extra information from _meta
-    // TODO: add default, required, min/max values, enum
+    if (_meta != null) {
+      _required = _meta.required;
+      _defaultValue = _meta.defaultValue;
+    }
   }
-
-  String get propertyName => _propertyName;
 
   Map get typeDescriptor {
     var property = {};
@@ -72,10 +81,17 @@ class ApiConfigSchemaProperty {
     }
 
     if (_repeated) {
-      return {
+      property = {
         'type': 'array',
         'items': property
       };
+    }
+
+    if (_required) {
+      property['required'] = true;
+    }
+    if (_defaultValue != null) {
+      property['default'] = toResponse(_defaultValue);
     }
     return property;
   }
@@ -89,8 +105,9 @@ class ApiConfigSchemaProperty {
     if (_meta != null && _meta.description != null) {
       parameter['description'] = _meta.description;
     }
-
-    // TODO: extra information from _meta
+    if (_defaultValue != null) {
+      parameter['default'] = toResponse(_defaultValue);
+    }
     return parameter;
   }
 
@@ -138,9 +155,14 @@ class ApiConfigSchemaProperty {
 
 class IntegerProperty extends ApiConfigSchemaProperty {
 
+  int _minValue;
+  int _maxValue;
+
   IntegerProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
     if (_meta != null) {
       _apiFormat = _meta.variant;
+      _minValue = _meta.minValue;
+      _maxValue = _meta.maxValue;
     }
     if (_apiFormat == null || _apiFormat == '') { _apiFormat = 'int32'; }
     if (_apiFormat == 'int32' || _apiFormat == 'uint32') {
@@ -167,6 +189,19 @@ class IntegerProperty extends ApiConfigSchemaProperty {
     } on FormatException catch (e) {
       throw new BadRequestError('Invalid integer format: $e');
     }
+  }
+
+  Map get parameter {
+    var parameter = super.parameter;
+
+    if (_minValue != null) {
+      parameter['minValue'] = _singleResponseValue(_minValue);
+    }
+    if (_maxValue != null) {
+      parameter['maxValue'] = _singleResponseValue(_maxValue);
+    }
+
+    return parameter;
   }
 }
 

@@ -160,6 +160,12 @@ class TestMessage1 {
   )
   String enumValue;
 
+  @ApiProperty(required: true)
+  int required_value;
+
+  @ApiProperty(defaultValue: 10)
+  int default_value;
+
   TestMessage1({this.count});
 }
 

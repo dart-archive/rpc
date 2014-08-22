@@ -46,12 +46,13 @@ class ApiConfigSchema {
     return property._ref.hasSimpleProperty(path);
   }
 
-  Map getParameter(List<String> path, {bool repeated: false}) {
+  Map getParameter(List<String> path, {bool repeated: false, bool required: true}) {
     var property = _properties[new Symbol(path[0])];
     if (path.length == 1) {
       var param = property.parameter;
       if (param != null) {
-        param['repeated'] = repeated || property._repeated;
+        param['repeated'] = repeated || property.repeated;
+        param['required'] = required && property.required;
       }
       return param;
     }
@@ -59,7 +60,11 @@ class ApiConfigSchema {
       return null;
     }
     path.removeAt(0);
-    return property._ref.getParameter(path, repeated: repeated || property._repeated);
+    return property._ref.getParameter(
+      path,
+      repeated: repeated || property.repeated,
+      required: required && property.required
+    );
   }
 
   String get schemaName => _schemaName;
@@ -77,18 +82,22 @@ class ApiConfigSchema {
     return descriptor;
   }
 
-  Map<String, Map> getParameters({String prefix: '', bool repeated: false}) {
+  Map<String, Map> getParameters({String prefix: '', bool repeated: false, bool required: true}) {
     var parameters = {};
     _properties.values.forEach((property) {
       if (property is! SchemaProperty) {
         parameters['$prefix${property.propertyName}'] = property.parameter;
-        if (repeated || property._repeated) {
+        if (repeated || property.repeated) {
           parameters['$prefix${property.propertyName}']['repeated'] = true;
+        }
+        if (required && property.required) {
+          parameters['$prefix${property.propertyName}']['required'] = true;
         }
       } else {
         parameters.addAll(property._ref.getParameters(
           prefix: '$prefix${property.propertyName}.',
-          repeated: repeated || property._repeated
+          repeated: repeated || property.repeated,
+          required: required && property.required
         ));
       }
     });

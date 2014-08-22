@@ -152,6 +152,15 @@ class ApiConfigMethod {
         _pathParams.forEach((paramName) {
           method['request']['parameters'][paramName]['required'] = true;
         });
+
+        // Add required parameters to Parameter list (after path params)
+        method['request']['parameters'].forEach((name, param) {
+          if (param['required'] == true) {
+            if (!_pathParams.contains(name)) {
+              _pathParams.add(name);
+            }
+          }
+        });
       }
     } else {
       method['request']['parameters'] = {};
