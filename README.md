@@ -233,8 +233,8 @@ You then have two options to use the API Server to serve API responses.
 1. `handleRequest`
 
 This method takes a `HttpRequest` and handles it accordingly.
-You should only call it for requests to `/_ah/spi/*`.
-For other requests the method will do nothing and return `false`.
+You should only call it for requests to `/_ah/spi/*`,
+it will return a 501 error response for other requests.
 
 ```
 ApiServer api_server;

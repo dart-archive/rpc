@@ -52,9 +52,12 @@ class ApiServer {
 
   Future<Map> _getApiConfigs(Map request) {
     context.services.logging.debug('getApiConfigs request: $request');
-    // TODO check apprevision in request
+    // TODO: check app revision in request
 
     return context.services.modules.hostname().then((root) {
+      // TODO:
+      // need to consider cases where API is running in module
+      // which would need two -dot- replacements for HTTPS-safe root
       root = root.replaceFirst('.', '-dot-');
       var configs = new List<String>();
       _apis.forEach((apiInfo) {
@@ -120,7 +123,8 @@ class ApiServer {
   }
 
   /**
-   * A shelf handler which you can add to your shelf cascade
+   * A shelf handler which can be add to shelf cascades
+   *
    * Will return a 501 response (instead of the default 404)
    * when it can't handle the request.
    */
@@ -154,16 +158,17 @@ class ApiServer {
 
   /**
    * Handle incoming HttpRequests.
-   * Will return false if the request shouldn't be handled
-   * by the API Server.
+   *
+   * Should only be used for /_ah/spi/ request paths
    */
-  bool handleRequest(HttpRequest request) {
+  void handleRequest(HttpRequest request) {
     if (!request.uri.path.startsWith('/_ah/spi')) {
-      return false;
+      request.drain().then((_) => _errorResponse(request.response, 501, 'Not Implemented'));
+      return;
     }
     if (request.method != 'POST') {
-      request.drain().then((_) => _errorResponse(request.response, 405, 'Method not allowed'));
-      return true;
+      request.drain().then((_) => _errorResponse(request.response, 405, 'Method Not Allowed'));
+      return;
     }
     request.transform(UTF8.decoder).join('').then((String data) {
       var headers = {'Authorization': request.headers.value('Authorization')};
@@ -178,7 +183,6 @@ class ApiServer {
           _jsonResponse(request.response, e.code, e.toJson());
         });
     });
-    return true;
   }
 
   void _jsonResponse(HttpResponse response, int code, Map json) {
