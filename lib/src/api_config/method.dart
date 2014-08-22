@@ -187,7 +187,6 @@ class ApiConfigMethod {
 
   Future<Map> invoke(InstanceMirror api, Map request, [ApiUser user]) {
     return new Future.sync(() {
-      var completer = new Completer();
       var params = [];
       if (_requestSchema != null && _requestSchema.hasProperties) {
         params.add(_requestSchema.fromRequest(request));
@@ -204,14 +203,12 @@ class ApiConfigMethod {
       if (response is! Future) {
         response = new Future.value(response);
       }
-      response.then((message) {
+      return response.then((message) {
         if (_responseSchema == null || message == null || !_responseSchema.hasProperties) {
-          completer.complete({});
-          return;
+          return {};
         }
-        completer.complete(_responseSchema.toResponse(message));
+        return _responseSchema.toResponse(message);
       });
-      return completer.future;
     });
   }
 }
