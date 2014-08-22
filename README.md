@@ -311,6 +311,9 @@ bin/generate.dart --no-prefix -i myapi.discovery -o ../
 You can then include the library in your project.
 The libraries can be used like any of the other Google Client API libraries, [some samples here](https://github.com/dart-gde/dart_api_client_examples).
 
+There's also a [TicTacToe sample](https://github.com/Scarygami/appengine-vm-endpoints-tictactoe-dart)
+with a full client- and server-side implementation.
+
 You can also use client libraries in other languages to access your API.
 See the official [Google Cloud Endpoints docs](https://developers.google.com/appengine/docs/python/endpoints/)
 for more information about this and Endpoints in general.
