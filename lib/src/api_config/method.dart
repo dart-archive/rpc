@@ -186,8 +186,8 @@ class ApiConfigMethod {
   }
 
   Future<Map> invoke(InstanceMirror api, Map request, [ApiUser user]) {
-    var completer = new Completer();
-    new Future.sync(() {
+    return new Future.sync(() {
+      var completer = new Completer();
       var params = [];
       if (_requestSchema != null && _requestSchema.hasProperties) {
         params.add(_requestSchema.fromRequest(request));
@@ -196,22 +196,11 @@ class ApiConfigMethod {
       }
       if (_checkAuth) {
         if (_authRequired && user == null) {
-          completer.completeError(new UnauthorizedError("User authentication required."));
-          return;
+          throw new UnauthorizedError("User authentication required.");
         }
         params.add(user);
       }
-      var response;
-      try {
-        response = api.invoke(_symbol, params).reflectee;
-      } on EndpointsError catch (e) {
-        completer.completeError(e);
-        return;
-      } catch (e) {
-        context.services.logging.error('Unhandled Error in API Method: $e');
-        completer.completeError(new InternalServerError('Unhandled Error in API Method: $e'));
-        return;
-      }
+      var response = api.invoke(_symbol, params).reflectee;
       if (response is! Future) {
         response = new Future.value(response);
       }
@@ -222,7 +211,7 @@ class ApiConfigMethod {
         }
         completer.complete(_responseSchema.toResponse(message));
       });
+      return completer.future;
     });
-    return completer.future;
   }
 }

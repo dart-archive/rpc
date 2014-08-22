@@ -1,3 +1,5 @@
+library db_api;
+
 import 'package:endpoints/endpoints.dart';
 import 'package:cloud_datastore/cloud_datastore.dart';
 import 'package:appengine/appengine.dart';

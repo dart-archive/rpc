@@ -115,6 +115,24 @@ class ApiConfigSchema {
         }
       }
     });
+    // Check required/default
+    _properties.forEach((sym, prop) {
+      if (prop.required || prop.hasDefault) {
+        var value = api.getField(sym);
+        if (value.hasReflectee) {
+          value = value.reflectee;
+        }
+        if (value == null) {
+          if (prop.hasDefault) {
+            api.setField(sym, prop.defaultValue);
+            return;
+          }
+          if (prop.required) {
+            throw new BadRequestError('Required field ${prop.propertyName} is missing');
+          }
+        }
+      }
+    });
     return api.reflectee;
   }
 

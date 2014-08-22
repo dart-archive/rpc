@@ -11,6 +11,8 @@ class ApiConfigSchemaProperty {
   bool get required => _required;
 
   var _defaultValue;
+  get defaultValue => _defaultValue;
+  bool get hasDefault => (_defaultValue != null);
 
   String _apiType;
   String _apiFormat;
@@ -183,12 +185,21 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   }
 
   _singleRequestValue(value) {
-    if (value == null || value is int) { return value; }
-    try {
-      return int.parse(value);
-    } on FormatException catch (e) {
-      throw new BadRequestError('Invalid integer format: $e');
+    if (value == null) { return value; }
+    if (value is! int) {
+      try {
+        value = int.parse(value);
+      } on FormatException catch (e) {
+        throw new BadRequestError('Invalid integer format: $e');
+      }
     }
+    if (_minValue != null && value < _minValue) {
+      throw new BadRequestError('$_propertyName needs to be >= $_minValue');
+    }
+    if (_maxValue != null && value > _maxValue) {
+      throw new BadRequestError('$_propertyName needs to be <= $_maxValue');
+    }
+    return value;
   }
 
   Map get parameter {
