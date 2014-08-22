@@ -31,7 +31,7 @@ class ApiServer {
    */
   static Response get cascadeResponse => _cascadeResponse;
 
-  Future<Map> _handler(String method, String request, Map headers) {
+  Future<Map> _handler(String method, String request, String authHeader) {
     var jsonRequest;
     try {
       jsonRequest = JSON.decode(request);
@@ -47,7 +47,7 @@ class ApiServer {
       return _logMessages(jsonRequest);
     }
 
-    return _executeApiMethod(method, jsonRequest, headers);
+    return _executeApiMethod(method, jsonRequest, authHeader);
   }
 
   Future<Map> _getApiConfigs(Map request) {
@@ -81,7 +81,7 @@ class ApiServer {
     return new Future.value({});
   }
 
-  Future<Map> _executeApiMethod(String method, Map request, Map headers) {
+  Future<Map> _executeApiMethod(String method, Map request, String authHeader) {
     ApiConfig api = null;
     for (var a in _apis) {
       if (a.isValid && a.canHandleCall(method)) {
@@ -95,7 +95,7 @@ class ApiServer {
 
     Completer completer = new Completer();
 
-    checkAuth(headers, api.clientIds)
+    checkAuth(authHeader, api.clientIds)
       .then((user) {
         api.handleCall(method, request, user)
           .then((response) {
@@ -123,7 +123,7 @@ class ApiServer {
   }
 
   /**
-   * A shelf handler which can be add to shelf cascades
+   * A shelf handler which can be added to shelf cascades
    *
    * Will return a 501 response (instead of the default 404)
    * when it can't handle the request.
@@ -138,10 +138,13 @@ class ApiServer {
 
     Completer completer = new Completer();
     request.readAsString().then((value) {
-      _handler(request.url.pathSegments.last, value, request.headers)
+      _handler(request.url.pathSegments.last, value, request.headers['Authorization'])
         .then((response) {
           completer.complete(
-            new Response.ok(JSON.encode(response), headers: {'Content-Type' : 'application/json'})
+            new Response.ok(
+              JSON.encode(response),
+              headers: {'Content-Type' : 'application/json'}
+            )
           );
         })
         .catchError((e) {
@@ -171,8 +174,7 @@ class ApiServer {
       return;
     }
     request.transform(UTF8.decoder).join('').then((String data) {
-      var headers = {'Authorization': request.headers.value('Authorization')};
-      _handler(request.uri.pathSegments.last, data, headers)
+      _handler(request.uri.pathSegments.last, data, request.headers.value('Authorization'))
         .then((response) {
           _jsonResponse(request.response, 200, response);
         })

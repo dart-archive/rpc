@@ -10,16 +10,15 @@ import 'package:google_oauth2_v2_api/oauth2_v2_api_client.dart';
 
 List<String> _authSchemes = ['OAUTH', 'BEARER'];
 
-Future<ApiUser> checkAuth(Map<String, String> headers, List<String> clientIds) {
-  var auth_header = headers['Authorization'];
-  if (auth_header == null) {
+Future<ApiUser> checkAuth(String authHeader, List<String> clientIds) {
+  if (authHeader == null || authHeader == '') {
     return new Future.value(null);
   }
   if (clientIds == null || clientIds.length == 0) {
     context.services.logging.info('No Client IDs specified, authorization won\'t be checked.');
     return new Future.value(null);
   }
-  var auth_parts = auth_header.split(' ');
+  var auth_parts = authHeader.split(' ');
   if (auth_parts.length != 2) {
     context.services.logging.error('Invalid Authorization header');
     return new Future.error(new UnauthorizedError('Invalid Authorization header'));
