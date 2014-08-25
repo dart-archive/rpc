@@ -134,6 +134,17 @@ class MyApi {
   }
 
   @ApiMethod(
+    name: 'echo4',
+    method: 'POST',
+    path: 'echo4',
+    description: 'Limited echo that doesn\'t return everything',
+    responseFields: const ['message']
+  )
+  MyResponse echo4(MyResponse request) {
+    return request;
+  }
+
+  @ApiMethod(
     name: 'silence',
     method: 'GET',
     path: 'silence',

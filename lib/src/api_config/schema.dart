@@ -3,20 +3,29 @@ part of endpoints.api_config;
 class ApiConfigSchema {
   ClassMirror _schemaClass;
   String _schemaName;
+  List<Symbol> _fields;
   Map<Symbol, ApiConfigSchemaProperty> _properties = {};
 
-  factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent) {
+  factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent, {List<String> fields: const []}) {
     var schemaName = MirrorSystem.getName(schemaClass.simpleName);
+    if (fields == null) { fields = []; }
+
+    // TODO: better way to create a SchemaName?
+    if (fields.length > 0) {
+      fields = fields.toList();
+      fields.sort();
+      schemaName = schemaName + '_' + fields.join('_');
+    }
 
     var schema = parent._getSchema(schemaName);
     if (schema == null) {
-      schema = new ApiConfigSchema._internal(schemaClass, schemaName, parent);
+      schema = new ApiConfigSchema._internal(schemaClass, schemaName, fields.map((e) => new Symbol(e)), parent);
     }
 
     return schema;
   }
 
-  ApiConfigSchema._internal(this._schemaClass, this._schemaName, ApiConfig parent) {
+  ApiConfigSchema._internal(this._schemaClass, this._schemaName, this._fields, ApiConfig parent) {
     var methods = _schemaClass.declarations.values.where(
       (mm) => mm is MethodMirror && mm.isConstructor
     );
@@ -33,6 +42,11 @@ class ApiConfigSchema {
               !dm.isConst && !dm.isFinal && !dm.isPrivate && !dm.isStatic
     );
 
+    if (_fields.length > 0) {
+      properties = properties.where(
+        (VariableMirror vm) => _fields.contains(vm.simpleName)
+      );
+    }
     properties.forEach((VariableMirror vm) {
       _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, parent);
     });

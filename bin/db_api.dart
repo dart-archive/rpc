@@ -10,7 +10,7 @@ class Message extends Model {
   @ApiProperty(description: 'Datastore ID of the Message', variant: 'uint64')
   int id;
 
-  @ApiProperty(description: 'Message text')
+  @ApiProperty(description: 'Message text', required: true)
   String text;
 
   @ApiProperty(description: 'Date of the message')
@@ -74,7 +74,8 @@ class DartDBApi {
     name: 'messages.insert',
     path: 'messages',
     method: 'POST',
-    description: 'Insert a new message'
+    description: 'Insert a new message',
+    requestFields: const ['text']
   )
   Future<Message> insert(Message message) {
     return context.services.db.commit(inserts: [message]).then((_) => message);

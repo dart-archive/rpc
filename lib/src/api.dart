@@ -24,8 +24,17 @@ class ApiMethod {
   final String path;
   final String method;
   final String description;
+  final List<String> requestFields;
+  final List<String> responseFields;
 
-  const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
+  const ApiMethod({
+    this.name,
+    this.path,
+    this.method: 'GET',
+    this.description,
+    this.requestFields: const [],
+    this.responseFields: const []
+  });
 }
 
 /**
