@@ -62,7 +62,7 @@ class ApiConfig {
     });
   }
 
-  ApiConfigSchema _getSchema(name) => _schemaMap[name];
+  ApiConfigSchema _getSchema(String name) => _schemaMap[name];
 
   _addSchema(schemaName, ApiConfigSchema schema) {
     if (schema != null) {

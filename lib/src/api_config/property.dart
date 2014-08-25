@@ -321,10 +321,8 @@ class SchemaProperty extends ApiConfigSchemaProperty {
   ApiConfigSchema _ref;
 
   SchemaProperty._internal(property, ClassMirror type, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
-    _ref = parent._getSchema(MirrorSystem.getName(type.simpleName));
-    if (_ref == null) {
-      _ref = new ApiConfigSchema(type, parent);
-    }
+    _ref = new ApiConfigSchema(type, parent);
+
     _apiType = null;
     _apiFormat = null;
     _apiParameterType = null;

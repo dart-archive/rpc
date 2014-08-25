@@ -161,10 +161,10 @@ class TestMessage1 {
   String enumValue;
 
   @ApiProperty(required: true)
-  int required_value;
+  int requiredValue;
 
   @ApiProperty(defaultValue: 10)
-  int default_value;
+  int defaultValue;
 
   TestMessage1({this.count});
 }
@@ -294,7 +294,7 @@ main () {
     test('request-parsing', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
-      var instance = m1.fromRequest({});
+      var instance = m1.fromRequest({'requiredValue': 10});
       expect(instance, new isInstanceOf<TestMessage1>());
       instance = m1.fromRequest({
         'count': 1,
@@ -311,7 +311,8 @@ main () {
           {'count': 6},
           {'count': 7}
         ],
-        'enumValue': 'test1'
+        'enumValue': 'test1',
+        'requiredValue': 10
       });
       expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
@@ -334,20 +335,22 @@ main () {
       expect(instance.submessages[1].count, 6);
       expect(instance.submessages[2].count, 7);
       expect(instance.enumValue, 'test1');
+      expect(instance.defaultValue, 10);
     });
 
     test('bad-request-creation', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
-      expect(() => m1.fromRequest({'count': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'date': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'value': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'messages': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessage': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessage': {'count': 'x'}}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessages': ['x']}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessages': [{'count': 'x'}]}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'enumValue': 'x'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'count': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'date': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'value': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'messages': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'submessage': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'submessage': {'count': 'x'}, 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'submessages': ['x'], 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'submessages': [{'count': 'x'}], 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'enumValue': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
     });
 
     test('response-creation', () {

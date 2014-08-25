@@ -5,9 +5,18 @@ class ApiConfigSchema {
   String _schemaName;
   Map<Symbol, ApiConfigSchemaProperty> _properties = {};
 
-  ApiConfigSchema(this._schemaClass, ApiConfig parent) {
-    _schemaName = MirrorSystem.getName(_schemaClass.simpleName);
+  factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent) {
+    var schemaName = MirrorSystem.getName(schemaClass.simpleName);
 
+    var schema = parent._getSchema(schemaName);
+    if (schema == null) {
+      schema = new ApiConfigSchema._internal(schemaClass, schemaName, parent);
+    }
+
+    return schema;
+  }
+
+  ApiConfigSchema._internal(this._schemaClass, this._schemaName, ApiConfig parent) {
     var methods = _schemaClass.declarations.values.where(
       (mm) => mm is MethodMirror && mm.isConstructor
     );

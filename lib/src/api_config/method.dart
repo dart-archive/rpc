@@ -88,16 +88,10 @@ class ApiConfigMethod {
     }
 
     if (requestMessage != null) {
-      _requestSchema = parent._getSchema(MirrorSystem.getName(requestMessage.simpleName));
-      if (_requestSchema == null) {
-        _requestSchema = new ApiConfigSchema(requestMessage, parent);
-      }
+      _requestSchema = new ApiConfigSchema(requestMessage, parent);
     }
     if (responseMessage != null) {
-      _responseSchema = parent._getSchema(MirrorSystem.getName(responseMessage.simpleName));
-      if (_responseSchema == null) {
-        _responseSchema = new ApiConfigSchema(responseMessage, parent);
-      }
+      _responseSchema = new ApiConfigSchema(responseMessage, parent);
     }
 
     var pathParams = _pathMatcher.allMatches(_path);
