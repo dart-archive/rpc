@@ -166,6 +166,9 @@ class TestMessage1 {
   @ApiProperty(defaultValue: 10)
   int defaultValue;
 
+  @ApiProperty(minValue: 10, maxValue: 100)
+  int limit;
+
   TestMessage1({this.count});
 }
 
@@ -312,7 +315,8 @@ main () {
           {'count': 7}
         ],
         'enumValue': 'test1',
-        'requiredValue': 10
+        'requiredValue': 10,
+        'limit': 50
       });
       expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
@@ -351,6 +355,8 @@ main () {
       expect(() => m1.fromRequest({'submessages': ['x'], 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
       expect(() => m1.fromRequest({'submessages': [{'count': 'x'}], 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
       expect(() => m1.fromRequest({'enumValue': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'limit': 1, 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      expect(() => m1.fromRequest({'limit': 1000, 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
     });
 
     test('response-creation', () {
