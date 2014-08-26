@@ -19,17 +19,25 @@ const _logLevelMap = const {
   'criticial': LogLevel.CRITICAL
 };
 
-class ApiServer {
 
-  List<ApiConfig> _apis = [];
+/**
+ * The main class for handling all API requests
+ * 
+ * To initialize add instances of your API Classes via `addApi` and then
+ * forward all `/_ah/spi/` requests to the `handleRequest` method or
+ * include the shelf `handler` in your shelf cascade.
+ */
+class ApiServer {
 
   static final _cascadeResponse = new Response(501);
 
   /**
-   * 501 response that can be returned from shelf handler
-   * to trigger cascading
+   * 501 shelf response that can be returned from 
+   * a shelf handler to trigger cascading
    */
   static Response get cascadeResponse => _cascadeResponse;
+
+  List<ApiConfig> _apis = [];
 
   Future<Map> _handler(String method, String request, String authHeader) {
     var jsonRequest;
