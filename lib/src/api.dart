@@ -4,27 +4,85 @@ const String API_EXPLORER_CLIENT_ID = '292824132082.apps.googleusercontent.com';
 
 /**
  * Use as annotation for your main API class.
+ * 
  * [name] and [version] are required.
  */
 class ApiClass {
+  /// Name of the API
   final String name;
+  
+  /// Version of the API
   final String version;
+  
+  /// Description of the API
   final String description;
+  
+  /**
+   * Client IDs that are allowed for authenticated calls to this API
+   * 
+   * You can create/manage Client IDs at the
+   * [Google Developers Console](https://console.developers.google.com)
+   */
   final List<String> allowedClientIds;
 
-  const ApiClass({this.name, this.version, this.description, this.allowedClientIds: const []});
+  const ApiClass({
+    this.name,
+    this.version,
+    this.description,
+    this.allowedClientIds: const []
+  });
 }
 
 /**
  * Use as annotation for your API methods inside of the API class.
+ * 
  * [name] and [path] are required.
  */
 class ApiMethod {
+  
+  /**
+   * Name of the method
+   * 
+   * Can have `resource.method` format to structure
+   * your API calls in groups
+   */
   final String name;
+  
+  /**
+   * Path where to call the method
+   * 
+   * Root path for all calls will be
+   * `https://your-app.appspot.com/_ah/api/your-api-name/your-api-version/`
+   * 
+   * Can contain path parameters like `{id}` which have to be part
+   * of the request message class specified in the method parameters
+   */
   final String path;
+  
+  /**
+   * Allowed HTTP method for calling this API method.
+   * 
+   * Can be `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
+   * 
+   * Defaults to `GET`
+   */
   final String method;
+  
+  /// Description of the method
   final String description;
+  
+  /**
+   * Limit the properties used for requests
+   * to a subset of the available properties
+   * of the request message class.
+   */
   final List<String> requestFields;
+  
+  /**
+   * Limit the properties returned by the API Method
+   * to a subset of the available properties
+   * of the response message class.
+   */
   final List<String> responseFields;
 
   const ApiMethod({
@@ -92,11 +150,16 @@ class VoidMessage {}
 
 /**
  * Currently authenticated user.
+ *
  * `email` is only available if the email-scope was
  * included during authentication.
  */
 class ApiUser {
+  /// Google ID of the user.
   final String id;
+  
+  /// Primary email address of the user
   final String email;
+
   ApiUser(this.id, this.email);
 }
