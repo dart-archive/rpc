@@ -79,7 +79,7 @@ main () {
     test('double_name2', () {
       var tester = new ApiConfig(new Tester());
       new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
-      expect(() => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count'], name: "MyMessage"), throwsA(new isInstanceOf<ApiConfigError>()));
+      expect(() => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count', 'value'], name: "MyMessage"), throwsA(new isInstanceOf<ApiConfigError>()));
     });
   });
 

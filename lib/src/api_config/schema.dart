@@ -1,5 +1,7 @@
 part of endpoints.api_config;
 
+String _capitalize(String string) => "${string.substring(0,1).toUpperCase()}${string.substring(1)}";
+
 class ApiConfigSchema {
   ClassMirror _schemaClass;
   String _schemaName;
@@ -14,7 +16,7 @@ class ApiConfigSchema {
     if (fields != null && fields.length > 0) {
       fields = fields.toList();
       fields.sort();
-      autoName = autoName + '_' + fields.join('_');
+      autoName = autoName + fields.map((field) => _capitalize(field)).join('');
       symbolFields = fields.map((field) => new Symbol(field)).toList();
     } else {
       symbolFields = [];
