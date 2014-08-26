@@ -8,18 +8,21 @@ class ApiConfigSchema {
 
   factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent, {List<String> fields: const []}) {
     var schemaName = MirrorSystem.getName(schemaClass.simpleName);
-    if (fields == null) { fields = []; }
+    List<Symbol> symbolFields;
 
     // TODO: better way to create a SchemaName?
-    if (fields.length > 0) {
+    if (fields != null && fields.length > 0) {
       fields = fields.toList();
       fields.sort();
       schemaName = schemaName + '_' + fields.join('_');
+      symbolFields = fields.map((field) => new Symbol(field));
+    } else {
+      symbolFields = [];
     }
 
     var schema = parent._getSchema(schemaName);
     if (schema == null) {
-      schema = new ApiConfigSchema._internal(schemaClass, schemaName, fields.map((e) => new Symbol(e)), parent);
+      schema = new ApiConfigSchema._internal(schemaClass, schemaName, symbolFields, parent);
     }
 
     return schema;
@@ -48,7 +51,10 @@ class ApiConfigSchema {
       );
     }
     properties.forEach((VariableMirror vm) {
-      _properties[vm.simpleName] = new ApiConfigSchemaProperty(vm, parent);
+      var prop = new ApiConfigSchemaProperty(vm, parent);
+      if (prop != null) {
+        _properties[vm.simpleName] = prop;
+      }
     });
   }
 

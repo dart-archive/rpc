@@ -23,6 +23,13 @@ class ApiConfigSchemaProperty {
     var type = property.type;
     var repeated = false;
     ApiProperty meta = null;
+    var metas = property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
+    if (metas.length > 0) {
+      meta = metas.first.reflectee;
+    }
+    if (meta != null && meta.ignore) {
+      return null;
+    }
     if(type.simpleName == #dynamic) {
       throw new ApiConfigError('${property.simpleName}: Property needs to have a type defined.');
     }
@@ -33,10 +40,6 @@ class ApiConfigSchemaProperty {
         throw new ApiConfigError('${property.simpleName}: List property must specify exactly one type parameter');
       }
       type = types[0];
-    }
-    var metas = property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
-    if (metas.length > 0) {
-      meta = metas.first.reflectee;
     }
     switch (type.reflectedType) {
       case int: return new IntegerProperty._internal(property, repeated, meta, parent);

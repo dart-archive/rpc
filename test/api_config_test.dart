@@ -169,6 +169,9 @@ class TestMessage1 {
   @ApiProperty(minValue: 10, maxValue: 100)
   int limit;
 
+  @ApiProperty(ignore: true)
+  int ignored;
+
   TestMessage1({this.count});
 }
 
@@ -316,7 +319,8 @@ main () {
         ],
         'enumValue': 'test1',
         'requiredValue': 10,
-        'limit': 50
+        'limit': 50,
+        'ignored': 10
       });
       expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
@@ -340,6 +344,7 @@ main () {
       expect(instance.submessages[2].count, 7);
       expect(instance.enumValue, 'test1');
       expect(instance.defaultValue, 10);
+      expect(instance.ignored, null);
     });
 
     test('bad-request-creation', () {
@@ -382,6 +387,7 @@ main () {
       var instance5 = new TestMessage2();
       instance5.count = 7;
       instance.submessages = [instance3, instance4, instance5];
+      instance.ignored = 10;
 
       var response = m1.toResponse(instance);
       expect(response, new isInstanceOf<Map>());
@@ -399,6 +405,7 @@ main () {
       expect(response['submessages'][1]['count'], 6);
       expect(response['submessages'][2]['count'], 7);
       expect(response['enumValue'], 'test1');
+      expect(response['ignored'], null);
     });
   });
 }
