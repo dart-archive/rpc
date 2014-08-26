@@ -3,32 +3,41 @@ part of endpoints.api_config;
 class ApiConfigSchema {
   ClassMirror _schemaClass;
   String _schemaName;
-  List<Symbol> _fields;
+  String _autoName;
   Map<Symbol, ApiConfigSchemaProperty> _properties = {};
 
-  factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent, {List<String> fields: const []}) {
-    var schemaName = MirrorSystem.getName(schemaClass.simpleName);
+  factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent, {List<String> fields: const [], String name}) {
+    var autoName = MirrorSystem.getName(schemaClass.simpleName);
     List<Symbol> symbolFields;
 
     // TODO: better way to create a SchemaName?
     if (fields != null && fields.length > 0) {
       fields = fields.toList();
       fields.sort();
-      schemaName = schemaName + '_' + fields.join('_');
-      symbolFields = fields.map((field) => new Symbol(field));
+      autoName = autoName + '_' + fields.join('_');
+      symbolFields = fields.map((field) => new Symbol(field)).toList();
     } else {
       symbolFields = [];
     }
 
+    var schemaName = autoName;
+    if (name != null && name != '') {
+      schemaName = name;
+    }
+
     var schema = parent._getSchema(schemaName);
     if (schema == null) {
-      schema = new ApiConfigSchema._internal(schemaClass, schemaName, symbolFields, parent);
+      schema = new ApiConfigSchema._internal(schemaClass, schemaName, autoName, symbolFields, parent);
+    } else {
+      if (schema._autoName != autoName) {
+        throw new ApiConfigError('${schemaName} can\'t have two different sets of properties');
+      }
     }
 
     return schema;
   }
 
-  ApiConfigSchema._internal(this._schemaClass, this._schemaName, this._fields, ApiConfig parent) {
+  ApiConfigSchema._internal(this._schemaClass, this._schemaName, this._autoName, List<Symbol> _fields, ApiConfig parent) {
     var methods = _schemaClass.declarations.values.where(
       (mm) => mm is MethodMirror && mm.isConstructor
     );

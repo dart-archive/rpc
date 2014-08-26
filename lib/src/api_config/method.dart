@@ -88,10 +88,18 @@ class ApiConfigMethod {
     }
 
     if (requestMessage != null) {
-      _requestSchema = new ApiConfigSchema(requestMessage, parent, fields: metadata.requestFields);
+      _requestSchema = new ApiConfigSchema(
+        requestMessage, parent,
+        fields: metadata.requestFields,
+        name: metadata.requestName
+      );
     }
     if (responseMessage != null) {
-      _responseSchema = new ApiConfigSchema(responseMessage, parent, fields: metadata.responseFields);
+      _responseSchema = new ApiConfigSchema(
+        responseMessage, parent,
+        fields: metadata.responseFields,
+        name: metadata.responseName
+      );
     }
 
     var pathParams = _pathMatcher.allMatches(_path);

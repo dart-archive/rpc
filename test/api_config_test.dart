@@ -63,12 +63,23 @@ main () {
   });
 
   group('api_config_schema_misconfig', () {
-    var tester = new ApiConfig(new Tester());
     List _wrong_schemas = [WrongSchema1];
     _wrong_schemas.forEach((schema) {
       test(schema.toString(), () {
+        var tester = new ApiConfig(new Tester());
         expect(() => new ApiConfigSchema(reflectClass(schema), tester), throwsA(new isInstanceOf<ApiConfigError>()));
       });
+    });
+
+    test('double_name1', () {
+      var tester = new ApiConfig(new Tester());
+      new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
+      expect(() => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"), throwsA(new isInstanceOf<ApiConfigError>()));
+    });
+    test('double_name2', () {
+      var tester = new ApiConfig(new Tester());
+      new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
+      expect(() => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count'], name: "MyMessage"), throwsA(new isInstanceOf<ApiConfigError>()));
     });
   });
 

@@ -79,11 +79,27 @@ class ApiMethod {
   final List<String> requestFields;
 
   /**
+   * Overwrite the request message name to be used in the API.
+   *
+   * Especially useful to prevent long/ugly auto-generated
+   * names when using [requestFields]
+   */
+  final String requestName;
+
+  /**
    * Limit the properties returned by the API Method
    * to a subset of the available properties
    * of the response message class.
    */
   final List<String> responseFields;
+
+  /**
+   * Overwrite the response message name to be used in the API.
+   *
+   * Especially useful to prevent long/ugly auto-generated
+   * names when using [responseFields]
+   */
+  final String responseName;
 
   const ApiMethod({
     this.name,
@@ -91,7 +107,9 @@ class ApiMethod {
     this.method: 'GET',
     this.description,
     this.requestFields: const [],
-    this.responseFields: const []
+    this.requestName,
+    this.responseFields: const [],
+    this.responseName
   });
 }
 
