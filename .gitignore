@@ -2,3 +2,4 @@ packages
 pubspec.lock
 Dockerfile
 dartdoc-viewer
+bin
