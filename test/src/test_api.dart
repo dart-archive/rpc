@@ -3,7 +3,7 @@ library test_api;
 import 'dart:async';
 import 'package:endpoints/endpoints.dart';
 
-part 'test_api_messages.dart';
+part 'test_api/messages.dart';
 
 class WrongMethods {
   @ApiMethod()
