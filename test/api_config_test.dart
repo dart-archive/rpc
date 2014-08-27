@@ -28,12 +28,15 @@ main () {
     test('correct_extended', () {
       var api_config = new ApiConfig(new CorrectMethods());
       expect(api_config.isValid, true);
-      expect(api_config.toJson()['name'], 'correct');
-      expect(api_config.toJson()['version'], 'v1');
+      var config = api_config.toJson();
+      expect(config['name'], 'correct');
+      expect(config['version'], 'v1');
+      expect(config['methods'].keys.length, 11);
     });
   });
 
   group('api_config_methods', () {
+
     test('misconfig', () {
       var test_mirror = reflectClass(WrongMethods);
       var tester = new ApiConfig(new Tester());
@@ -50,6 +53,7 @@ main () {
         );
       });
     });
+
     test('recursion', () {
       var test_mirror = reflectClass(ResursiveGet);
       var tester = new ApiConfig(new Tester());
@@ -66,6 +70,7 @@ main () {
         );
       });
     });
+
     test('correct', () {
       var test_mirror = reflectClass(CorrectMethods);
       var tester = new ApiConfig(new Tester());
@@ -86,19 +91,28 @@ main () {
     _wrong_schemas.forEach((schema) {
       test(schema.toString(), () {
         var tester = new ApiConfig(new Tester());
-        expect(() => new ApiConfigSchema(reflectClass(schema), tester), throwsA(new isInstanceOf<ApiConfigError>()));
+        expect(
+          () => new ApiConfigSchema(reflectClass(schema), tester),
+          throwsA(new isInstanceOf<ApiConfigError>())
+        );
       });
     });
 
     test('double_name1', () {
       var tester = new ApiConfig(new Tester());
       new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
-      expect(() => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"), throwsA(new isInstanceOf<ApiConfigError>()));
+      expect(
+        () => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"),
+        throwsA(new isInstanceOf<ApiConfigError>())
+      );
     });
     test('double_name2', () {
       var tester = new ApiConfig(new Tester());
       new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
-      expect(() => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count', 'value'], name: "MyMessage"), throwsA(new isInstanceOf<ApiConfigError>()));
+      expect(
+        () => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count', 'value'], name: "MyMessage"),
+        throwsA(new isInstanceOf<ApiConfigError>())
+      );
     });
   });
 
