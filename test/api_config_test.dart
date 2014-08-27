@@ -205,18 +205,26 @@ main () {
     test('bad-request-creation', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
-      expect(() => m1.fromRequest({}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'count': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'date': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'value': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'messages': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessage': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessage': {'count': 'x'}, 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessages': ['x'], 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'submessages': [{'count': 'x'}], 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'enumValue': 'x', 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'limit': 1, 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
-      expect(() => m1.fromRequest({'limit': 1000, 'requiredValue': '10'}), throwsA(new isInstanceOf<BadRequestError>()));
+      var requests = [
+        {},
+        {'count': 'x', 'requiredValue': '10'},
+        {'date': 'x', 'requiredValue': '10'},
+        {'value': 'x', 'requiredValue': '10'},
+        {'messages': 'x', 'requiredValue': '10'},
+        {'submessage': 'x', 'requiredValue': '10'},
+        {'submessage': {'count': 'x'}, 'requiredValue': '10'},
+        {'submessages': ['x'], 'requiredValue': '10'},
+        {'submessages': [{'count': 'x'}], 'requiredValue': '10'},
+        {'enumValue': 'x', 'requiredValue': '10'},
+        {'limit': 1, 'requiredValue': '10'},
+        {'limit': 1000, 'requiredValue': '10'}
+      ];
+      requests.forEach((request) {
+        expect(
+          () => m1.fromRequest(request),
+          throwsA(new isInstanceOf<BadRequestError>())
+        );
+      });
     });
 
     test('response-creation', () {
