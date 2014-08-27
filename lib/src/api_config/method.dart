@@ -110,6 +110,12 @@ class ApiConfigMethod {
       }
       _pathParams.add(param);
     });
+
+    try {
+      var test = this.resourceMethod;
+    } on StackOverflowError catch (_) {
+      throw new ApiConfigError('$_methodName: Request messages for bodyless methods can\'t be recursive');
+    }
   }
 
   Symbol get symbol => _symbol;

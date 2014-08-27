@@ -11,9 +11,6 @@ start_phase "Analyzing"
 analyze_files $(find $REPO_ROOT/lib -name "*.dart")
 RETURN_VALUE=$(expr $RETURN_VALUE + $?)
 
-analyze_files $(find $REPO_ROOT/bin -name "*.dart")
-RETURN_VALUE=$(expr $RETURN_VALUE + $?)
-
 analyze_files $(find $REPO_ROOT/test -name '*.dart')
 RETURN_VALUE=$(expr $RETURN_VALUE + $?)
 

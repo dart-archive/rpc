@@ -35,7 +35,7 @@ main () {
 
   group('api_config_methods', () {
     test('misconfig', () {
-      var test_mirror = reflectClass(Misconfig1);
+      var test_mirror = reflectClass(WrongMethods);
       var tester = new ApiConfig(new Tester());
       var methods = test_mirror.declarations.values.where(
         (dm) => dm is MethodMirror &&
@@ -44,7 +44,26 @@ main () {
                 dm.metadata.first.reflectee.runtimeType == ApiMethod
       );
       methods.forEach((MethodMirror mm) {
-        expect(() => new ApiConfigMethod(mm, 'Test', tester), throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError')));
+        expect(
+          () => new ApiConfigMethod(mm, 'Test', tester),
+          throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
+        );
+      });
+    });
+    test('recursion', () {
+      var test_mirror = reflectClass(ResursiveGet);
+      var tester = new ApiConfig(new Tester());
+      var methods = test_mirror.declarations.values.where(
+        (dm) => dm is MethodMirror &&
+                dm.isRegularMethod &&
+                dm.metadata.length > 0 &&
+                dm.metadata.first.reflectee.runtimeType == ApiMethod
+      );
+      methods.forEach((MethodMirror mm) {
+        expect(
+          () => new ApiConfigMethod(mm, 'Test', tester),
+          throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
+        );
       });
     });
     test('correct', () {

@@ -5,7 +5,7 @@ import 'package:endpoints/endpoints.dart';
 
 part 'test_api_messages.dart';
 
-class Misconfig1 {
+class WrongMethods {
   @ApiMethod()
   void missingAnnotations1() {}
 
@@ -55,6 +55,18 @@ class Misconfig1 {
 
   @ApiMethod(name: 'test13', path: 'test13')
   VoidMessage genericRequest(request) { return null; }
+}
+
+class ResursiveGet {
+  @ApiMethod(name: 'test1', path: 'test1')
+  VoidMessage resursiveGet1(RecursiveMessage1 request) {
+    return null;
+  }
+
+  @ApiMethod(name: 'test2', path: 'test2')
+  VoidMessage resursiveGet2(RecursiveMessage2 request) {
+    return null;
+  }
 }
 
 @ApiClass(name: 'correct', version: 'v1')
@@ -113,8 +125,11 @@ class CorrectMethods {
   }
 }
 
+class Misconfig1 {}
+
 @ApiClass()
-class Misconfig2 {}
+class Misconfig2 {
+}
 
 @ApiClass(name: 'test')
 class Misconfig3 {}
