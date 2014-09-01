@@ -178,7 +178,23 @@ class VoidMessage {}
  * in the @ApiMethod annotation
  */
 class ListResponse<T> {
+
+  /// List of items to be returned in the API
   List<T> items;
+
+  ListResponse([this.items]) {
+    if (items == null) {
+      items = new List<T>();
+    }
+  }
+
+  /// Add a new item to the response
+  void add(T item) {
+    if (items == null) {
+      items = new List<T>();
+    }
+    items.add(item);
+  }
 }
 
 /**

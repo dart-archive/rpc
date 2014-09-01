@@ -183,12 +183,17 @@ main () {
         expect(instance.items[0], new isInstanceOf<TestMessage1>());
         expect(instance.items[0].count, 1);
 
-        message1.items = [];
         var test1 = new TestMessage1();
         test1.count = 1;
         test1.message = 'test';
-        message1.items.add(test1);
+        message1.add(test1);
         var json = m1.toResponse(message1);
+        expect(json['items'].length, 1);
+        expect(json['items'][0]['count'], 1);
+        expect(json['items'][0]['message'], 'test');
+
+        message1 = new ListResponse<TestMessage1>([test1]);
+        json = m1.toResponse(message1);
         expect(json['items'].length, 1);
         expect(json['items'][0]['count'], 1);
         expect(json['items'][0]['message'], 'test');
