@@ -225,10 +225,12 @@ class ListRequest<T> {
   )
   String order;
 
+  /**
+   * Returns a datastore query with the provided parameters
+   *
+   * Will throw if T is not a datastore model
+   */
   db.Query get query {
-    if (T is! db.Model) {
-      return null;
-    }
     db.Query q = context.services.db.query(T);
     if (limit != null) {
       q.limit(limit);
