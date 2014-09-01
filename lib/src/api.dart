@@ -1,5 +1,8 @@
 library endpoints.api;
 
+import 'package:cloud_datastore/cloud_datastore.dart' as db;
+import 'package:appengine/appengine.dart' show context;
+
 const String API_EXPLORER_CLIENT_ID = '292824132082.apps.googleusercontent.com';
 
 /**
@@ -194,6 +197,49 @@ class ListResponse<T> {
       items = new List<T>();
     }
     items.add(item);
+  }
+}
+
+/**
+ * Special API Message to use when requesting
+ * a list of other API messages
+ *
+ * Schema will be called {T-Name}ListRequest unless given another name
+ * in the @ApiMethod annotation
+ */
+class ListRequest<T> {
+  @ApiProperty(
+    description: 'Number of items to return in one request',
+    variant: 'int32',
+    defaultValue: 20
+  )
+  int limit;
+
+  @ApiProperty(
+    description: 'Offset for paging through results'
+  )
+  int offset;
+
+  @ApiProperty(
+    description: 'Define property name for sorting, prefix with - for descending order'
+  )
+  String order;
+
+  db.Query get query {
+    if (T is! db.Model) {
+      return null;
+    }
+    db.Query q = context.services.db.query(T);
+    if (limit != null) {
+      q.limit(limit);
+    }
+    if (offset != null) {
+      q.offset(offset);
+    }
+    if (order != null) {
+      q.order(order);
+    }
+    return q;
   }
 }
 
