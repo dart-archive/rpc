@@ -34,9 +34,6 @@ class TestMessage1 {
   )
   String enumValue;
 
-  @ApiProperty(required: true)
-  int requiredValue;
-
   @ApiProperty(defaultValue: 10)
   int defaultValue;
 
@@ -65,6 +62,13 @@ class TestMessage3 {
 
   @ApiProperty(variant: 'uint32')
   int count32u;
+}
+
+class TestMessage4 {
+  @ApiProperty(required: true)
+  int requiredValue;
+
+  int count;
 }
 
 class WrongSchema1 {

@@ -12,12 +12,13 @@ main () {
   group('api_config_misconfig', () {
     List _misconfig_apis = [new Misconfig1(), new Misconfig2(), new Misconfig3(), new Misconfig4()];
     _misconfig_apis.forEach((api) {
-      test(api.toString(), () {
+      test(api.runtimeType.toString(), () {
         var api_config = new ApiConfig(api);
         expect(api_config.isValid, false);
       });
     });
   });
+
   group('api_config_correct', () {
     test('correct_simple', () {
       var api_config = new ApiConfig(new Tester());
@@ -86,37 +87,38 @@ main () {
     });
   });
 
-  group('api_config_schema_misconfig', () {
-    List _wrong_schemas = [WrongSchema1];
-    _wrong_schemas.forEach((schema) {
-      test(schema.toString(), () {
+  group('api_config_schema', () {
+
+    group('misconfig', () {
+      List _wrong_schemas = [WrongSchema1];
+      _wrong_schemas.forEach((schema) {
+        test(schema.toString(), () {
+          var tester = new ApiConfig(new Tester());
+          expect(
+            () => new ApiConfigSchema(reflectClass(schema), tester),
+            throwsA(new isInstanceOf<ApiConfigError>())
+          );
+        });
+      });
+
+      test('double_name1', () {
         var tester = new ApiConfig(new Tester());
+        new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
         expect(
-          () => new ApiConfigSchema(reflectClass(schema), tester),
+          () => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"),
+          throwsA(new isInstanceOf<ApiConfigError>())
+        );
+      });
+      test('double_name2', () {
+        var tester = new ApiConfig(new Tester());
+        new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
+        expect(
+          () => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count', 'value'], name: "MyMessage"),
           throwsA(new isInstanceOf<ApiConfigError>())
         );
       });
     });
 
-    test('double_name1', () {
-      var tester = new ApiConfig(new Tester());
-      new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
-      expect(
-        () => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"),
-        throwsA(new isInstanceOf<ApiConfigError>())
-      );
-    });
-    test('double_name2', () {
-      var tester = new ApiConfig(new Tester());
-      new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
-      expect(
-        () => new ApiConfigSchema(reflectClass(TestMessage1), tester, fields: ['count', 'value'], name: "MyMessage"),
-        throwsA(new isInstanceOf<ApiConfigError>())
-      );
-    });
-  });
-
-  group('api_config_schema', () {
     test('recursion', () {
       expect(new Future.sync(() {
         var tester = new ApiConfig(new Tester());
@@ -152,6 +154,48 @@ main () {
       expect(json['count64u'], '4');
     });
 
+    group('ListResponse', () {
+
+      test('misconfig', () {
+        var tester = new ApiConfig(new Tester());
+        ListResponse message1 = new ListResponse();
+        expect(
+          () => new ApiConfigSchema(reflect(message1).type, tester),
+          throwsA(new isInstanceOf<ApiConfigError>())
+        );
+      });
+
+      test('correct', () {
+        var tester = new ApiConfig(new Tester());
+        ListResponse<TestMessage1> message1 = new ListResponse<TestMessage1>();
+        ListResponse<TestMessage2> message2 = new ListResponse<TestMessage2>();
+        expect(() => new ApiConfigSchema(reflect(message1).type, tester), returnsNormally);
+
+        var m1 = new ApiConfigSchema(reflect(message1).type, tester);
+        expect(m1.schemaName, 'TestMessage1List');
+
+        var m2 = new ApiConfigSchema(reflect(message2).type, tester);
+        expect(m2.schemaName, 'TestMessage2List');
+
+        var instance = m1.fromRequest({'items': [{'count': 1}]});
+        expect(instance, new isInstanceOf<ListResponse<TestMessage1>>());
+        expect(instance.items.length, 1);
+        expect(instance.items[0], new isInstanceOf<TestMessage1>());
+        expect(instance.items[0].count, 1);
+
+        message1.items = [];
+        var test1 = new TestMessage1();
+        test1.count = 1;
+        test1.message = 'test';
+        message1.items.add(test1);
+        var json = m1.toResponse(message1);
+        expect(json['items'].length, 1);
+        expect(json['items'][0]['count'], 1);
+        expect(json['items'][0]['message'], 'test');
+      });
+
+    });
+
     test('request-parsing', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
@@ -173,7 +217,6 @@ main () {
           {'count': 7}
         ],
         'enumValue': 'test1',
-        'requiredValue': 10,
         'limit': 50,
         'ignored': 10
       });
@@ -202,23 +245,40 @@ main () {
       expect(instance.ignored, null);
     });
 
+    test('required', () {
+      var tester = new ApiConfig(new Tester());
+      var m1 = new ApiConfigSchema(reflectClass(TestMessage4), tester);
+      expect(() => m1.fromRequest({'requiredValue': 1}), returnsNormally);
+    });
+
     test('bad-request-creation', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
       var requests = [
-        {},
-        {'count': 'x', 'requiredValue': '10'},
-        {'date': 'x', 'requiredValue': '10'},
-        {'value': 'x', 'requiredValue': '10'},
-        {'messages': 'x', 'requiredValue': '10'},
-        {'submessage': 'x', 'requiredValue': '10'},
-        {'submessage': {'count': 'x'}, 'requiredValue': '10'},
-        {'submessages': ['x'], 'requiredValue': '10'},
-        {'submessages': [{'count': 'x'}], 'requiredValue': '10'},
-        {'enumValue': 'x', 'requiredValue': '10'},
-        {'limit': 1, 'requiredValue': '10'},
-        {'limit': 1000, 'requiredValue': '10'}
+        {'count': 'x'},
+        {'date': 'x'},
+        {'value': 'x'},
+        {'messages': 'x'},
+        {'submessage': 'x'},
+        {'submessage': {'count': 'x'}},
+        {'submessages': ['x']},
+        {'submessages': [{'count': 'x'}]},
+        {'enumValue': 'x'},
+        {'limit': 1},
+        {'limit': 1000}
       ];
+      requests.forEach((request) {
+        expect(
+          () => m1.fromRequest(request),
+          throwsA(new isInstanceOf<BadRequestError>())
+        );
+      });
+    });
+
+    test('missing-required', () {
+      var tester = new ApiConfig(new Tester());
+      var m1 = new ApiConfigSchema(reflectClass(TestMessage4), tester);
+      var requests = [{}, {'count': 1}];
       requests.forEach((request) {
         expect(
           () => m1.fromRequest(request),

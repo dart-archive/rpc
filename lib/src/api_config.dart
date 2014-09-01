@@ -3,8 +3,6 @@ library endpoints.api_config;
 import 'api.dart';
 import 'errors.dart';
 
-import 'package:appengine/appengine.dart';
-
 import 'dart:async';
 import 'dart:mirrors';
 import 'dart:convert' show JSON;

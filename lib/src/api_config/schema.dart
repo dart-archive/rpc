@@ -12,6 +12,15 @@ class ApiConfigSchema {
     var autoName = MirrorSystem.getName(schemaClass.simpleName);
     List<Symbol> symbolFields;
 
+    if (schemaClass.isSubtypeOf(reflectType(ListResponse))) {
+      var types = schemaClass.typeArguments;
+      if (types.length != 1 || types[0].simpleName == #dynamic) {
+        throw new ApiConfigError('${autoName}: ListResponse must specify exactly one type parameter');
+      }
+      var type = types[0];
+      autoName = MirrorSystem.getName(type.simpleName) + "List";
+    }
+
     // TODO: better way to create a SchemaName?
     if (fields != null && fields.length > 0) {
       fields = fields.toList();

@@ -171,6 +171,17 @@ class ApiProperty {
 class VoidMessage {}
 
 /**
+ * Special API Message to use when returning
+ * a list of other API messages
+ *
+ * Schema will be called {T-Name}List unless given another name
+ * in the @ApiMethod annotation
+ */
+class ListResponse<T> {
+  List<T> items;
+}
+
+/**
  * Currently authenticated user.
  *
  * `email` is only available if the email-scope was
