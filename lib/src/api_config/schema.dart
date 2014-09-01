@@ -10,24 +10,14 @@ class ApiConfigSchema {
 
   factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent, {List<String> fields: const [], String name}) {
     var autoName = MirrorSystem.getName(schemaClass.simpleName);
-    List<Symbol> symbolFields;
 
-    if (schemaClass.isSubtypeOf(reflectType(ListResponse))) {
+    if (schemaClass.isSubtypeOf(reflectType(ListResponse)) || schemaClass.isSubtypeOf(reflectType(ListRequest))) {
       var types = schemaClass.typeArguments;
       if (types.length != 1 || types[0].simpleName == #dynamic) {
-        throw new ApiConfigError('${autoName}: ListResponse must specify exactly one type parameter');
+        throw new ApiConfigError('${autoName}: ListResponse/ListRequest must specify exactly one type parameter');
       }
       var type = types[0];
-      autoName = MirrorSystem.getName(type.simpleName) + "List";
-    }
-
-    if (schemaClass.isSubtypeOf(reflectType(ListRequest))) {
-      var types = schemaClass.typeArguments;
-      if (types.length != 1 || types[0].simpleName == #dynamic) {
-        throw new ApiConfigError('${autoName}: ListRequest must specify exactly one type parameter');
-      }
-      var type = types[0];
-      autoName = MirrorSystem.getName(type.simpleName) + "ListRequest";
+      autoName = MirrorSystem.getName(type.simpleName);
     }
 
     // TODO: better way to create a SchemaName?
@@ -35,9 +25,8 @@ class ApiConfigSchema {
       fields = fields.toList();
       fields.sort();
       autoName = autoName + fields.map((field) => _capitalize(field)).join('');
-      symbolFields = fields.map((field) => new Symbol(field)).toList();
     } else {
-      symbolFields = [];
+      fields = [];
     }
 
     var schemaName = autoName;
@@ -45,9 +34,22 @@ class ApiConfigSchema {
       schemaName = name;
     }
 
+    if (schemaClass.isSubtypeOf(reflectType(ListResponse))) {
+      autoName += "List";
+      schemaName += "List";
+    }
+    if (schemaClass.isSubtypeOf(reflectType(ListRequest))) {
+      autoName += "ListRequest";
+      schemaName += "ListRequest";
+    }
+
     var schema = parent._getSchema(schemaName);
     if (schema == null) {
-      schema = new ApiConfigSchema._internal(schemaClass, schemaName, autoName, symbolFields, parent);
+      if (schemaClass.isSubtypeOf(reflectType(ListResponse))) {
+        schema = new ListResponseSchema._internal(schemaClass, schemaName, autoName, fields, name, parent);
+      } else {
+        schema = new ApiConfigSchema._internal(schemaClass, schemaName, autoName, fields, name, parent);
+      }
     } else {
       if (schema._autoName != autoName) {
         throw new ApiConfigError('${schemaName} can\'t have two different sets of properties');
@@ -57,7 +59,7 @@ class ApiConfigSchema {
     return schema;
   }
 
-  ApiConfigSchema._internal(this._schemaClass, this._schemaName, this._autoName, List<Symbol> _fields, ApiConfig parent) {
+  ApiConfigSchema._internal(this._schemaClass, this._schemaName, this._autoName, List<String> fields, String name, ApiConfig parent) {
     var methods = _schemaClass.declarations.values.where(
       (mm) => mm is MethodMirror && mm.isConstructor
     );
@@ -67,18 +69,22 @@ class ApiConfigSchema {
 
     parent._addSchema(_schemaName, this);
 
-    var declarations = _schemaClass.declarations;
+    _createProperties(fields, name, parent);
+  }
 
+  void _createProperties(List<String> fields, String name, ApiConfig parent) {
     var properties = _schemaClass.declarations.values.where(
       (dm) => dm is VariableMirror &&
               !dm.isConst && !dm.isFinal && !dm.isPrivate && !dm.isStatic
     );
 
-    if (_fields.length > 0) {
+    if (fields != null && fields.length > 0) {
+      var symbolFields = fields.map((field) => new Symbol(field)).toList();
       properties = properties.where(
-        (VariableMirror vm) => _fields.contains(vm.simpleName)
+        (VariableMirror vm) => symbolFields.contains(vm.simpleName)
       );
     }
+
     properties.forEach((VariableMirror vm) {
       var prop = new ApiConfigSchemaProperty(vm, parent);
       if (prop != null) {
@@ -204,5 +210,24 @@ class ApiConfigSchema {
       }
     });
     return response;
+  }
+}
+
+class ListResponseSchema extends ApiConfigSchema {
+
+  ListResponseSchema._internal(schemaClass, schemaName, autoName, fields, name, parent) :
+    super._internal(schemaClass, schemaName, autoName, fields, name, parent);
+
+  void _createProperties(List<String> fields, String name, ApiConfig parent) {
+    // TODO: call super for other properties if ListResponse is extended
+
+    VariableMirror items = _schemaClass.declarations.values.firstWhere(
+      (dm) => dm is VariableMirror && dm.simpleName == #items
+    );
+
+    var prop = new ApiConfigSchemaProperty(items, parent, fields: fields, name: name);
+    if (prop != null) {
+      _properties[#items] = prop;
+    }
   }
 }

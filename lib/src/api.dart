@@ -177,8 +177,10 @@ class VoidMessage {}
  * Special API Message to use when returning
  * a list of other API messages
  *
- * Schema will be called {T-Name}List unless given another name
- * in the @ApiMethod annotation
+ * Schema will be called {T-Name}List or {responseName}List
+ * if provided in the @ApiMethod annotation
+ *
+ * [responseFields] from @ApiMethod will apply to the items in the List
  */
 class ListResponse<T> {
 

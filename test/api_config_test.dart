@@ -154,53 +154,6 @@ main () {
       expect(json['count64u'], '4');
     });
 
-    group('ListResponse', () {
-
-      test('misconfig', () {
-        var tester = new ApiConfig(new Tester());
-        ListResponse message1 = new ListResponse();
-        expect(
-          () => new ApiConfigSchema(reflect(message1).type, tester),
-          throwsA(new isInstanceOf<ApiConfigError>())
-        );
-      });
-
-      test('correct', () {
-        var tester = new ApiConfig(new Tester());
-        ListResponse<TestMessage1> message1 = new ListResponse<TestMessage1>();
-        ListResponse<TestMessage2> message2 = new ListResponse<TestMessage2>();
-        expect(() => new ApiConfigSchema(reflect(message1).type, tester), returnsNormally);
-
-        var m1 = new ApiConfigSchema(reflect(message1).type, tester);
-        expect(m1.schemaName, 'TestMessage1List');
-
-        var m2 = new ApiConfigSchema(reflect(message2).type, tester);
-        expect(m2.schemaName, 'TestMessage2List');
-
-        var instance = m1.fromRequest({'items': [{'count': 1}]});
-        expect(instance, new isInstanceOf<ListResponse<TestMessage1>>());
-        expect(instance.items.length, 1);
-        expect(instance.items[0], new isInstanceOf<TestMessage1>());
-        expect(instance.items[0].count, 1);
-
-        var test1 = new TestMessage1();
-        test1.count = 1;
-        test1.message = 'test';
-        message1.add(test1);
-        var json = m1.toResponse(message1);
-        expect(json['items'].length, 1);
-        expect(json['items'][0]['count'], 1);
-        expect(json['items'][0]['message'], 'test');
-
-        message1 = new ListResponse<TestMessage1>([test1]);
-        json = m1.toResponse(message1);
-        expect(json['items'].length, 1);
-        expect(json['items'][0]['count'], 1);
-        expect(json['items'][0]['message'], 'test');
-      });
-
-    });
-
     test('request-parsing', () {
       var tester = new ApiConfig(new Tester());
       var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
@@ -334,6 +287,69 @@ main () {
       expect(response['submessages'][2]['count'], 7);
       expect(response['enumValue'], 'test1');
       expect(response['ignored'], null);
+    });
+
+    group('ListResponse', () {
+      test('misconfig', () {
+        var tester = new ApiConfig(new Tester());
+        ListResponse message1 = new ListResponse();
+        expect(
+          () => new ApiConfigSchema(reflect(message1).type, tester),
+          throwsA(new isInstanceOf<ApiConfigError>())
+        );
+      });
+
+      test('correct', () {
+        var tester = new ApiConfig(new Tester());
+        ListResponse<TestMessage1> message1 = new ListResponse<TestMessage1>();
+        ListResponse<TestMessage2> message2 = new ListResponse<TestMessage2>();
+        expect(() => new ApiConfigSchema(reflect(message1).type, tester), returnsNormally);
+
+        var m1 = new ApiConfigSchema(reflect(message1).type, tester);
+        expect(m1.schemaName, 'TestMessage1List');
+
+        var m2 = new ApiConfigSchema(reflect(message2).type, tester);
+        expect(m2.schemaName, 'TestMessage2List');
+
+        var instance = m1.fromRequest({'items': [{'count': 1}]});
+        expect(instance, new isInstanceOf<ListResponse<TestMessage1>>());
+        expect(instance.items.length, 1);
+        expect(instance.items[0], new isInstanceOf<TestMessage1>());
+        expect(instance.items[0].count, 1);
+
+        var test1 = new TestMessage1();
+        test1.count = 1;
+        test1.message = 'test';
+        message1.add(test1);
+        var json = m1.toResponse(message1);
+        expect(json['items'].length, 1);
+        expect(json['items'][0]['count'], 1);
+        expect(json['items'][0]['message'], 'test');
+
+        message1 = new ListResponse<TestMessage1>([test1]);
+        json = m1.toResponse(message1);
+        expect(json['items'].length, 1);
+        expect(json['items'][0]['count'], 1);
+        expect(json['items'][0]['message'], 'test');
+      });
+
+      test('ListResponse fields', () {
+        var tester = new ApiConfig(new Tester());
+        ListResponse<TestMessage1> message1 = new ListResponse<TestMessage1>();
+        var m1 = new ApiConfigSchema(reflect(message1).type, tester, fields: ['count', 'value']);
+        var instance = m1.fromRequest({
+          'items': [
+            {'count': 1, 'message': 'test', 'value': 2.3}
+          ]
+        });
+        expect(instance.items[0].count, 1);
+        expect(instance.items[0].message, null);
+        expect(instance.items[0].value, 2.3);
+
+        m1 = new ApiConfigSchema(reflect(message1).type, tester, fields: ['count', 'value'], name: 'Test');
+        expect(m1.schemaName, 'TestList');
+        expect(m1.descriptor['properties']['items']['items']['\$ref'], 'Test');
+      });
     });
   });
 }

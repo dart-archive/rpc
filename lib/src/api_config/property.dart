@@ -19,7 +19,7 @@ class ApiConfigSchemaProperty {
   String _apiParameterType;
   ApiProperty _meta;
 
-  factory ApiConfigSchemaProperty(VariableMirror property, ApiConfig parent) {
+  factory ApiConfigSchemaProperty(VariableMirror property, ApiConfig parent, {List<String> fields, String name}) {
     var type = property.type;
     var repeated = false;
     ApiProperty meta = null;
@@ -53,7 +53,7 @@ class ApiConfigSchemaProperty {
       case DateTime: return new DateTimeProperty._internal(property, repeated, meta, parent);
     }
     if (type is ClassMirror && !(type as ClassMirror).isAbstract) {
-      return new SchemaProperty._internal(property, type, repeated, meta, parent);
+      return new SchemaProperty._internal(property, type, repeated, meta, parent, fields: fields, name: name);
     }
     throw new ApiConfigError('${property.simpleName}: Invalid type.');
   }
@@ -323,8 +323,8 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 
   ApiConfigSchema _ref;
 
-  SchemaProperty._internal(property, ClassMirror type, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
-    _ref = new ApiConfigSchema(type, parent);
+  SchemaProperty._internal(property, ClassMirror type, repeated, meta, parent, {List<String> fields, String name}): super._internal(property, repeated, meta, parent) {
+    _ref = new ApiConfigSchema(type, parent, fields: fields, name: name);
 
     _apiType = null;
     _apiFormat = null;
