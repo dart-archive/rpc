@@ -304,12 +304,13 @@ For this you have to download the discovery document and use it with the generat
 
 ```
 URL='https://your_app_id.appspot.com/_ah/api/discovery/v1/apis/yourApi/v1/rest'
-curl -s -o myapi.discovery $URL
-bin/generate.dart --no-prefix -i myapi.discovery -o ../
+mkdir input
+curl -s -o input/myapi.json $URL
+bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
 ```
 
 You can then include the library in your project.
-The libraries can be used like any of the other Google Client API libraries, [some samples here](https://github.com/dart-gde/dart_api_client_examples).
+The libraries can be used like any of the other Google Client API libraries, [some samples here](https://github.com/dart-lang/googleapis_examples).
 
 There's also a [TicTacToe sample](https://github.com/Scarygami/appengine-vm-endpoints-tictactoe-dart)
 with a full client- and server-side implementation.
