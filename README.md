@@ -230,7 +230,7 @@ Any uncaught errors happening in your API method will be returned as `InternalSe
 In `bin/server.dart` create a new instance of ApiServer and add your Api class instances.
 You then have two options to use the API Server to serve API responses.
 
-1. `handleRequest`
+-  `handleRequest`
 
 This method takes a `HttpRequest` and handles it accordingly.
 You should only call it for requests to `/_ah/spi/*`,
@@ -260,7 +260,7 @@ void main() {
 }
 ```
 
-2. Shelf `handler`
+-  Shelf `handler`
 
 ApiServer exposes a shelf handler which you can add to a shelf cascade,
 best before all your other handlers.
