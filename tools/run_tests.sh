@@ -8,7 +8,10 @@ source "$REPO_ROOT/tools/utils.sh"
 export RETURN_VALUE=0
 
 start_phase "Analyzing"
-analyze_files $(find $REPO_ROOT/lib -name "*.dart")
+analyze_files $REPO_ROOT/lib/*.dart
+RETURN_VALUE=$(expr $RETURN_VALUE + $?)
+
+analyze_files $REPO_ROOT/lib/src/*.dart
 RETURN_VALUE=$(expr $RETURN_VALUE + $?)
 
 analyze_files $REPO_ROOT/test/*.dart
