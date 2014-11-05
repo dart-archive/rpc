@@ -287,7 +287,7 @@ curl -s -o input/myapi.json $URL
 bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
 ```
 
-You can then include the library in your project.
+You can then include the library in your project. Due to the way that the deploy process works it's easiest to copy the files of the generated client library to the lib folder of your project.
 The libraries can be used like any of the other Google Client API libraries, [some samples here](https://github.com/dart-lang/googleapis_examples).
 
 There's also a [TicTacToe sample](https://github.com/Scarygami/appengine-vm-endpoints-tictactoe-dart)
