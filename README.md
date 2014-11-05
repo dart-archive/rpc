@@ -4,6 +4,8 @@
 
 Implementation of [Google Cloud Endpoints](https://developers.google.com/appengine/docs/python/endpoints/) in Dart.
 
+These instructions assume that you are already set-up to run [Dart on App Engine](https://www.dartlang.org/cloud/).
+
 ### Usage
 
 ##### app.yaml configuration
@@ -13,7 +15,7 @@ will check for a Cloud Endpoints configuration when deploying.
 
 ```
 version: 1
-runtime: contrib-dart
+runtime: custom
 vm: true
 api_version: 1
 threadsafe: true
