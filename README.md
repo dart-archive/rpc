@@ -228,6 +228,7 @@ Any uncaught errors happening in your API method will be returned as `InternalSe
 ##### API Server
 
 In `bin/server.dart` create a new instance of ApiServer and add your Api class instances.
+
 Any requests to `/_ah/spi/*` should then be handled by the `handleRequest` method.
 
 This method takes a `HttpRequest` and handles it accordingly.
