@@ -4,7 +4,6 @@ import 'errors.dart';
 import 'auth.dart';
 import 'api_config.dart';
 
-import 'package:shelf/shelf.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -22,20 +21,11 @@ const _logLevelMap = const {
 
 /**
  * The main class for handling all API requests
- * 
+ *
  * To initialize add instances of your API Classes via `addApi` and then
- * forward all `/_ah/spi/` requests to the `handleRequest` method or
- * include the shelf `handler` in your shelf cascade.
+ * forward all `/_ah/spi/` requests to the `handleRequest` method.
  */
 class ApiServer {
-
-  static final _cascadeResponse = new Response(501);
-
-  /**
-   * 501 shelf response that can be returned from 
-   * a shelf handler to trigger cascading
-   */
-  static Response get cascadeResponse => _cascadeResponse;
 
   List<ApiConfig> _apis = [];
 
@@ -129,43 +119,6 @@ class ApiServer {
 
     return completer.future;
   }
-
-  /**
-   * A shelf handler which can be added to shelf cascades
-   *
-   * Will return a 501 response (instead of the default 404)
-   * when it can't handle the request.
-   */
-  Handler get handler => (Request request) {
-    if (!request.url.path.startsWith('/_ah/spi/')) {
-      return _cascadeResponse;
-    }
-    if (request.method != 'POST') {
-      return new Response(405, body: 'Method not allowed');
-    }
-
-    Completer completer = new Completer();
-    request.readAsString().then((value) {
-      _handler(request.url.pathSegments.last, value, request.headers['Authorization'])
-        .then((response) {
-          completer.complete(
-            new Response.ok(
-              JSON.encode(response),
-              headers: {'Content-Type' : 'application/json'}
-            )
-          );
-        })
-        .catchError((e) {
-          if (e is EndpointsError) {
-            completer.complete(e.response);
-          } else {
-            completer.complete(new InternalServerError('Unknown API Error: $e').response);
-          }
-        });
-    });
-
-    return completer.future;
-  };
 
   /**
    * Handle incoming HttpRequests.

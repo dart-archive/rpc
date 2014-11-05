@@ -1,6 +1,6 @@
 library endpoints.api;
 
-import 'package:cloud_datastore/cloud_datastore.dart' as db;
+import 'package:gcloud/db.dart';
 import 'package:appengine/appengine.dart' show context;
 
 const String API_EXPLORER_CLIENT_ID = '292824132082.apps.googleusercontent.com';
@@ -232,8 +232,9 @@ class ListRequest<T> {
    *
    * Will throw if T is not a datastore model
    */
-  db.Query get query {
-    db.Query q = context.services.db.query(T);
+  Query get query {
+    var db = context.services.db;
+    Query q = db.query(T);
     if (limit != null) {
       q.limit(limit);
     }

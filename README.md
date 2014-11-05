@@ -228,9 +228,7 @@ Any uncaught errors happening in your API method will be returned as `InternalSe
 ##### API Server
 
 In `bin/server.dart` create a new instance of ApiServer and add your Api class instances.
-You then have two options to use the API Server to serve API responses.
-
-1. `handleRequest`
+Any requests to `/_ah/spi/*` should then be handled by the `handleRequest` method.
 
 This method takes a `HttpRequest` and handles it accordingly.
 You should only call it for requests to `/_ah/spi/*`,
@@ -247,7 +245,7 @@ void _handler(HttpRequest request) {
 
   // Do your normal request handling here
 
-  context.assets.serve(request.response, request.uri.path);
+  context.assets.serve(request.uri.path);
 }
 
 void main() {
@@ -257,29 +255,6 @@ void main() {
   runAppEngine(_handler).then((_) {
     // Server running.
   });
-}
-```
-
-2. Shelf `handler`
-
-ApiServer exposes a shelf handler which you can add to a shelf cascade,
-best before all your other handlers.
-
-Since APIs can return 404 as a valid response, the default configuration of
-`shelf.Cascade` which cascades on 404 and 405 errors doesn't work.
-Instead you will have to use 501 responses to trigger cascading.
-You can also return `ApiServer.cascadeResponse` from your methods to do this.
-
-```
-void main() {
-  var api_server = new ApiServer();
-  api_server.addApi(new MyApi());
-  var cascade = new Cascade(statusCodes: [501])
-    .add(api_server.handler)
-    .add(_myHandler)
-    .add(shelf_ae.assetHandler);
-
-  shelf_ae.serve(cascade.handler);
 }
 ```
 
