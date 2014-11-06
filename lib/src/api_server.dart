@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:appengine/appengine.dart';
+import 'package:shelf/shelf.dart';
 
 const _logLevelMap = const {
   'debug': LogLevel.DEBUG,
@@ -28,6 +29,14 @@ const _logLevelMap = const {
 class ApiServer {
 
   List<ApiConfig> _apis = [];
+
+  static final _cascadeResponse = new Response(501);
+
+  /**
+   * 501 response that can be returned from shelf handler
+   * to trigger cascading
+   */
+  static Response get cascadeResponse => _cascadeResponse;
 
   Future<Map> _handler(String method, String request, String authHeader) {
     var jsonRequest;
@@ -119,6 +128,43 @@ class ApiServer {
 
     return completer.future;
   }
+
+  /**
+   * A shelf handler which can be added to shelf cascades
+   *
+   * Will return a 501 response (instead of the default 404)
+   * when it can't handle the request.
+   */
+  Handler get handler => (Request request) {
+    if (!request.url.path.startsWith('/_ah/spi/')) {
+      return _cascadeResponse;
+    }
+    if (request.method != 'POST') {
+      return new Response(405, body: 'Method not allowed');
+    }
+
+    Completer completer = new Completer();
+    request.readAsString().then((value) {
+      _handler(request.url.pathSegments.last, value, request.headers['Authorization'])
+        .then((response) {
+          completer.complete(
+            new Response.ok(
+              JSON.encode(response),
+              headers: {'Content-Type' : 'application/json'}
+            )
+          );
+        })
+        .catchError((e) {
+          if (e is EndpointsError) {
+            completer.complete(e.response);
+          } else {
+            completer.complete(new InternalServerError('Unknown API Error: $e').response);
+          }
+        });
+    });
+
+    return completer.future;
+  };
 
   /**
    * Handle incoming HttpRequests.

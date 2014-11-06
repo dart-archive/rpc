@@ -1,6 +1,7 @@
 library endpoints.errors;
 
 import 'dart:convert' show JSON;
+import 'package:shelf/shelf.dart' show Response;
 
 class EndpointsError implements Exception {
 
@@ -22,6 +23,14 @@ class EndpointsError implements Exception {
 
   String toString() {
     return JSON.encode(toJson());
+  }
+
+  Response get response {
+    return new Response(
+      code,
+      body: toString(),
+      headers: {'Content-Type' : 'application/json'}
+    );
   }
 }
 
