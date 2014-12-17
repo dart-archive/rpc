@@ -1,4 +1,8 @@
-part of endpoints.api_config;
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+part of endpoints.config;
 
 class ApiConfigSchemaProperty {
   String _propertyName;
@@ -19,46 +23,56 @@ class ApiConfigSchemaProperty {
   String _apiParameterType;
   ApiProperty _meta;
 
-  factory ApiConfigSchemaProperty(VariableMirror property, ApiConfig parent, {List<String> fields, String name}) {
+  factory ApiConfigSchemaProperty(
+      VariableMirror property, ApiConfig parent, {String name}) {
     var type = property.type;
     var repeated = false;
     ApiProperty meta = null;
-    var metas = property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
+    var metas =
+        property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
     if (metas.length > 0) {
       meta = metas.first.reflectee;
     }
-    if (meta != null && meta.ignore) {
-      return null;
-    }
-    if(type.simpleName == #dynamic) {
-      throw new ApiConfigError('${property.simpleName}: Property needs to have a type defined.');
+    if (type.simpleName == #dynamic) {
+      throw new ApiConfigError('${property.simpleName}: '
+                               'Property needs to have a type defined.');
     }
     if (type.isSubtypeOf(reflectType(List))) {
       repeated = true;
       var types = type.typeArguments;
       if (types.length != 1 || types[0].simpleName == #dynamic) {
-        throw new ApiConfigError('${property.simpleName}: List property must specify exactly one type parameter');
+        throw new ApiConfigError('${property.simpleName}: '
+            'List property must specify exactly one type parameter');
       }
       type = types[0];
     }
     switch (type.reflectedType) {
-      case int: return new IntegerProperty._internal(property, repeated, meta, parent);
-      case double: return new DoubleProperty._internal(property, repeated, meta, parent);
-      case bool: return new BooleanProperty._internal(property, repeated, meta, parent);
+      case int:
+        return new IntegerProperty._internal(property, repeated, meta, parent);
+      case double:
+        return new DoubleProperty._internal(property, repeated, meta, parent);
+      case bool:
+        return new BooleanProperty._internal(property, repeated, meta, parent);
       case String:
         if (meta != null && meta.values != null && meta.values.isNotEmpty) {
           return new EnumProperty._internal(property, repeated, meta, parent);
         }
         return new StringProperty._internal(property, repeated, meta, parent);
-      case DateTime: return new DateTimeProperty._internal(property, repeated, meta, parent);
+      case DateTime:
+        return new DateTimeProperty._internal(
+            property, repeated, meta, parent);
     }
     if (type is ClassMirror && !(type as ClassMirror).isAbstract) {
-      return new SchemaProperty._internal(property, type, repeated, meta, parent, fields: fields, name: name);
+      return new SchemaProperty._internal(
+          property, type, repeated, meta, parent, name: name);
     }
     throw new ApiConfigError('${property.simpleName}: Invalid type.');
   }
 
-  ApiConfigSchemaProperty._internal(VariableMirror property, bool this._repeated, this._meta, ApiConfig parent) {
+  ApiConfigSchemaProperty._internal(VariableMirror property,
+                                    bool this._repeated,
+                                    this._meta,
+                                    ApiConfig parent) {
     _propertyName = MirrorSystem.getName(property.simpleName);
 
     if (_meta != null) {
@@ -163,9 +177,10 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   int _minValue;
   int _maxValue;
 
-  IntegerProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+  IntegerProperty._internal(property, repeated, meta, parent)
+      : super._internal(property, repeated, meta, parent) {
     if (_meta != null) {
-      _apiFormat = _meta.variant;
+      _apiFormat = _meta.format;
       _minValue = _meta.minValue;
       _maxValue = _meta.maxValue;
     }
@@ -221,10 +236,11 @@ class IntegerProperty extends ApiConfigSchemaProperty {
 
 class DoubleProperty extends ApiConfigSchemaProperty {
 
-  DoubleProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+  DoubleProperty._internal(property, repeated, meta, parent)
+      : super._internal(property, repeated, meta, parent) {
     _apiType = 'number';
     if (_meta != null) {
-      _apiFormat = _meta.variant;
+      _apiFormat = _meta.format;
     }
     if (_apiFormat == null || _apiFormat == '') {
       _apiFormat = 'double';
@@ -247,7 +263,8 @@ class DoubleProperty extends ApiConfigSchemaProperty {
 
 class StringProperty extends ApiConfigSchemaProperty {
 
-  StringProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+  StringProperty._internal(property, repeated, meta, parent)
+      : super._internal(property, repeated, meta, parent) {
     _apiType = 'string';
     _apiFormat = null;
     _apiParameterType = _apiType;
@@ -256,7 +273,8 @@ class StringProperty extends ApiConfigSchemaProperty {
 
 class EnumProperty extends ApiConfigSchemaProperty {
 
-  EnumProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+  EnumProperty._internal(property, repeated, meta, parent)
+      : super._internal(property, repeated, meta, parent) {
     _apiType = 'string';
     _apiFormat = null;
     _apiParameterType = _apiType;
@@ -284,7 +302,8 @@ class EnumProperty extends ApiConfigSchemaProperty {
 
 class BooleanProperty extends ApiConfigSchemaProperty {
 
-  BooleanProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+  BooleanProperty._internal(property, repeated, meta, parent)
+      : super._internal(property, repeated, meta, parent) {
     _apiType = 'boolean';
     _apiFormat = null;
     _apiParameterType = _apiType;
@@ -298,7 +317,8 @@ class BooleanProperty extends ApiConfigSchemaProperty {
 
 class DateTimeProperty extends ApiConfigSchemaProperty {
 
-  DateTimeProperty._internal(property, repeated, meta, parent): super._internal(property, repeated, meta, parent) {
+  DateTimeProperty._internal(property, repeated, meta, parent)
+      : super._internal(property, repeated, meta, parent) {
     _apiType = 'string';
     _apiFormat = 'date-time';
     _apiParameterType = _apiType;
@@ -323,8 +343,10 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 
   ApiConfigSchema _ref;
 
-  SchemaProperty._internal(property, ClassMirror type, repeated, meta, parent, {List<String> fields, String name}): super._internal(property, repeated, meta, parent) {
-    _ref = new ApiConfigSchema(type, parent, fields: fields, name: name);
+  SchemaProperty._internal(
+      property, ClassMirror type, repeated, meta, parent, {String name})
+      : super._internal(property, repeated, meta, parent) {
+    _ref = new ApiConfigSchema(type, parent, name: name);
 
     _apiType = null;
     _apiFormat = null;

@@ -1,3 +1,7 @@
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 part of test_api;
 
 class RecursiveMessage1 {
@@ -40,9 +44,6 @@ class TestMessage1 {
   @ApiProperty(minValue: 10, maxValue: 100)
   int limit;
 
-  @ApiProperty(ignore: true)
-  int ignored;
-
   TestMessage1({this.count});
 }
 
@@ -51,16 +52,16 @@ class TestMessage2 {
 }
 
 class TestMessage3 {
-  @ApiProperty(variant: 'int64')
+  @ApiProperty(format: 'int64')
   int count64;
 
-  @ApiProperty(variant: 'uint64')
+  @ApiProperty(format: 'uint64')
   int count64u;
 
-  @ApiProperty(variant: 'int32')
+  @ApiProperty(format: 'int32')
   int count32;
 
-  @ApiProperty(variant: 'uint32')
+  @ApiProperty(format: 'uint32')
   int count32u;
 }
 

@@ -1,7 +1,12 @@
-part of endpoints.api_config;
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+part of endpoints.config;
 
 final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
-const List<String> _allowedMethods = const ['GET', 'DELETE', 'PUT', 'POST', 'PATCH'];
+const List<String> _allowedMethods =
+    const ['GET', 'DELETE', 'PUT', 'POST', 'PATCH'];
 const List<String> _bodyLessMethods = const ['GET', 'DELETE'];
 
 class ApiConfigMethod {
@@ -16,9 +21,6 @@ class ApiConfigMethod {
   String _description;
   ApiConfigSchema _requestSchema;
   ApiConfigSchema _responseSchema;
-
-  bool _authRequired = false;
-  bool _checkAuth = false;
 
   ApiConfigMethod(MethodMirror mm, String this._apiClass, ApiConfig parent) {
     ApiMethod metadata = mm.metadata.first.reflectee;
@@ -57,11 +59,8 @@ class ApiConfigMethod {
     }
     ClassMirror responseMessage = type;
 
-    if (mm.parameters.length > 2) {
-      throw new ApiConfigError('$_methodName: API Methods can only accept at most one request message and one ApiUser as parameter');
-    }
-    if (mm.parameters.length == 0) {
-      throw new ApiConfigError('$_methodName: ApiMessage request parameter needs to be specified');
+    if (mm.parameters.length != 1) {
+      throw new ApiConfigError('$_methodName: API Methods requires exactly one request message parameter');
     }
     var param = mm.parameters[0];
     if (param.isNamed || param.isOptional) {
@@ -73,33 +72,13 @@ class ApiConfigMethod {
     }
     ClassMirror requestMessage = type;
 
-    if (mm.parameters.length == 2) {
-      var userParam = mm.parameters[1];
-      if (userParam.isNamed) {
-        throw new ApiConfigError('$_methodName: API Method User parameter can\'t be named');
-      }
-      if (userParam.type.reflectedType != ApiUser) {
-        throw new ApiConfigError('$_methodName: Second API Method parameter must be of type ApiUser');
-      }
-      _checkAuth = true;
-      if (!userParam.isOptional) {
-        _authRequired = true;
-      }
-    }
-
     if (requestMessage != null) {
       _requestSchema = new ApiConfigSchema(
-        requestMessage, parent,
-        fields: metadata.requestFields,
-        name: metadata.requestName
-      );
+        requestMessage, parent);
     }
     if (responseMessage != null) {
       _responseSchema = new ApiConfigSchema(
-        responseMessage, parent,
-        fields: metadata.responseFields,
-        name: metadata.responseName
-      );
+        responseMessage, parent);
     }
 
     var pathParams = _pathMatcher.allMatches(_path);
@@ -193,19 +172,13 @@ class ApiConfigMethod {
     return method;
   }
 
-  Future<Map> invoke(InstanceMirror api, Map request, [ApiUser user]) {
+  Future<Map> invoke(InstanceMirror api, Map request) {
     return new Future.sync(() {
       var params = [];
       if (_requestSchema != null && _requestSchema.hasProperties) {
         params.add(_requestSchema.fromRequest(request));
       } else {
         params.add(null);
-      }
-      if (_checkAuth) {
-        if (_authRequired && user == null) {
-          throw new UnauthorizedError("User authentication required.");
-        }
-        params.add(user);
       }
       var response = api.invoke(_symbol, params).reflectee;
       if (response is! Future) {

@@ -1,265 +1,132 @@
-library endpoints.api;
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 
-import 'package:gcloud/db.dart';
-import 'package:appengine/appengine.dart' show context;
+library endpoints.annotations;
 
-const String API_EXPLORER_CLIENT_ID = '292824132082.apps.googleusercontent.com';
-
-/**
- * Use as annotation for your main API class.
- *
- * [name] and [version] are required.
- */
+/// Use as annotation for your main API class.
+///
+/// [version] is required. [name] will default to the camel-case version
+/// of the annotated class name if not specified. The base path of the
+/// api will be /api/[name]/[version].
 class ApiClass {
-  /// Name of the API
+  /// API name.
+  ///
+  /// E.g. 'storage'.
   final String name;
 
-  /// Version of the API
+  /// API version.
   final String version;
 
-  /// Description of the API
-  final String description;
+  /// API title.
+  ///
+  /// E.g. 'Ajax Storage API'.
+  final String title;
 
-  /**
-   * Client IDs that are allowed for authenticated calls to this API
-   *
-   * You can create/manage Client IDs at the
-   * [Google Developers Console](https://console.developers.google.com)
-   */
-  final List<String> allowedClientIds;
+  /// API description.
+  final String description;
 
   const ApiClass({
-    this.name,
-    this.version,
-    this.description,
-    this.allowedClientIds: const []
+      this.name,
+      this.version,
+      this.title,
+      this.description
   });
 }
 
-/**
- * Use as annotation for your API methods inside of the API class.
- *
- * [name] and [path] are required.
- */
-class ApiMethod {
-
-  /**
-   * Name of the method
-   *
-   * Can have `resource.method` format to structure
-   * your API calls in groups
-   */
+/// Use as annotation for your API resources that should be added to a parent
+/// toplevel API class.
+class ApiResource {
+  /// Name of the resource.
+  ///
+  /// Defaults to the camel-case version of the class name if not specified.
   final String name;
 
-  /**
-   * Path where to call the method
-   *
-   * Root path for all calls will be
-   * `https://your-app.appspot.com/_ah/api/your-api-name/your-api-version/`
-   *
-   * Can contain path parameters like `{id}` which have to be part
-   * of the request message class specified in the method parameters
-   */
-  final String path;
-
-  /**
-   * Allowed HTTP method for calling this API method.
-   *
-   * Can be `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
-   *
-   * Defaults to `GET`
-   */
-  final String method;
-
-  /// Description of the method
+  /// Description of the resource API.
   final String description;
 
-  /**
-   * Limit the properties used for requests
-   * to a subset of the available properties
-   * of the request message class.
-   */
-  final List<String> requestFields;
-
-  /**
-   * Overwrite the request message name to be used in the API.
-   *
-   * Especially useful to prevent long/ugly auto-generated
-   * names when using [requestFields]
-   */
-  final String requestName;
-
-  /**
-   * Limit the properties returned by the API Method
-   * to a subset of the available properties
-   * of the response message class.
-   */
-  final List<String> responseFields;
-
-  /**
-   * Overwrite the response message name to be used in the API.
-   *
-   * Especially useful to prevent long/ugly auto-generated
-   * names when using [responseFields]
-   */
-  final String responseName;
-
-  const ApiMethod({
-    this.name,
-    this.path,
-    this.method: 'GET',
-    this.description,
-    this.requestFields: const [],
-    this.requestName,
-    this.responseFields: const [],
-    this.responseName
-  });
+  const ApiResource({this.name, this.description});
 }
 
-/**
- * Optional annotation for parameters inside of API request/response messages.
- */
-class ApiProperty {
-  /// description of the property to be included in the discovery document
+/// Use as annotation for your API methods inside of the API class.
+class ApiMethod {
+
+  /// Name of the method.
+  ///
+  /// Defaults to the camel-case version of the class name if not.
+  final String name;
+
+  /// Path used to route a message to the method.
+  ///
+  /// It is a required field.
+  ///
+  /// The path can contain path parameters like `{id}` which have to be part
+  /// of the request message class specified in the method parameters.
+  final String path;
+
+  /// HTTP method used to call this API method.
+  ///
+  /// Can be `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
+  /// Defaults to `GET`.
+  final String method;
+
+  /// Description of the method.
   final String description;
 
-  /**
-   * Specifies the representation of int and double properties in the backend
-   *
-   * Possible values for int: 'int32' (default), 'uint32', 'int64', 'uint64'
-   *
-   * The 64 bit values will be represented as String in the JSON requests/responses
-   *
-   * Possible values for double: 'double' (default), 'float'
-   */
-  final String variant;
+  const ApiMethod({
+      this.name,
+      this.path,
+      this.method: 'GET',
+      this.description
+  }) ;
+}
 
-  /// Whether the property needs to be supplied for requests
+/// Optional annotation for parameters inside of API request/response messages.
+class ApiProperty {
+  /// description of the property to be included in the discovery document.
+  final String description;
+
+  /// Specifies the representation of int and double properties in the backend.
+  ///
+  /// Possible values for int: 'int32' (default), 'uint32', 'int64', 'uint64'.
+  /// The 64 bit values will be represented as String in the JSON
+  /// requests/responses.
+  ///
+  /// Possible values for double: 'double' (default), 'float'.
+  final String format;
+
+  /// Whether the property is required.
+  ///
+  /// A request without a required property will fail with BadRequestError.
+  /// The generated discovery document will include the required field to
+  /// allow client stub generators to validate the request or response as
+  /// required.
   final bool required;
 
-  /// Default value for this property if it's not supplied in the request
+  /// Default value for this property if it's not supplied.
   final defaultValue;
 
-  /// For int properties: the minimal value allowed in requests
+  /// For int properties: the minimal value.
   final int minValue;
 
-  /// For int properties: the maximal value allowed in requests
+  /// For int properties: the maximal value.
   final int maxValue;
 
-  /**
-   * Possible values for enum properties, as value - description pairs.
-   * Properties using this will have to be String
-   */
+  /// Possible values for enum properties, as value - description pairs.
+  ///  Properties using this will have to be String.
   final Map<String, String> values;
 
-  /// Don't include this property in request/response messages
-  final bool ignore;
-
   const ApiProperty({
-    this.description,
-    this.variant,
-    this.required: false,
-    this.defaultValue,
-    this.minValue,
-    this.maxValue,
-    this.values,
-    this.ignore: false}
+      this.description,
+      this.format,
+      this.required: false,
+      this.defaultValue,
+      this.minValue,
+      this.maxValue,
+      this.values}
   );
 }
 
-/**
- * Special API Message to use when a method
- * doesn't need a request or doesn't return a response
- */
+/// Special API Message to use when a method doesn't need a request or doesn't
+/// return a response.
 class VoidMessage {}
-
-/**
- * Special API Message to use when returning
- * a list of other API messages
- *
- * Schema will be called {T-Name}List or {responseName}List
- * if provided in the @ApiMethod annotation
- *
- * [responseFields] from @ApiMethod will apply to the items in the List
- */
-class ListResponse<T> {
-
-  /// List of items to be returned in the API
-  List<T> items;
-
-  ListResponse([this.items]) {
-    if (items == null) {
-      items = new List<T>();
-    }
-  }
-
-  /// Add a new item to the response
-  void add(T item) {
-    if (items == null) {
-      items = new List<T>();
-    }
-    items.add(item);
-  }
-}
-
-/**
- * Special API Message to use when requesting
- * a list of other API messages
- *
- * Schema will be called {T-Name}ListRequest unless given another name
- * in the @ApiMethod annotation
- */
-class ListRequest<T> {
-  @ApiProperty(
-    description: 'Number of items to return in one request',
-    variant: 'int32',
-    defaultValue: 20
-  )
-  int limit;
-
-  @ApiProperty(
-    description: 'Offset for paging through results'
-  )
-  int offset;
-
-  @ApiProperty(
-    description: 'Define property name for sorting, prefix with - for descending order'
-  )
-  String order;
-
-  /**
-   * Returns a datastore query with the provided parameters
-   *
-   * Will throw if T is not a datastore model
-   */
-  Query get query {
-    var db = context.services.db;
-    Query q = db.query(T);
-    if (limit != null) {
-      q.limit(limit);
-    }
-    if (offset != null) {
-      q.offset(offset);
-    }
-    if (order != null) {
-      q.order(order);
-    }
-    return q;
-  }
-}
-
-/**
- * Currently authenticated user.
- *
- * `email` is only available if the email-scope was
- * included during authentication.
- */
-class ApiUser {
-  /// Google ID of the user.
-  final String id;
-
-  /// Primary email address of the user
-  final String email;
-
-  ApiUser(this.id, this.email);
-}

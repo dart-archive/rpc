@@ -1,3 +1,7 @@
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 library test_api;
 
 import 'dart:async';
@@ -81,26 +85,6 @@ class CorrectMethods {
 
   @ApiMethod(name: 'test3', path: 'test3')
   TestMessage1 method3(TestMessage1 request) {
-    return new TestMessage1();
-  }
-
-  @ApiMethod(name: 'test4', path: 'test4')
-  TestMessage1 method4(TestMessage1 request, [ApiUser user]) {
-    return new TestMessage1();
-  }
-
-  @ApiMethod(name: 'test5', path: 'test5')
-  TestMessage1 method5(TestMessage1 request, ApiUser user) {
-    return new TestMessage1();
-  }
-
-  @ApiMethod(name: 'test6', path: 'test6')
-  TestMessage1 method6(VoidMessage _, ApiUser user) {
-    return new TestMessage1();
-  }
-
-  @ApiMethod(name: 'test7', path: 'test7')
-  TestMessage1 method7(VoidMessage _, [ApiUser user]) {
     return new TestMessage1();
   }
 

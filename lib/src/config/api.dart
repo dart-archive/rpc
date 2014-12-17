@@ -1,4 +1,8 @@
-part of endpoints.api_config;
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+part of endpoints.config;
 
 class ApiConfig {
 
@@ -9,7 +13,6 @@ class ApiConfig {
   String _version;
   String _description;
   String _apiClassName;
-  List<String> _clientIds = [];
 
   List<ApiConfigError> _errors = [];
   Map<String, ApiConfigMethod> _methodMap = {};
@@ -31,7 +34,6 @@ class ApiConfig {
     _name = metaData.name;
     _version = metaData.version;
     _description = metaData.description;
-    _clientIds = metaData.allowedClientIds;
 
     if (_name == null || _name == '') {
       _errors.add(new ApiConfigError('ApiClass.name is required'));
@@ -76,12 +78,11 @@ class ApiConfig {
 
   String get errors => '$_apiClassName:\n' + _errors.join('\n');
 
-  List<String> get clientIds => _clientIds;
 
   bool canHandleCall(String method) => _methodMap.containsKey(method);
 
-  Future<Map> handleCall(String method, Map request, [ApiUser user]) {
-    return _methodMap[method].invoke(_api, request, user);
+  Future<Map> handleCall(String method, Map request) {
+    return _methodMap[method].invoke(_api, request);
   }
 
   Map toJson([String root = 'localhost:8080']) {

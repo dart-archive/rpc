@@ -1,92 +1,64 @@
-part of endpoints.api_config;
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+part of endpoints.config;
 
 String _capitalize(String string) => "${string.substring(0,1).toUpperCase()}${string.substring(1)}";
 
 class ApiConfigSchema {
-  ClassMirror _schemaClass;
-  String _schemaName;
-  String _autoName;
+  final String schemaName;
+  final ClassMirror _schemaClass;
+  final String _autoName;
   Map<Symbol, ApiConfigSchemaProperty> _properties = {};
 
-  factory ApiConfigSchema(ClassMirror schemaClass, ApiConfig parent, {List<String> fields: const [], String name}) {
+  factory ApiConfigSchema(ClassMirror schemaClass,
+                          ApiConfig api,
+                          {String name}) {
     var autoName = MirrorSystem.getName(schemaClass.simpleName);
-
-    if (schemaClass.isSubtypeOf(reflectType(ListResponse)) || schemaClass.isSubtypeOf(reflectType(ListRequest))) {
-      var types = schemaClass.typeArguments;
-      if (types.length != 1 || types[0].simpleName == #dynamic) {
-        throw new ApiConfigError('${autoName}: ListResponse/ListRequest must specify exactly one type parameter');
-      }
-      var type = types[0];
-      autoName = MirrorSystem.getName(type.simpleName);
-    }
-
-    // TODO: better way to create a SchemaName?
-    if (fields != null && fields.length > 0) {
-      fields = fields.toList();
-      fields.sort();
-      autoName = autoName + fields.map((field) => _capitalize(field)).join('');
-    } else {
-      fields = [];
-    }
-
     var schemaName = autoName;
-    if (name != null && name != '') {
+    if (name != null && name.isNotEmpty) {
       schemaName = name;
     }
 
-    if (schemaClass.isSubtypeOf(reflectType(ListResponse))) {
-      autoName += "List";
-      schemaName += "List";
-    }
-    if (schemaClass.isSubtypeOf(reflectType(ListRequest))) {
-      autoName += "ListRequest";
-      schemaName += "ListRequest";
-    }
-
-    var schema = parent._getSchema(schemaName);
+    var schema = api._getSchema(schemaName);
     if (schema == null) {
-      if (schemaClass.isSubtypeOf(reflectType(ListResponse))) {
-        schema = new ListResponseSchema._internal(schemaClass, schemaName, autoName, fields, name, parent);
-      } else {
-        schema = new ApiConfigSchema._internal(schemaClass, schemaName, autoName, fields, name, parent);
-      }
+      schema = new ApiConfigSchema._internal(
+          schemaClass, schemaName, autoName, api);
     } else {
       if (schema._autoName != autoName) {
-        throw new ApiConfigError('${schemaName} can\'t have two different sets of properties');
+        throw new ApiConfigError('$schemaName cannot have two different sets '
+                                 'of properties.');
       }
     }
 
     return schema;
   }
 
-  ApiConfigSchema._internal(this._schemaClass, this._schemaName, this._autoName, List<String> fields, String name, ApiConfig parent) {
+  ApiConfigSchema._internal(this._schemaClass, this.schemaName,
+                            this._autoName, ApiConfig api) {
     var methods = _schemaClass.declarations.values.where(
       (mm) => mm is MethodMirror && mm.isConstructor
     );
-    if (!methods.isEmpty && methods.where((mm) => mm.simpleName == _schemaClass.simpleName).isEmpty) {
-      throw new ApiConfigError('${schemaName} needs to have an unnamed constructor');
+    if (!methods.isEmpty && methods.where(
+        (mm) => mm.simpleName == _schemaClass.simpleName).isEmpty) {
+      throw new ApiConfigError('$schemaName needs to have an unnamed '
+                               'constructor.');
     }
 
-    parent._addSchema(_schemaName, this);
+    api._addSchema(schemaName, this);
 
-    _createProperties(fields, name, parent);
+    _createProperties(api);
   }
 
-  void _createProperties(List<String> fields, String name, ApiConfig parent) {
+  void _createProperties(ApiConfig api) {
     var properties = _schemaClass.declarations.values.where(
       (dm) => dm is VariableMirror &&
               !dm.isConst && !dm.isFinal && !dm.isPrivate && !dm.isStatic
     );
 
-    if (fields != null && fields.length > 0) {
-      var symbolFields = fields.map((field) => new Symbol(field)).toList();
-      properties = properties.where(
-        (VariableMirror vm) => symbolFields.contains(vm.simpleName)
-      );
-    }
-
     properties.forEach((VariableMirror vm) {
-      var prop = new ApiConfigSchemaProperty(vm, parent);
+      var prop = new ApiConfigSchemaProperty(vm, api);
       if (prop != null) {
         _properties[vm.simpleName] = prop;
       }
@@ -110,7 +82,8 @@ class ApiConfigSchema {
     return property._ref.hasSimpleProperty(path);
   }
 
-  Map getParameter(List<String> path, {bool repeated: false, bool required: true}) {
+  Map getParameter(List<String> path,
+                   {bool repeated: false, bool required: true}) {
     var property = _properties[new Symbol(path[0])];
     if (path.length == 1) {
       var param = property.parameter;
@@ -131,8 +104,6 @@ class ApiConfigSchema {
     );
   }
 
-  String get schemaName => _schemaName;
-
   Map get descriptor {
     var descriptor = {};
     descriptor['id'] = schemaName;
@@ -146,7 +117,8 @@ class ApiConfigSchema {
     return descriptor;
   }
 
-  Map<String, Map> getParameters({String prefix: '', bool repeated: false, bool required: true}) {
+  Map<String, Map> getParameters(
+      {String prefix: '', bool repeated: false, bool required: true}) {
     var parameters = {};
     _properties.values.forEach((property) {
       if (property is! SchemaProperty) {
@@ -169,35 +141,38 @@ class ApiConfigSchema {
   }
 
   fromRequest(Map request) {
-    InstanceMirror api = _schemaClass.newInstance(new Symbol(''), []);
-    request.forEach((name, value) {
-      if (value != null) {
-        var sym = new Symbol(name);
-        var prop = _properties[sym];
-        if (prop != null) {
-          api.setField(sym, prop.fromRequest(value));
+    InstanceMirror schema = _schemaClass.newInstance(new Symbol(''), []);
+    if (request != null) {
+      request.forEach((name, value) {
+        if (value != null) {
+          var sym = new Symbol(name);
+          var prop = _properties[sym];
+          if (prop != null) {
+            schema.setField(sym, prop.fromRequest(value));
+          }
         }
-      }
-    });
+      });
+    }
     // Check required/default
     _properties.forEach((sym, prop) {
       if (prop.required || prop.hasDefault) {
-        var value = api.getField(sym);
+        var value = schema.getField(sym);
         if (value.hasReflectee) {
           value = value.reflectee;
         }
         if (value == null) {
           if (prop.hasDefault) {
-            api.setField(sym, prop.defaultValue);
+            schema.setField(sym, prop.defaultValue);
             return;
           }
           if (prop.required) {
-            throw new BadRequestError('Required field ${prop.propertyName} is missing');
+            throw new BadRequestError(
+                'Required field ${prop.propertyName} is missing');
           }
         }
       }
     });
-    return api.reflectee;
+    return schema.reflectee;
   }
 
   Map toResponse(message) {
@@ -210,24 +185,5 @@ class ApiConfigSchema {
       }
     });
     return response;
-  }
-}
-
-class ListResponseSchema extends ApiConfigSchema {
-
-  ListResponseSchema._internal(schemaClass, schemaName, autoName, fields, name, parent) :
-    super._internal(schemaClass, schemaName, autoName, fields, name, parent);
-
-  void _createProperties(List<String> fields, String name, ApiConfig parent) {
-    // TODO: call super for other properties if ListResponse is extended
-
-    VariableMirror items = _schemaClass.declarations.values.firstWhere(
-      (dm) => dm is VariableMirror && dm.simpleName == #items
-    );
-
-    var prop = new ApiConfigSchemaProperty(items, parent, fields: fields, name: name);
-    if (prop != null) {
-      _properties[#items] = prop;
-    }
   }
 }
