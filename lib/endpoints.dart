@@ -1,5 +1,5 @@
 library endpoints;
 
-export 'src/api_server.dart';
-export 'src/api.dart';
+export 'src/server.dart';
+export 'src/annotations.dart';
 export 'src/errors.dart';

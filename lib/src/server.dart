@@ -1,15 +1,15 @@
 library endpoints.api_server;
 
-import 'errors.dart';
-import 'auth.dart';
-import 'api_config.dart';
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:appengine/appengine.dart';
 import 'package:shelf/shelf.dart';
+
+import 'errors.dart';
+import 'config.dart';
+
 
 const _logLevelMap = const {
   'debug': LogLevel.DEBUG,
@@ -101,31 +101,18 @@ class ApiServer {
     }
 
     Completer completer = new Completer();
-
-    checkAuth(authHeader, api.clientIds)
-      .then((user) {
-        api.handleCall(method, request, user)
-          .then((response) {
-            completer.complete(response);
-          })
-          .catchError((e) {
-            if (e is EndpointsError) {
-              completer.completeError(e);
-            } else {
-              completer.completeError(new InternalServerError('Unknown API Error: $e'));
-            }
-            return true;
-          });
+    api.handleCall(method, request, null)
+      .then((response) {
+        completer.complete(response);
       })
       .catchError((e) {
         if (e is EndpointsError) {
           completer.completeError(e);
         } else {
-          completer.completeError(new InternalServerError('Unknown User Authentication Error: $e'));
+          completer.completeError(new InternalServerError('Unknown API Error: $e'));
         }
         return true;
       });
-
     return completer.future;
   }
 
