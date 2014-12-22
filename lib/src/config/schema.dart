@@ -23,8 +23,7 @@ class ApiConfigSchema {
 
     var schema = api._getSchema(schemaName);
     if (schema == null) {
-      schema = new ApiConfigSchema._internal(
-          schemaClass, schemaName, autoName, api);
+      schema = new ApiConfigSchema._(schemaClass, schemaName, autoName, api);
     } else {
       if (schema._autoName != autoName) {
         throw new ApiConfigError('$schemaName cannot have two different sets '
@@ -35,8 +34,8 @@ class ApiConfigSchema {
     return schema;
   }
 
-  ApiConfigSchema._internal(this._schemaClass, this.schemaName,
-                            this._autoName, ApiConfig api) {
+  ApiConfigSchema._(this._schemaClass, this.schemaName,
+                    this._autoName, ApiConfig api) {
     var methods = _schemaClass.declarations.values.where(
       (mm) => mm is MethodMirror && mm.isConstructor
     );
@@ -46,7 +45,7 @@ class ApiConfigSchema {
                                'constructor.');
     }
 
-    api._addSchema(schemaName, this);
+    api.addSchema(schemaName, this);
 
     _createProperties(api);
   }

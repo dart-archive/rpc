@@ -2,210 +2,90 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library endpoints.api_server;
-
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:appengine/appengine.dart';
-import 'package:shelf/shelf.dart';
+library endpoints.server;
 
 import 'errors.dart';
 import 'config.dart';
 
+import 'dart:async';
+import 'dart:convert';
 
-const _logLevelMap = const {
-  'debug': LogLevel.DEBUG,
-  'info': LogLevel.INFO,
-  'warning': LogLevel.WARNING,
-  'error': LogLevel.ERROR,
-  'criticial': LogLevel.CRITICAL
-};
+final JsonEncoder _encoder = new JsonEncoder.withIndent(' ');
 
-
-/**
- * The main class for handling all API requests
- *
- * To initialize add instances of your API Classes via `addApi` and then
- * forward all `/_ah/spi/` requests to the `handleRequest` method.
- */
+/// The main class for handling all API requests.
 class ApiServer {
 
-  List<ApiConfig> _apis = [];
+  Map<String, ApiConfig> _apis = {};
 
-  static final _cascadeResponse = new Response(501);
+  /// Add a new api to the API server.
+  void addApi(api) {
+    var apiConfig = new ApiConfig(api);
+    if (_apis.containsKey(apiConfig.apiPath)) {
+      apiConfig.addError(new ApiConfigError('${apiConfig.id} API path: '
+          '${apiConfig.apiPath} already in use.'));
+    }
+    if (!apiConfig.isValid) {
+      throw new ApiConfigError('Endpoints: Failed to parse API RPC '
+                               'annotations.\n\n${apiConfig.errors}\n');
+    }
+    _apis[apiConfig.apiPath] = apiConfig;
+  }
 
-  /**
-   * 501 response that can be returned from shelf handler
-   * to trigger cascading
-   */
-  static Response get cascadeResponse => _cascadeResponse;
-
-  Future<Map> _handler(String method, String request, String authHeader) {
-    var jsonRequest;
-    try {
-      jsonRequest = JSON.decode(request);
-    } on FormatException catch (e) {
+  /// Handles the api call.
+  ///
+  /// It looks up the corresponding api and call the api instance to
+  /// further dispatch to the correct method call.
+  Future<Map> handleCall(String httpMethod,
+                         String apiCallPath,
+                         Map queryParams,
+                         Map requestBody) {
+    // The api key is the first two path segments of the apiCallPath.
+    // apiCallPath must be of the form:
+    //   <apiName>/<apiVersion>/<method|resourceName>[/...].
+    List<String> pathSegments = apiCallPath.split('/');
+    if (pathSegments.length < 3) {
+      return new Future.error(new NotFoundError('Invalid request, missing API '
+          'name and version: $apiCallPath.'));
+    }
+    var apiKey = '${pathSegments[0]}/${pathSegments[1]}';
+    ApiConfig api = _apis[apiKey];
+    if (api == null || !api.isValid) {
       return new Future.error(
-        new BadRequestError('Request data couldn\'t be decoded: $e')
-      );
+          new NotFoundError('No valid API endpoint for this request'));
     }
-    if (method == 'BackendService.getApiConfigs') {
-      return _getApiConfigs(jsonRequest);
-    }
-    if (method == 'BackendService.logMessages') {
-      return _logMessages(jsonRequest);
-    }
-
-    return _executeApiMethod(method, jsonRequest, authHeader);
-  }
-
-  Future<Map> _getApiConfigs(Map request) {
-    context.services.logging.debug('getApiConfigs request: $request');
-    // TODO: check app revision in request
-
-    return context.services.modules.hostname().then((root) {
-      // TODO:
-      // need to consider cases where API is running in module
-      // which would need two -dot- replacements for HTTPS-safe root
-      root = root.replaceFirst('.', '-dot-');
-      var configs = new List<String>();
-      _apis.forEach((apiInfo) {
-        if (apiInfo.isValid) {
-          configs.add(apiInfo.toString(root));
-        } else {
-          context.services.logging.error(apiInfo.errors);
-        }
-      });
-      return {'items': configs};
-    });
-  }
-
-  Future<Map> _logMessages(Map request) {
-    context.services.logging.debug('logMessages request: $request');
-
-    List messages = request['messages'];
-    messages.forEach((Map message) {
-      context.services.logging.log(_logLevelMap[message['level']], message['message']);
-    });
-    return new Future.value({});
-  }
-
-  Future<Map> _executeApiMethod(String method, Map request, String authHeader) {
-    ApiConfig api = null;
-    for (var a in _apis) {
-      if (a.isValid && a.canHandleCall(method)) {
-        api = a;
-        break;
-      }
-    }
-    if (api == null) {
-      return new Future.error(new NotFoundError('No configured API can handle this request'));
-    }
-
     Completer completer = new Completer();
-    api.handleCall(method, request)
-      .then((response) {
-        completer.complete(response);
-      })
-      .catchError((e) {
-        if (e is EndpointsError) {
-          completer.completeError(e);
-        } else {
-          completer.completeError(new InternalServerError('Unknown API Error: $e'));
-        }
-        return true;
-      });
-    return completer.future;
-  }
-
-  /**
-   * A shelf handler which can be added to shelf cascades
-   *
-   * Will return a 501 response (instead of the default 404)
-   * when it can't handle the request.
-   */
-  Handler get handler => (Request request) {
-    if (!request.url.path.startsWith('/_ah/spi/')) {
-      return _cascadeResponse;
-    }
-    if (request.method != 'POST') {
-      return new Response(405, body: 'Method not allowed');
-    }
-
-    Completer completer = new Completer();
-    request.readAsString().then((value) {
-      _handler(request.url.pathSegments.last, value, request.headers['Authorization'])
-        .then((response) {
-          completer.complete(
-            new Response.ok(
-              JSON.encode(response),
-              headers: {'Content-Type' : 'application/json'}
-            )
-          );
-        })
+    var methodPath = apiCallPath.substring(apiKey.length + 1);
+    api.handleCall(httpMethod, methodPath, queryParams, requestBody)
+        .then((response) => completer.complete(response))
         .catchError((e) {
           if (e is EndpointsError) {
-            completer.complete(e.response);
+            completer.completeError(e);
           } else {
-            completer.complete(new InternalServerError('Unknown API Error: $e').response);
+            completer.completeError(
+                new InternalServerError('Unknown API Error: $e'));
           }
+          return true;
         });
-    });
-
     return completer.future;
-  };
-
-  /**
-   * Handle incoming HttpRequests.
-   *
-   * Should only be used for /_ah/spi/ request paths
-   */
-  void handleRequest(HttpRequest request) {
-    if (!request.uri.path.startsWith('/_ah/spi')) {
-      request.drain().then((_) => _errorResponse(request.response, 501, 'Not Implemented'));
-      return;
-    }
-    if (request.method != 'POST') {
-      request.drain().then((_) => _errorResponse(request.response, 405, 'Method Not Allowed'));
-      return;
-    }
-    request.transform(UTF8.decoder).join('').then((String data) {
-      _handler(request.uri.pathSegments.last, data, request.headers.value('Authorization'))
-        .then((response) {
-          _jsonResponse(request.response, 200, response);
-        })
-        .catchError((e) {
-          if (e is! EndpointsError) {
-            e = new InternalServerError('Unknown API Error: $e');
-          }
-          _jsonResponse(request.response, e.code, e.toJson());
-        });
-    });
   }
 
-  void _jsonResponse(HttpResponse response, int code, Map json) {
-    var data = UTF8.encode(JSON.encode(json));
-    response.headers.contentType = new ContentType('application', 'json');
-    response.statusCode = code;
-    response.contentLength = data.length;
-    response.add(data);
-    response.close();
+  /// Returns a map of all discovery documents available at this api server.
+  Map<String, String> getAllDiscoveryDocuments(
+      [String apiPathPrefix = '',
+       String root = 'http://localhost:8080/']) {
+    Map docs = {};
+    _apis.forEach(
+        (apiPath, api) =>
+            docs[apiPath] = _encoder.convert(api.toJson(root, apiPathPrefix)));
+    return docs;
   }
 
-  void _errorResponse(HttpResponse response, int code, String message) {
-    var data = UTF8.encode(message);
-    response.headers.contentType =
-      new ContentType('text', 'plain', charset: 'charset=utf-8');
-    response.statusCode = code;
-    response.contentLength = data.length;
-    response.add(data);
-    response.close();
-  }
-
-  /// Add a new api implementation to the API server
-  void addApi(api) {
-    _apis.add(new ApiConfig(api));
+  /// Returns the discovery document matching the given key.
+  String getDiscoveryDocument(String apiKey,
+                              [String apiPathPrefix = '',
+                               String root = 'http://localhost:8080/']) {
+    var api = _apis[apiKey];
+    if (api != null) return _encoder.convert(api.toJson(root, apiPathPrefix));
+    return null;
   }
 }

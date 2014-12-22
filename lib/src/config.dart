@@ -5,16 +5,18 @@
 library endpoints.config;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:mirrors';
-import 'dart:convert' show JSON;
+import 'package:crypto/crypto.dart';
+import 'package:uri/uri.dart';
 
 import 'annotations.dart';
 import 'errors.dart';
 
 part 'config/api.dart';
 part 'config/method.dart';
-part 'config/schema.dart';
 part 'config/property.dart';
+part 'config/schema.dart';
 
 
 class ApiConfigError extends Error {

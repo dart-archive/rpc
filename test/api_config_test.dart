@@ -14,11 +14,32 @@ import 'src/test_api.dart';
 
 main () {
   group('api_config_misconfig', () {
-    List _misconfig_apis = [new Misconfig1(), new Misconfig2(), new Misconfig3(), new Misconfig4()];
-    _misconfig_apis.forEach((api) {
+    test('no_apiclass_annotation', () {
+      expect(
+        () => new ApiConfig(new NoAnnotation()),
+        throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
+      );
+    });
+    List _noversion_apis = [new NoVersion1(), new NoVersion2()];
+    _noversion_apis.forEach((api) {
       test(api.runtimeType.toString(), () {
         var api_config = new ApiConfig(api);
         expect(api_config.isValid, false);
+      });
+    });
+    List ambiguous_paths = [new AmbiguousMethodPaths1(),
+                            new AmbiguousMethodPaths2(),
+                            new AmbiguousMethodPaths3(),
+                            new AmbiguousMethodPaths4(),
+                            new AmbiguousMethodPaths5(),
+                            new AmbiguousMethodPaths6(),
+                            new AmbiguousMethodPaths7()];
+    ambiguous_paths.forEach((ambiguous) {
+      test(ambiguous.toString(), () {
+        var api_config = new ApiConfig(ambiguous);
+        expect(api_config.isValid, false);
+        var config = api_config.toJson('rootUrl/');
+        expect(config['version'], 'test');
       });
     });
   });
@@ -27,16 +48,16 @@ main () {
     test('correct_simple', () {
       var api_config = new ApiConfig(new Tester());
       expect(api_config.isValid, true);
-      expect(api_config.toJson()['name'], 'Tester');
-      expect(api_config.toJson()['version'], 'v1test');
+      expect(api_config.toJson('rootUrl/')['name'], 'Tester');
+      expect(api_config.toJson('rootUrl/')['version'], 'v1test');
     });
     test('correct_extended', () {
       var api_config = new ApiConfig(new CorrectMethods());
       expect(api_config.isValid, true);
-      var config = api_config.toJson();
+      var config = api_config.toJson('rootUrl/');
       expect(config['name'], 'correct');
       expect(config['version'], 'v1');
-      expect(config['methods'].keys.length, 7);
+      expect(config['methods'].keys.length, 13);
     });
   });
 
@@ -52,8 +73,10 @@ main () {
                 dm.metadata.first.reflectee.runtimeType == ApiMethod
       );
       methods.forEach((MethodMirror mm) {
+        var metadata = mm.metadata.first.reflectee;
+        expect(metadata.runtimeType, ApiMethod);
         expect(
-          () => new ApiConfigMethod(mm, 'Test', tester),
+          () => new ApiConfigMethod(mm, metadata, tester, reflect(tester)),
           throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
         );
       });
@@ -69,8 +92,10 @@ main () {
                 dm.metadata.first.reflectee.runtimeType == ApiMethod
       );
       methods.forEach((MethodMirror mm) {
+        var metadata = mm.metadata.first.reflectee;
+        expect(metadata.runtimeType, ApiMethod);
         expect(
-          () => new ApiConfigMethod(mm, 'Test', tester),
+          () => new ApiConfigMethod(mm, metadata, tester, reflect(tester)),
           throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
         );
       });
@@ -86,7 +111,11 @@ main () {
                 dm.metadata.first.reflectee.runtimeType == ApiMethod
       );
       methods.forEach((MethodMirror mm) {
-        expect(() => new ApiConfigMethod(mm, 'Test', tester), returnsNormally);
+        var metadata = mm.metadata.first.reflectee;
+        expect(metadata.runtimeType, ApiMethod);
+        expect(
+            () => new ApiConfigMethod(mm, metadata, tester, reflect(tester)),
+            returnsNormally);
       });
     });
   });
@@ -107,11 +136,9 @@ main () {
 
       test('double_name1', () {
         var tester = new ApiConfig(new Tester());
-        new ApiConfigSchema(
-            reflectClass(TestMessage1), tester, name: 'MyMessage');
+        new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
         expect(
-          () => new ApiConfigSchema(
-              reflectClass(TestMessage2), tester, name: 'MyMessage'),
+          () => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"),
           throwsA(new isInstanceOf<ApiConfigError>())
         );
       });
@@ -140,8 +167,7 @@ main () {
     test('variants', () {
       var tester = new ApiConfig(new Tester());
       var message = new ApiConfigSchema(reflectClass(TestMessage3), tester);
-      var instance = message.fromRequest(
-          {'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
+      var instance = message.fromRequest({'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
       expect(instance.count32, 1);
       expect(instance.count32u, 2);
       expect(instance.count64, 3);
