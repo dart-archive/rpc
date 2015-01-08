@@ -26,14 +26,15 @@ class ApiConfigMethod {
 
   factory ApiConfigMethod(MethodMirror mm,
                           ApiMethod metadata,
+                          String parentId,
                           ApiConfig api,
                           InstanceMirror instance) {
-    var id = '${api.id}.' + MirrorSystem.getName(mm.simpleName);
+    var id = '$parentId.' + MirrorSystem.getName(mm.simpleName);
     var name = metadata.name;
     if (name == null || name.isEmpty) {
-      // Default name to class name with lowercase first letter.
+      // Default name is class name with lowercase first letter.
       var className = MirrorSystem.getName(mm.simpleName);
-      name = className.substring(0, 1).toLowerCase() + className.substring(1);
+      name = camelCaseName(className);
     }
     if (metadata.path == null || metadata.path.isEmpty) {
       throw new ApiConfigError('$id: ApiMethod.path field is required.');
@@ -213,7 +214,7 @@ class ApiConfigMethod {
     return _parser.match(methodPath);
   }
 
-  Map get toJson {
+  Map get asJson {
     Map json = {
       'id': id,
       'path': path,

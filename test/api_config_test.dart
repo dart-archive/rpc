@@ -14,59 +14,256 @@ import 'src/test_api.dart';
 
 main () {
   group('api_config_misconfig', () {
+
     test('no_apiclass_annotation', () {
       expect(
         () => new ApiConfig(new NoAnnotation()),
         throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
       );
     });
-    List _noversion_apis = [new NoVersion1(), new NoVersion2()];
-    _noversion_apis.forEach((api) {
+
+    List _noversionApis = [new NoVersion1(), new NoVersion2()];
+    _noversionApis.forEach((api) {
       test(api.runtimeType.toString(), () {
-        var api_config = new ApiConfig(api);
-        expect(api_config.isValid, false);
+        var apiConfig = new ApiConfig(api);
+        expect(apiConfig.isValid, isFalse);
       });
     });
-    List ambiguous_paths = [new AmbiguousMethodPaths1(),
-                            new AmbiguousMethodPaths2(),
-                            new AmbiguousMethodPaths3(),
-                            new AmbiguousMethodPaths4(),
-                            new AmbiguousMethodPaths5(),
-                            new AmbiguousMethodPaths6(),
-                            new AmbiguousMethodPaths7()];
-    ambiguous_paths.forEach((ambiguous) {
+
+    List ambiguousPaths = [new AmbiguousMethodPaths1(),
+                           new AmbiguousMethodPaths2(),
+                           new AmbiguousMethodPaths3(),
+                           new AmbiguousMethodPaths4(),
+                           new AmbiguousMethodPaths5(),
+                           new AmbiguousMethodPaths6(),
+                           new AmbiguousMethodPaths7()];
+    ambiguousPaths.forEach((ambiguous) {
       test(ambiguous.toString(), () {
-        var api_config = new ApiConfig(ambiguous);
-        expect(api_config.isValid, false);
-        var config = api_config.toJson('rootUrl/');
+        var apiConfig = new ApiConfig(ambiguous);
+        expect(apiConfig.isValid, isFalse);
+        var config = apiConfig.toJson('rootUrl/');
         expect(config['version'], 'test');
       });
     });
   });
 
   group('api_config_correct', () {
+
     test('correct_simple', () {
-      var api_config = new ApiConfig(new Tester());
-      expect(api_config.isValid, true);
-      expect(api_config.toJson('rootUrl/')['name'], 'Tester');
-      expect(api_config.toJson('rootUrl/')['version'], 'v1test');
+      var apiConfig = new ApiConfig(new Tester());
+      expect(apiConfig.isValid, isTrue);
+      Map expectedJson = {
+        'kind': 'discovery#restDescription',
+        'etag': '9a0bdcd569d244abfc83d507ea2e78031d5c7db9',
+        'discoveryVersion': 'v1',
+        'id': 'Tester:v1test',
+        'name': 'Tester',
+        'version': 'v1test',
+        'revision': '0',
+        'title': 'Tester',
+        'description': '',
+        'protocol': 'rest',
+        'baseUrl': 'http://localhost:8080/Tester/v1test/',
+        'basePath': '/Tester/v1test/',
+        'rootUrl': 'http://localhost:8080/',
+        'servicePath': 'Tester/v1test/',
+        'parameters': {},
+        'schemas': {},
+        'methods': {},
+        'resources': {}
+      };
+      var json = apiConfig.toJson('http://localhost:8080/');
+      expect(json, expectedJson);
     });
+
+    test('correct_simple2', () {
+      var apiConfig = new ApiConfig(new CorrectSimple());
+      expect(apiConfig.isValid, isTrue);
+      Map expectedSchemas = {
+        'TestMessage1': {
+          'id': 'TestMessage1',
+          'type': 'object',
+          'properties': {
+            'count': {'type': 'integer', 'format': 'int32'},
+            'message': {'type': 'string'},
+            'value': {'type': 'number', 'format': 'double'},
+            'check': {'type': 'boolean'},
+            'date': {'type': 'string', 'format': 'date-time'},
+            'messages': {'type': 'array', 'items': {'type': 'string'}},
+            'submessage': {'\$ref': 'TestMessage2'},
+            'submessages':
+                {'type': 'array', 'items': {'\$ref': 'TestMessage2'}},
+            'enumValue': {'type': 'string'},
+            'defaultValue':
+                {'type': 'integer', 'format': 'int32', 'default': 10},
+            'limit': {'type': 'integer', 'format': 'int32'}
+          }
+        },
+        'TestMessage2': {
+          'id': 'TestMessage2',
+          'type': 'object',
+          'properties': {'count': {'type': 'integer', 'format': 'int32'}}
+        }
+      };
+      Map expectedMethods = {
+        'simple1': {
+          'id': 'CorrectSimple.simple1',
+          'path': 'test1/{path}',
+          'httpMethod': 'GET',
+          'description': null,
+          'parameters': {
+            'path': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'path\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['path']
+        },
+        'simple2': {
+          'id': 'CorrectSimple.simple2',
+          'path': 'test2',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': [],
+          'request': {'\$ref': 'TestMessage1'},
+          'response': {'\$ref': 'TestMessage1'}
+        }
+      };
+      var json = apiConfig.toJson('http://localhost:8080/');
+      expect(json['schemas'], expectedSchemas);
+      expect(json['methods'], expectedMethods);
+    });
+
     test('correct_extended', () {
-      var api_config = new ApiConfig(new CorrectMethods());
-      expect(api_config.isValid, true);
-      var config = api_config.toJson('rootUrl/');
+      var apiConfig = new ApiConfig(new CorrectMethods());
+      expect(apiConfig.isValid, isTrue);
+      var config = apiConfig.toJson('rootUrl/');
       expect(config['name'], 'correct');
       expect(config['version'], 'v1');
+      expect(config['schemas'].keys.length, 2);
       expect(config['methods'].keys.length, 13);
     });
   });
 
+  group('api_config_resources_misconfig', () {
+
+    test('multiple_method_annotations', () {
+      var tester = new ApiConfig(new Tester());
+      var resource = new MultipleResourceMethodAnnotations();
+      var resourceMirror = reflect(resource);
+      new ApiConfigResource(resourceMirror, null, 'multiMethodAnnotations',
+                            tester);
+      expect(tester.isValid, isFalse);
+    });
+
+    test('multiple_resource_annotations', () {
+      var tester = new ApiConfig(new TesterWithMultipleResourceAnnotations());
+      expect(tester.isValid, isFalse);
+    });
+
+    test('duplicate_resources', () {
+      var tester = new ApiConfig(new TesterWithDuplicateResourceNames());
+      expect(tester.isValid, isFalse);
+    });
+  });
+
+  group('api_config_resources_correct', () {
+
+    test('simple', () {
+      var tester = new ApiConfig(new TesterWithOneResource());
+      expect(tester.isValid, isTrue);
+      var json = tester.toJson('http://localhost:8080/');
+      Map expectedResources = {
+        'someResource': {
+          'methods': {
+            'method1': {
+              'id': 'SomeResource.method1',
+              'path': 'someResourceMethod',
+              'httpMethod': 'GET',
+              'description': null,
+              'parameters': {},
+              'parameterOrder': []
+            }
+          },
+          'resources': {}
+        }
+      };
+      expect(json['resources'], expectedResources);
+    });
+
+    test('two_resources', () {
+      var tester = new ApiConfig(new TesterWithTwoResources());
+      expect(tester.isValid, isTrue);
+      var expectedResources = {
+        'someResource': {
+          'methods': {
+            'method1': {
+              'id': 'SomeResource.method1',
+              'path': 'someResourceMethod',
+              'httpMethod': 'GET',
+              'description': null,
+              'parameters': {},
+              'parameterOrder': []
+            }
+          },
+          'resources': {}
+        },
+        'nice_name': {
+          'methods': {
+            'method1': {
+              'id': 'NamedResource.method1',
+              'path': 'namedResourceMethod',
+              'httpMethod': 'GET',
+              'description': null,
+              'parameters': {},
+              'parameterOrder': []
+            }
+          },
+          'resources': {}
+        }
+      };
+      var json = tester.toJson('http://localhost:8080/');
+      expect(json['resources'], expectedResources);
+    });
+
+    test('nested_resources', () {
+      var tester = new ApiConfig(new TesterWithNestedResources());
+      expect(tester.isValid, isTrue);
+      var expectedResources = {
+        'resourceWithNested': {
+          'methods': {},
+          'resources': {
+            'nestedResource': {
+              'methods': {
+                'method1': {
+                  'id': 'NestedResource.method1',
+                  'path': 'nestedResourceMethod',
+                  'httpMethod': 'GET',
+                  'description': null,
+                  'parameters': {},
+                  'parameterOrder': []
+                }
+              },
+              'resources': {}
+            }
+          }
+        }
+      };
+      var json = tester.toJson('http://localhost:8080/');
+      expect(json['resources'], expectedResources);
+    });
+  });
+
+
   group('api_config_methods', () {
 
     test('misconfig', () {
-      var test_mirror = reflectClass(WrongMethods);
+      var testMirror = reflectClass(WrongMethods);
       var tester = new ApiConfig(new Tester());
-      var methods = test_mirror.declarations.values.where(
+      var methods = testMirror.declarations.values.where(
         (dm) => dm is MethodMirror &&
                 dm.isRegularMethod &&
                 dm.metadata.length > 0 &&
@@ -76,16 +273,17 @@ main () {
         var metadata = mm.metadata.first.reflectee;
         expect(metadata.runtimeType, ApiMethod);
         expect(
-          () => new ApiConfigMethod(mm, metadata, tester, reflect(tester)),
+          () => new ApiConfigMethod(
+              mm, metadata, tester.id, tester, reflect(tester)),
           throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
         );
       });
     });
 
     test('recursion', () {
-      var test_mirror = reflectClass(ResursiveGet);
+      var testMirror = reflectClass(RecursiveGet);
       var tester = new ApiConfig(new Tester());
-      var methods = test_mirror.declarations.values.where(
+      var methods = testMirror.declarations.values.where(
         (dm) => dm is MethodMirror &&
                 dm.isRegularMethod &&
                 dm.metadata.length > 0 &&
@@ -95,16 +293,17 @@ main () {
         var metadata = mm.metadata.first.reflectee;
         expect(metadata.runtimeType, ApiMethod);
         expect(
-          () => new ApiConfigMethod(mm, metadata, tester, reflect(tester)),
+          () => new ApiConfigMethod(
+              mm, metadata, tester.id, tester, reflect(tester)),
           throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
         );
       });
     });
 
     test('correct', () {
-      var test_mirror = reflectClass(CorrectMethods);
+      var testMirror = reflectClass(CorrectMethods);
       var tester = new ApiConfig(new Tester());
-      var methods = test_mirror.declarations.values.where(
+      var methods = testMirror.declarations.values.where(
         (dm) => dm is MethodMirror &&
                 dm.isRegularMethod &&
                 dm.metadata.length > 0 &&
@@ -114,7 +313,8 @@ main () {
         var metadata = mm.metadata.first.reflectee;
         expect(metadata.runtimeType, ApiMethod);
         expect(
-            () => new ApiConfigMethod(mm, metadata, tester, reflect(tester)),
+            () => new ApiConfigMethod(
+                mm, metadata, tester.id, tester, reflect(tester)),
             returnsNormally);
       });
     });
@@ -123,8 +323,8 @@ main () {
   group('api_config_schema', () {
 
     group('misconfig', () {
-      List _wrong_schemas = [WrongSchema1];
-      _wrong_schemas.forEach((schema) {
+      List _wrongSchemas = [WrongSchema1];
+      _wrongSchemas.forEach((schema) {
         test(schema.toString(), () {
           var tester = new ApiConfig(new Tester());
           expect(

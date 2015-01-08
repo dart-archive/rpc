@@ -6,15 +6,12 @@ part of endpoints.config;
 
 class ApiConfig {
 
-  final InstanceMirror _api;
-  final ClassMirror _apiClass;
-
   final String id;
+  final String apiPath;
   final String _name;
   final String _version;
   final String _title;
   final String _description;
-  final String apiPath;
 
   final List<ApiConfigError> _errors = [];
   final Map<String, ApiConfigSchema> _schemaMap = {};
@@ -25,6 +22,7 @@ class ApiConfig {
   final Map<String, List<ApiConfigMethod> > _methodMap = {};
 
   final List<ApiConfigMethod> _topLevelMethods = [];
+  final Map<String, ApiConfigResource> _resources = {};
 
   factory ApiConfig(api) {
     var apiInstance = reflect(api);
@@ -39,56 +37,39 @@ class ApiConfig {
     ApiClass metaData = metas.first.reflectee;
     var name = metaData.name;
     if (name == null || name.isEmpty) {
-      // Default name to class id with lowercase first letter.
-      name = id.substring(0, 1).toLowerCase() + id.substring(1);
+      // Default name is the class name with lowercase first letter.
+      name = camelCaseName(id);
     }
     String apiPath = '$name/${metaData.version}';
-    return new ApiConfig._(id, apiPath, apiInstance, apiClass,
-        name, metaData.version, metaData.title, metaData.description);
+    return new ApiConfig._(id, apiPath, name, metaData.version,
+                           metaData.title, metaData.description,
+                           apiInstance, apiClass);
   }
 
-  ApiConfig._(this.id, this.apiPath, this._api, this._apiClass, this._name,
-              this._version, this._title, this._description) {
+  ApiConfig._(this.id, this.apiPath, this._name, this._version, this._title,
+              this._description, InstanceMirror apiInstance,
+              ClassMirror apiClass) {
     assert(this._name != null);
     if (_version == null || _version.isEmpty) {
       _errors.add(new ApiConfigError('$id: ApiClass.version field is '
                                      'required'));
     }
-    // We do not support inheritance for annotated API methods. Ie.
-    // a parent class' methods are not exposed as API entry points.
-    _apiClass.declarations.values.forEach((dm) {
-      if (dm is! MethodMirror ||
-          !dm.isRegularMethod ||
-          dm.metadata.length == 0) {
-        // Ignore this declaration as it is not a regular method with at least
-        // one annotation.
+    // Scan for API methods and resources.
+    List<ApiConfigResource> resources = [];
+    scanApi(apiClass, apiInstance, id, this, _topLevelMethods, resources);
+
+    // Setup the resources and check for duplicates.
+    resources.forEach((resource) {
+      if (_resources.containsKey(resource.name)) {
+        addError(new ApiConfigError('$id: Duplicate resource with name: '
+                                    '${resource.name}'));
         return;
       }
-      // Check the method declaration has exactly one ApiMethod annotation.
-      var annotations = dm.metadata.where(
-          (a) => a.reflectee.runtimeType == ApiMethod).toList();
-      if (annotations.length > 1) {
-        _errors.add(new ApiConfigError('$id: Multiple ApiMethod annotations '
-                                       'on method \'${dm.simpleName}\'.'));
-      } else if (annotations.length == 1) {
-        var method;
-        try {
-          method = new ApiConfigMethod(dm, annotations.first.reflectee,
-                                       this, _api);
-        } on ApiConfigError catch (e) {
-          _errors.add(e);
-          return;
-        } catch (e) {
-          _errors.add(
-              new ApiConfigError('$id: Unknown API Config error: $e.'));
-          return;
-        }
-
-        _topLevelMethods.add(method);
-        addMethod(method);
-      }
-      // Method has no ApiMethod annotation. Ignore.
+      _resources[resource.name] = resource;
     });
+
+    // Add methods to api.
+    _topLevelMethods.forEach(addMethod);
   }
 
   void addMethod(ApiConfigMethod method) {
@@ -178,9 +159,9 @@ class ApiConfig {
   Map toJson(String root, [String apiPathPrefix = '']) {
     String servicePath;
     if (apiPathPrefix != null) {
-      servicePath = '$apiPathPrefix/$apiPath/';
+      servicePath = '$apiPathPrefix$apiPath/';
     } else {
-      servicePath = apiPath;
+      servicePath = apiPath.substring(1);
     }
     Map json = {
       'kind'            : 'discovery#restDescription',
@@ -203,17 +184,19 @@ class ApiConfig {
       'parameters'      : {},
       'schemas'         : {},
       'methods'         : {},
-      // TODO: Add support for resources.
       'resources'       : {}
     };
     _schemaMap.values.where((schema) => (schema.hasProperties))
         .forEach((schema) {
           json['schemas'][schema.schemaName] = schema.descriptor;
         });
-    _topLevelMethods.forEach((method) {
-        json['methods'][method.name] = method.toJson;
+    _resources.values.forEach((resource) {
+      json['resources'][resource.name] = resource.asJson;
     });
-    // TODO: Check if this is stable or not. E.g. if the hash map is not
+    _topLevelMethods.forEach((method) {
+        json['methods'][method.name] = method.asJson;
+    });
+    // TODO: Check if this is stable or not. E.g. if the hash map is
     // deterministic.
     var sha1 = new SHA1();
     sha1.add(UTF8.encode(json.toString()));

@@ -16,7 +16,9 @@ import 'errors.dart';
 part 'config/api.dart';
 part 'config/method.dart';
 part 'config/property.dart';
+part 'config/resource.dart';
 part 'config/schema.dart';
+part 'config/utils.dart';
 
 
 class ApiConfigError extends Error {

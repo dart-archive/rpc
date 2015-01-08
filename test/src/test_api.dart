@@ -73,7 +73,7 @@ class WrongMethods {
   VoidMessage invalidPath2() { return null; }
 }
 
-class ResursiveGet {
+class RecursiveGet {
   @ApiMethod(name: 'test1', path: 'test1')
   VoidMessage resursiveGet1(RecursiveMessage1 request) {
     return null;
@@ -81,6 +81,25 @@ class ResursiveGet {
 
   @ApiMethod(name: 'test2', path: 'test2')
   VoidMessage resursiveGet2(RecursiveMessage2 request) {
+    return null;
+  }
+}
+
+@ApiClass(version: 'v1')
+class CorrectSimple {
+  final String _foo = 'ffo';
+
+  final CorrectMethods _cm = new CorrectMethods();
+
+  CorrectMethods _cmNonFinal = new CorrectMethods();
+
+  @ApiMethod(path: 'test1/{path}')
+  VoidMessage simple1(String path) {
+    return null;
+  }
+
+  @ApiMethod(method: 'POST', path: 'test2')
+  TestMessage1 simple2(TestMessage1 request) {
     return null;
   }
 }
@@ -293,3 +312,77 @@ class AmbiguousMethodPaths7 {
 
 @ApiClass(name: 'Tester', version: 'v1test')
 class Tester {}
+
+@ApiClass(version: 'v1test')
+class TesterWithOneResource {
+
+  @ApiResource()
+  final SomeResource someResource = new SomeResource();
+}
+
+@ApiClass(version: 'v1test')
+class TesterWithTwoResources {
+
+  @ApiResource()
+  final SomeResource someResource = new SomeResource();
+
+  @ApiResource(name: 'nice_name')
+  final NamedResource namedResource = new NamedResource();
+}
+
+@ApiClass(version: 'v1test')
+class TesterWithNestedResources {
+
+  @ApiResource()
+  final ResourceWithNested resourceWithNested = new ResourceWithNested();
+}
+
+@ApiClass(version: 'v1test')
+class TesterWithDuplicateResourceNames {
+
+  @ApiResource()
+  final SomeResource someResource = new SomeResource();
+
+  @ApiResource(name: 'someResource')
+  final NamedResource namedResource = new NamedResource();
+}
+
+@ApiClass(version: 'v1test')
+class TesterWithMultipleResourceAnnotations {
+
+  @ApiResource()
+  @ApiResource()
+  final SomeResource someResource = new SomeResource();
+}
+
+
+class MultipleResourceMethodAnnotations {
+
+  @ApiMethod(path: 'multi')
+  @ApiMethod(path: 'multi2')
+  VoidMessage multiAnnotations() { return null; }
+}
+
+class SomeResource {
+
+  @ApiMethod(path: 'someResourceMethod')
+  VoidMessage method1() { return null; }
+}
+
+class NamedResource {
+
+  @ApiMethod(path: 'namedResourceMethod')
+  VoidMessage method1() { return null; }
+}
+
+class ResourceWithNested {
+
+  @ApiResource()
+  NestedResource nestedResource = new NestedResource();
+}
+
+class NestedResource {
+
+  @ApiMethod(path: 'nestedResourceMethod')
+  VoidMessage method1() { return null; }
+}
