@@ -7,7 +7,7 @@ library io_rpc_sample;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:endpoints/endpoints.dart';
+import 'package:rpc/rpc.dart';
 import 'toyapi.dart';
 
 final ApiServer _apiServer = new ApiServer();

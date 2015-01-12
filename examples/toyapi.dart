@@ -4,7 +4,7 @@
 
 library toyapi;
 
-import 'package:endpoints/endpoints.dart';
+import 'package:rpc/rpc.dart';
 
 class ToyResponse {
   String result;

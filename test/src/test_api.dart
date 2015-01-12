@@ -5,7 +5,8 @@
 library test_api;
 
 import 'dart:async';
-import 'package:endpoints/endpoints.dart';
+
+import 'package:rpc/rpc.dart';
 
 part 'test_api/messages.dart';
 

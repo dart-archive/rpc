@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of endpoints.config;
+part of rpc.config;
 
 class ApiConfigSchemaProperty {
   String _propertyName;
@@ -161,7 +161,7 @@ class ApiConfigSchemaProperty {
     }
     if (_repeated) {
       if (value is! List) {
-        throw new EndpointsError(500, 'Bad response', 'Invalid response');
+        throw new RpcError(500, 'Bad response', 'Invalid response');
       }
       var response = [];
       value.forEach((v) => response.add(_singleResponseValue(v)));

@@ -2,13 +2,12 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:unittest/unittest.dart';
-
-import 'package:endpoints/endpoints.dart';
-import 'package:endpoints/src/config.dart';
-
 import 'dart:async';
 import 'dart:mirrors';
+
+import 'package:rpc/rpc.dart';
+import 'package:rpc/src/config.dart';
+import 'package:unittest/unittest.dart';
 
 import 'src/test_api.dart';
 

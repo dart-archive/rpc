@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library endpoints.server;
+library rpc.server;
 
 import 'dart:async';
 import 'dart:convert';
@@ -27,8 +27,8 @@ class ApiServer {
           '${apiConfig.apiPath} already in use.'));
     }
     if (!apiConfig.isValid) {
-      throw new ApiConfigError('Endpoints: Failed to parse API RPC '
-                               'annotations.\n\n${apiConfig.errors}\n');
+      throw new ApiConfigError('RPC: Failed to parse API annotations.\n\n'
+                               '${apiConfig.errors}\n');
     }
     _apis[apiConfig.apiPath] = apiConfig;
   }
@@ -52,7 +52,8 @@ class ApiServer {
   Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) {
     ApiConfig api = _apis[request.apiKey];
     if (api == null || !api.isValid) {
-      var error = new BadRequestError('No valid API endpoint for this request');
+      var error =
+          new BadRequestError('Could not find API with key ${request.apiKey}.');
       return _wrapErrorAsResponse(request, error);
     }
     Completer completer = new Completer();
@@ -76,7 +77,7 @@ class ApiServer {
       HttpHeaders.EXPIRES: '0'
     };
     var response;
-    if (error is EndpointsError) {
+    if (error is RpcError) {
       response =
           new HttpApiResponse.error(error.code, error.msg, headers, error);
     } else {

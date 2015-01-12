@@ -1,8 +1,8 @@
-name: endpoints
+name: rpc
 version: 0.1.0
 author: Dart Team <misc@dartlang.org>
 description: Library for exposing Dart server-side APIs.
-homepage: https://github.com/dart-lang/dart_endpoints
+homepage: https://github.com/dart-lang/rpc
 environment:
   sdk: '>=1.5.0 <2.0.0'
 dependencies:
@@ -13,4 +13,3 @@ dev_dependencies:
   unittest: '>=0.11.0 <0.12.0'
   shelf: '>=0.5.6 <0.6.0'
   shelf_route: '>=0.11.0+1 <0.12.0'
-  appengine: '>=0.2.3 <0.3.0'

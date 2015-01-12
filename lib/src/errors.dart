@@ -2,36 +2,35 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library endpoints.errors;
+library rpc.errors;
 
 import 'dart:io';
 
-class EndpointsError implements Exception {
+class RpcError implements Exception {
 
-  final String state = 'APPLICATION_ERROR';
+  final int code;
   final String name;
   final String msg;
-  final int code;
 
-  EndpointsError(this.code, this.name, this.msg);
+  RpcError(this.code, this.name, this.msg);
 }
 
-class NotFoundError extends EndpointsError {
+class NotFoundError extends RpcError {
   NotFoundError([String msg = "Not found."])
       : super(HttpStatus.NOT_FOUND, 'Not Found', msg);
 }
 
-class BadRequestError extends EndpointsError {
+class BadRequestError extends RpcError {
   BadRequestError([String msg = "Bad request."])
       : super(HttpStatus.BAD_REQUEST, 'Bad Request', msg);
 }
 
-class InternalServerError extends EndpointsError {
+class InternalServerError extends RpcError {
   InternalServerError([String msg = "Internal Server Error."])
       : super(HttpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error', msg);
 }
 
-class ApplicationError extends EndpointsError {
+class ApplicationError extends RpcError {
   ApplicationError(Exception e)
       : super(HttpStatus.INTERNAL_SERVER_ERROR,
               'Application Invocation Error',
