@@ -4,6 +4,7 @@
 
 library endpoints;
 
-export 'src/server.dart';
 export 'src/annotations.dart';
 export 'src/errors.dart';
+export 'src/message.dart';
+export 'src/server.dart';

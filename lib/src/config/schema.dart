@@ -174,9 +174,9 @@ class ApiConfigSchema {
     return schema.reflectee;
   }
 
-  Map toResponse(message) {
+  Map toResponse(result) {
     var response = {};
-    InstanceMirror mirror = reflect(message);
+    InstanceMirror mirror = reflect(result);
     _properties.forEach((sym, prop) {
       var value = prop.toResponse(mirror.getField(sym).reflectee);
       if (value != null) {

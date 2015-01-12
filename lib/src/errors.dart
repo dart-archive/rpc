@@ -4,7 +4,7 @@
 
 library endpoints.errors;
 
-import 'dart:convert' show JSON;
+import 'dart:io';
 
 class EndpointsError implements Exception {
 
@@ -14,30 +14,27 @@ class EndpointsError implements Exception {
   final int code;
 
   EndpointsError(this.code, this.name, this.msg);
-
-  Map toJson() {
-    var json = {
-      'state'        : state,
-      'error_name'   : name,
-      'code'         : code,
-      'error_message': msg
-    };
-    return json;
-  }
-
-  String toString() {
-    return JSON.encode(toJson());
-  }
 }
 
 class NotFoundError extends EndpointsError {
-  NotFoundError([String msg = "Not found."]) : super(404, 'Not Found', msg);
+  NotFoundError([String msg = "Not found."])
+      : super(HttpStatus.NOT_FOUND, 'Not Found', msg);
 }
 
 class BadRequestError extends EndpointsError {
-  BadRequestError([String msg = "Bad request."]) : super(400, 'Bad Request', msg);
+  BadRequestError([String msg = "Bad request."])
+      : super(HttpStatus.BAD_REQUEST, 'Bad Request', msg);
 }
 
 class InternalServerError extends EndpointsError {
-  InternalServerError([String msg = "Internal Server Error."]) : super(500, 'Internal Server Error', msg);
+  InternalServerError([String msg = "Internal Server Error."])
+      : super(HttpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error', msg);
+}
+
+class ApplicationError extends EndpointsError {
+  ApplicationError(Exception e)
+      : super(HttpStatus.INTERNAL_SERVER_ERROR,
+              'Application Invocation Error',
+              e.toString());
+
 }

@@ -4,6 +4,9 @@
 
 part of endpoints.config;
 
+
+final _bytesToJson = UTF8.decoder.fuse(JSON.decoder);
+final _jsonToBytes = JSON.encoder.fuse(UTF8.encoder);
 final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
 const List<String> _allowedMethods =
     const ['GET', 'DELETE', 'PUT', 'POST', 'PATCH'];
@@ -74,7 +77,7 @@ class ApiConfigMethod {
     // Setup a uri parser used to match a uri to this method.
     var parser;
     try {
-      var template = new UriTemplate(metadata.path);
+      var template = new UriTemplate('${api.apiPath}/${metadata.path}');
       parser = new UriParser(template);
     } catch (e) {
       throw new ApiConfigError(
@@ -210,8 +213,14 @@ class ApiConfigMethod {
 
   UriTemplate get template => _parser.template;
 
-  UriMatch matches(Uri methodPath) {
-    return _parser.match(methodPath);
+  bool matches(HttpApiRequest request) {
+    UriMatch match = _parser.match(request.uri);
+    if (match == null) {
+      return false;
+    }
+    assert(match.rest.path.length == 0);
+    request.pathParameters = match.parameters;
+    return true;
   }
 
   Map get asJson {
@@ -249,55 +258,102 @@ class ApiConfigMethod {
     return json;
   }
 
-  Future<Map> invoke(Map pathParams, Map queryParams, Map requestBody) {
-    return new Future.sync(() {
-      if (_bodyLessMethods.contains(httpMethod)) {
-        if (requestBody != null) {
+  Future<HttpApiResponse> invokeHttpRequest(HttpApiRequest request) {
+    var positionalParams = [];
+    // Add path parameters to params in the correct order.
+    for (var paramName in _pathParams) {
+      assert(request.pathParameters != null);
+      var value = request.pathParameters[paramName];
+      if (value == null) {
+        return new Future.error(
+            new BadRequestError('Required parameter: $paramName missing.'));
+      }
+      positionalParams.add(value);
+    }
+    // Build named parameter map for query parameters.
+    var namedParams = {};
+    assert(_queryParamTypes != null);
+    var queryParameters = request.queryParameters;
+    if (_queryParamTypes.isNotEmpty && queryParameters != null) {
+      for (var queryParamName in queryParameters.keys) {
+        Symbol querySymbol = _queryParamTypes[queryParamName];
+        if (querySymbol != null) {
           return new Future.error(new BadRequestError(
-              'No support for ${httpMethod} requests with a request body.'));
+              'Invalid request, no parameter named: $queryParamName.'));
         }
+        // TODO: Check for duplicates. Currently latest dup wins.
+        namedParams[querySymbol] = queryParameters[queryParamName];
       }
+    }
+    var apiResult;
+    if (_bodyLessMethods.contains(httpMethod)) {
+      apiResult = invokeNoBody(request, positionalParams, namedParams);
+    } else {
+      apiResult = invokeWithBody(request, positionalParams, namedParams);
+    }
+    return apiResult.then((value) {
+      var result;
+      if (_responseSchema != null && value != null &&
+          _responseSchema.hasProperties) {
+        // TODO: Support other encodings.
+        var jsonResult = _responseSchema.toResponse(value);
+        var encodedResultIterable = [_jsonToBytes.convert(jsonResult)];
+        result = new Stream.fromIterable(encodedResultIterable);
+      } else {
+        // Return an empty stream.
+        result = new Stream.fromIterable([]);
+      }
+      var headers = {
+        HttpHeaders.CONTENT_TYPE: request.contentType,
+        HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
+        HttpHeaders.PRAGMA: 'no-cache',
+        HttpHeaders.EXPIRES: '0'
+      };
+      return new HttpApiResponse(HttpStatus.OK, result, headers: headers);
+    });
+  }
 
-      var params = [];
-      // Add path parameters to params in the correct order.
-      for (var paramName in _pathParams) {
-        var value = pathParams[paramName];
-        if (value == null) {
-          return new Future.error(
-              new BadRequestError('Required parameter: $paramName missing.'));
-        }
-        params.add(value);
-      }
-      // Build named parameter map for query parameters.
-      var namedParams = {};
-      assert(_queryParamTypes != null);
-      if (_queryParamTypes.isNotEmpty && queryParams != null) {
-        for (var queryParamName in queryParams.keys) {
-          Symbol querySymbol = _queryParamTypes[queryParamName];
-          if (querySymbol != null) {
-            return new Future.error(new BadRequestError(
-                'Invalid request, no parameter named: $queryParamName.'));
-          }
-          // TODO: Check for duplicates. Currently latest dup wins.
-          namedParams[querySymbol] = queryParams[queryParamName];
-        }
-      }
+  Future<dynamic> invokeNoBody(HttpApiRequest request,
+                               List positionalParams,
+                               Map namedParams) {
+    // Drain the request body just in case.
+    return request.body.drain().then((_) {
+      request.bodyProcessed = true;
+      try {
+        var result =
+            _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+        return result;
+      } catch (error) {
+        // We explicitly catch exceptions thrown by the invoke method, otherwise
+        // these exceptions would be shown as 500 Unknown API Error since we
+        // cannot distinguish them from e.g. an internal null pointer exception.
+        return new Future.error(new ApplicationError(error));
+      };
+    });
+  }
+
+  Future<dynamic> invokeWithBody(HttpApiRequest request,
+                                 List positionalParams,
+                                 Map namedParams) {
+    // Decode request body parameters to json.
+    // TODO: support other encodings
+    return request.body.transform(_bytesToJson).first.then((bodyParams) {
+      request.bodyProcessed = true;
       if (_requestSchema != null && _requestSchema.hasProperties) {
-        assert(!_bodyLessMethods.contains(httpMethod));
-        params.add(_requestSchema.fromRequest(requestBody));
+        // The request schema is the last positional parameter, so just adding
+        // it to the list of position parameters.
+        positionalParams.add(_requestSchema.fromRequest(bodyParams));
       }
-      var response = _instance.invoke(symbol, params, namedParams).reflectee;
-      if (response is! Future) {
-        response = new Future.value(response);
+      try {
+        var result =
+            _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+        return result;
+      } catch (error) {
+        // We explicitly catch exceptions thrown by the invoke method, otherwise
+        // these exceptions would be shown as 500 Unknown API Error since we
+        // cannot distinguish them from e.g. an internal null pointer exception.
+        return new Future.error(new ApplicationError(error));
       }
-      return response.then((message) {
-        if (_responseSchema == null ||
-            message == null ||
-            !_responseSchema.hasProperties) {
-          return {};
-        }
-        return _responseSchema.toResponse(message);
-      });
     });
   }
 }

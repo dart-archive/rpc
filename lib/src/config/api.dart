@@ -40,7 +40,7 @@ class ApiConfig {
       // Default name is the class name with lowercase first letter.
       name = camelCaseName(id);
     }
-    String apiPath = '$name/${metaData.version}';
+    String apiPath = '/$name/${metaData.version}';
     return new ApiConfig._(id, apiPath, name, metaData.version,
                            metaData.title, metaData.description,
                            apiInstance, apiClass);
@@ -94,7 +94,7 @@ class ApiConfig {
     for (ApiConfigMethod existingMethod in existingMethods) {
       List<String> existingMethodPathSegments =
           existingMethod.path.split('/');
-      if (overlappingPaths(methodPathSegments, existingMethodPathSegments)) {
+      if (_overlappingPaths(methodPathSegments, existingMethodPathSegments)) {
         _errors.add(new ApiConfigError(
             '${method.id}: Method path: ${method.path} overlaps with method '
             'path of ${existingMethod.id}: ${existingMethod.path}'));
@@ -103,7 +103,7 @@ class ApiConfig {
     existingMethods.add(method);
   }
 
-  bool overlappingPaths(List<String> pathSegments1,
+  bool _overlappingPaths(List<String> pathSegments1,
                         List<String> pathSegments2) {
     assert(pathSegments1.length == pathSegments2.length);
     for (int i = 0; i < pathSegments1.length; ++i) {
@@ -134,34 +134,27 @@ class ApiConfig {
 
   void addError(ApiConfigError error) => _errors.add(error);
 
-  Future<Map> handleCall(String httpMethod,
-                         String methodPath,
-                         Map<String, String> queryParams,
-                         Map requestBody) {
-    String methodKey = '$httpMethod${methodPath.split('/').length}';
-    List<ApiConfigMethod> methods = _methodMap[methodKey];
-    Uri methodUri = Uri.parse(methodPath);
+  Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) {
+    final List<ApiConfigMethod> methods = _methodMap[request.methodKey];
     if (methods != null) {
       for (var method in methods) {
         // TODO: improve performance of this (measure first).
-        UriMatch match = method.matches(methodUri);
-        if (match != null) {
-          assert(match.rest.path.length == 0);
-          return method.invoke(match.parameters, queryParams, requestBody);
+        if (method.matches(request)) {
+          return method.invokeHttpRequest(request);
         }
       }
     }
     return new Future.error(
-        new NotFoundError('Unknown method: $httpMethod $apiPath/'
-                          '$methodPath.'));
+        new NotFoundError('Unknown method: ${request.httpMethod} '
+                          '${request.uri.path}.'));
   }
 
-  Map toJson(String root, [String apiPathPrefix = '']) {
+  Map toJson(String root, [String apiPathPrefix]) {
     String servicePath;
     if (apiPathPrefix != null) {
       servicePath = '$apiPathPrefix$apiPath/';
     } else {
-      servicePath = apiPath.substring(1);
+      servicePath = '${apiPath.substring(1)}/';
     }
     Map json = {
       'kind'            : 'discovery#restDescription',

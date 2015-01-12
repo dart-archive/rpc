@@ -4,11 +4,13 @@
 
 library endpoints.server;
 
-import 'errors.dart';
-import 'config.dart';
-
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'config.dart';
+import 'errors.dart';
+import 'message.dart';
 
 final JsonEncoder _encoder = new JsonEncoder.withIndent(' ');
 
@@ -35,37 +37,62 @@ class ApiServer {
   ///
   /// It looks up the corresponding api and call the api instance to
   /// further dispatch to the correct method call.
-  Future<Map> handleCall(String httpMethod,
-                         String apiCallPath,
-                         Map queryParams,
-                         Map requestBody) {
-    // The api key is the first two path segments of the apiCallPath.
-    // apiCallPath must be of the form:
-    //   <apiName>/<apiVersion>/<method|resourceName>[/...].
-    List<String> pathSegments = apiCallPath.split('/');
-    if (pathSegments.length < 3) {
-      return new Future.error(new NotFoundError('Invalid request, missing API '
-          'name and version: $apiCallPath.'));
-    }
-    var apiKey = '${pathSegments[0]}/${pathSegments[1]}';
-    ApiConfig api = _apis[apiKey];
+  ///
+  /// Returns a HttpApiResponse either with the result of calling the method
+  /// or an error if the method wasn't found, the parameters were not matching,
+  /// or if the method itself failed.
+  /// Errors have the format:
+  ///
+  ///     {
+  ///       error: {
+  ///         code: <http status code>,
+  ///         message: <message describing the failure>
+  ///       }
+  ///     }
+  Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) {
+    ApiConfig api = _apis[request.apiKey];
     if (api == null || !api.isValid) {
-      return new Future.error(
-          new NotFoundError('No valid API endpoint for this request'));
+      var error = new BadRequestError('No valid API endpoint for this request');
+      return _wrapErrorAsResponse(request, error);
     }
     Completer completer = new Completer();
-    var methodPath = apiCallPath.substring(apiKey.length + 1);
-    api.handleCall(httpMethod, methodPath, queryParams, requestBody)
+    api.handleHttpRequest(request)
         .then((response) => completer.complete(response))
         .catchError((e) {
-          if (e is EndpointsError) {
-            completer.completeError(e);
-          } else {
-            completer.completeError(
-                new InternalServerError('Unknown API Error: $e'));
-          }
+          completer.complete(_wrapErrorAsResponse(request, e));
           return true;
         });
+    return completer.future;
+  }
+
+  Future<HttpApiResponse>_wrapErrorAsResponse(HttpApiRequest request,
+                                              Exception error) {
+    Completer completer = new Completer();
+    // TODO support more encodings.
+    var headers = {
+      HttpHeaders.CONTENT_TYPE: ContentType.JSON.toString(),
+      HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
+      HttpHeaders.PRAGMA: 'no-cache',
+      HttpHeaders.EXPIRES: '0'
+    };
+    var response;
+    if (error is EndpointsError) {
+      response =
+          new HttpApiResponse.error(error.code, error.msg, headers, error);
+    } else {
+      response =
+          new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
+                                    'Unknown API Error.', headers, error);
+    }
+    if (request.bodyProcessed) {
+      completer.complete(response);
+    } else {
+      // Drain the request before responding.
+      request.body.drain().whenComplete(() {
+        // Return the response independent of whether draining failed.
+        completer.complete(response);
+      });
+    }
     return completer.future;
   }
 

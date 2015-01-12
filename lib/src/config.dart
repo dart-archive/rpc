@@ -6,12 +6,14 @@ library endpoints.config;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:mirrors';
 import 'package:crypto/crypto.dart';
 import 'package:uri/uri.dart';
 
 import 'annotations.dart';
 import 'errors.dart';
+import 'message.dart';
 
 part 'config/api.dart';
 part 'config/method.dart';

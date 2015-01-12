@@ -15,13 +15,13 @@ void scanApi(ClassMirror klass,
              List<ApiConfigMethod> methods,
              List<ApiConfigResource> resources) {
   klass.declarations.values.forEach((dm) {
-    ApiConfigMethod method = checkIfMethod(dm, klassInstance, id, api);
+    ApiConfigMethod method = _checkIfMethod(dm, klassInstance, id, api);
     if (method != null) {
       methods.add(method);
       return;
     }
     ApiConfigResource resource =
-        checkIfResource(dm, klassInstance, id, api);
+        _checkIfResource(dm, klassInstance, id, api);
     if (resource != null) {
       resources.add(resource);
       return;
@@ -29,10 +29,10 @@ void scanApi(ClassMirror klass,
   });
 }
 
-ApiConfigMethod checkIfMethod(dynamic dm,
-                              InstanceMirror klassInstance,
-                              String id,
-                              ApiConfig api) {
+ApiConfigMethod _checkIfMethod(dynamic dm,
+                               InstanceMirror klassInstance,
+                               String id,
+                               ApiConfig api) {
   if (dm is! MethodMirror ||
       !dm.isRegularMethod ||
       dm.metadata.length == 0) {
@@ -70,10 +70,10 @@ ApiConfigMethod checkIfMethod(dynamic dm,
   return method;
 }
 
-ApiConfigResource checkIfResource(DeclarationMirror dm,
-                                  InstanceMirror klassInstance,
-                                  String id,
-                                  ApiConfig api) {
+ApiConfigResource _checkIfResource(DeclarationMirror dm,
+                                   InstanceMirror klassInstance,
+                                   String id,
+                                   ApiConfig api) {
   if (dm is! VariableMirror || dm.metadata.length == 0) {
     // Do a bit of error checking to check if someone added an ApiResource
     // annotation on a non-field.
@@ -127,4 +127,3 @@ dynamic getMetadata(DeclarationMirror dm,
   }
   return annotations.first.reflectee;
 }
-
