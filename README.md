@@ -2,34 +2,100 @@
 
 ### Description
 
-Light-weight RPC package for implementing server-side Dart APIs. The package
-supports the Google Discovery Document format for message encoding and HTTP
-rest for routing of requests.
+Light-weight RPC package for creating RESTful server-side Dart APIs. The package
+supports the Google [Discovery Document](https://developers.google.com/discovery/v1/reference/apis)
+format for message encoding and HTTP REST for routing of requests.
 
 The discovery documents for the API will be automatically generated and are
 compatible with existing Discovery Document client stub generators.
 This way it is easy to create a server side API that can be called by any client
 language which has a Discovery Document client stub generator.
 
-### Usage
+### Simple Example
+
+Below follows a simple example to give an quick overview of how to create an
+API. In the following sections follows a more elaborate description of how to
+build the API and setup an API server.
+
+```dart
+@ApiClass(
+  name: 'myApi',
+  version: 'v1',
+  description: 'My Awesome Dart server side API' // optional
+)
+class MyApi {
+  @ApiMethod(method: 'GET', path: 'find/{name}')
+  AgeResponse findAge(String name) {
+    ... find age for person of name {name} ...
+    return new AgeResponse(age);
+  }
+
+  @ApiMethod(method: 'POST', path: 'update')
+  VoidMessage updateName(UpdateRequest request) {
+    ... process request, returns error if not found ...
+    return null;
+  }
+}
+
+class AgeResponse {
+  int age;
+}
+
+class UpdateRequest {
+  String name;
+  int age;
+}
+```
 
 Two complete examples using respectively `dart:io` and `shelf` can be found at
 [Examples](https://github.com/dart-lang/rpc/tree/master/examples).
 
+### Usage
+
+##### Terminology
+
+We use the following concepts below when describing how to build your API.
+
+- Top-level class - This is the API entry-point. It describes the API name and
+version. The top-level class is defined via the `ApiClass` annotation.
+- Resource - Resources are used to group methods together for a cleaner API
+structure. Class members annotated with `@ApiResource` are exposed as resources. 
+- Method - Methods are what is invoked!! They specify how to route requests and
+the valid parameters and the response. Only methods annotated with the
+`ApiMethod` annotation are exposed. 
+- Schema - Schemas are used to describe response and the request parameters
+passed in the body of the HTTP request.
+- Properties - A schema contains properties. Each property can optionally be
+further restricted by the `ApiProperty` annotation.
+
 ##### Main API Class
 
-Each API is defined by a class with an `@ApiClass` annotation,
-specifying at least a `version`. The API name can be specified by the `name`
-field and will default to the class name in camel-case if omitted.
+Defining an API starts with annotating a class with the `@ApiClass` annotation.
+It must specify at least the `version` field. The API name can optionally be
+specified via the `name` field and will default to the class name in camel-case
+if omitted.
 
-```javascript
+```dart
 @ApiClass(
-  name: 'myApi', // optional (default is the same since class name is MyApi).
+  name: 'myApi',  // Optional (default is the same since class name is MyApi).
   version: 'v1',
   description: 'My Awesome Dart server side API' // optional
 )
 class MyApi {
   (...)
+}
+
+  @ApiMethod(path: 'voidMethod')
+  VoidMessage myVoidMethod() {
+    ...
+    return null;
+  }
+
+  @ApiMethod(path: 'someMethod')
+  MyResponse myMethod() {
+    ...
+    return new MyResponse();
+  }
 }
 ```
 
@@ -42,7 +108,7 @@ was serving on `http://localhost:8080` the API base url would be
 Inside of your API class you can define public methods that will
 correspond to methods that can be called on your API.
 
-For a method to be exposed as a remote API endpoint it must be annotated with
+For a method to be exposed as a remote API method it must be annotated with
 the `@ApiMethod` annotation specifying a unique path used for routing requests
 to the method.
 
@@ -53,16 +119,16 @@ method defaults to `GET`.
 A description of the method can also be specified using the `description`
 field. If omitted it defaults to the empty string.
 
-###### Response
+###### Response (return value)
 
 A method must always return a response. The response can be either a class or
 a future of the class.
-In the case where a method has no response the VoidMessage class should be
-returned.
+In the case where a method has no response the predefined VoidMessage class
+should be returned.
 
 Example method returning nothing:
 
-```javascript
+```dart
 @ApiMethod(path: 'voidMethod')
 VoidMessage myVoidMethod() {
   ...
@@ -72,7 +138,11 @@ VoidMessage myVoidMethod() {
 
 Example method returning class:
 
-```javascript
+```dart
+class MyResponse {
+  String result;
+}
+
 @ApiMethod(path: 'someMethod')
 MyResponse myMethod() {
   ...
@@ -82,7 +152,7 @@ MyResponse myMethod() {
 
 Example method returning a future:
 
-```javascript
+```dart
 @ApiMethod(path: 'futureMethod')
 Future<MyResponse> myFutureMethod() {
   ...
@@ -99,7 +169,7 @@ corresponding to the generated Discovery Document schema.
 
 ###### Parameters
 
-Method parameters can be specified in three ways.
+Method parameters can be passed in three different ways.
 
 - As a path parameter in the method path (supported on all HTTP methods)
 - As a query string parameter (supported for GET)
@@ -110,7 +180,7 @@ string parameters are optional named parameters.
 
 Example of a method using POST with both path parameters and a request body:
 
-```javascript
+```dart
 @ApiMethod(
   method: 'POST',
   path: 'resource/{name}/type/{type}')
@@ -120,7 +190,7 @@ MyResponse myMethod(String name, String type, MyRequest request) {
 }
 ```
 
-The curly brackets specify the path parameters and must appear as positional
+The curly brackets specify path parameters and must appear as positional
 parameters in the same order of the method signature. The request body parameter
 is always specified as the last parameter.
 
@@ -141,7 +211,7 @@ If the request body is not needed it is possible to use the VoidMessage class or
 change it to use the GET HTTP method. If using GET the method signature would
 instead become.
 
-```javascript
+```dart
 @ApiMethod(path: '/resource/{name}/type/{type}')
 MyResponse myMethod(String name, String type) {
    ...
@@ -151,7 +221,7 @@ MyResponse myMethod(String name, String type) {
 
 When using GET it is possible to use optional named parameters as below.
 
-```javascript
+```dart
 @ApiMethod(path: '/resource/{name}/type/{type}')
 MyResponse myMethod(String name, String type, {String filter}) {
    ...
@@ -181,7 +251,7 @@ specify default values, format of an `int` or `double` specifying how to
 handle it in the backend, min/max value of an `int` property, and whether a
 property is required.
 
-For `int` properties the `format` field is used to specific the size of the
+For `int` properties the `format` field is used to specify the size of the
 integer. It can take the values `int32`, `uint32`, `int64` or `uint64`.
 The 64-bit variants will be represented as `String` in the JSON objects.
 
@@ -191,8 +261,24 @@ specify the min and max value of the integer.
 For `double` properties the `format` parameter can take the value
 `double` or `float`.
 
-The `defaultValue` field is used to a default value. The `required` fields
-is used to specify whether a field is required.
+The `defaultValue` field is used to specify a default value. The `required`
+fields is used to specify whether a field is required.
+
+Example schema:
+
+```dart
+class MyRequest {
+   @ApiProperty(
+     format: 'uint32',
+     defaultValue=40,
+     minValue=0,
+     maxValue=150)
+   int age;
+
+   @ApiProperty(format: 'float')
+   double averageAge;
+}
+```
 
 ##### Resources
 
@@ -207,7 +293,7 @@ used in the `@ApiResource` annotation.
 
 Example resource API:
 
-```javascript
+```dart
 
 @ApiClass(version: 'v1')
 class MyApi {
@@ -245,7 +331,7 @@ HttpServer as well as an example using the shelf middleware.
 
 E.g. to use shelf you would do something like:
 
-```javascript
+```dart
 
 final ApiServer _apiServer = new ApiServer();
 
@@ -256,7 +342,11 @@ void main() {
   shelf_io.serve(apiRouter.handler, '0.0.0.0', 9090);
 }
 
-/// A shelf handler for '/api' API requests .
+/// A shelf handler for '/api' API requests.
+/// If the request path ends with '/rest' the Discovery Document for
+/// the API is returned. E.g. to get the Discovery Document for `myApi` with
+/// version `v1` and with the application API prefix of `/api` the path would
+/// be `<server ip:port>/api/myApi/v1/rest`.
 Future<shelf.Response> _apiHandler(shelf.Request request) async {
   if (request.url.path.endsWith('/rest')) {
     // Return the discovery doc for the given API.
@@ -277,11 +367,17 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
   }
 }
 
+/// The Discovery Document handler returns the Discovery Document for the
+/// given API. The '/api' prefix is stripped away by the apiRouter in main.
+/// This method will strip away the '/rest' suffix to get the apiKey and
+/// lookup the api.
 Future<shelf.Response> _discoveryDocumentHandler(shelf.Request request) {
   var requestPath = request.url.path;
   var apiKey = requestPath.substring(0, requestPath.length - '/rest'.length);
   var uri = request.requestedUri;
   var baseUrl = '${uri.scheme}://${uri.host}:${uri.port}/';
+  // We pass in the 'api' prefix and the baseUrl to generate a valid Discovery
+  // Document for this server.
   var doc = _apiServer.getDiscoveryDocument(apiKey, 'api', baseUrl);
   if (doc == null) {
     return new Future.value(
@@ -293,9 +389,10 @@ Future<shelf.Response> _discoveryDocumentHandler(shelf.Request request) {
 
 Notice that the `ApiServer` supports its own `HttpApiRequest` and
 `HttpApiResponse` format that is agnostic to whether the enclosing web server
-is using `shelf` of `dart:io`. In the above case the `shelf.Request` is used
-to create an `HttpApiRequest` containing the information needed to invoke the
-correct API method using the `ApiServer`'s handleHttpRequest method.
+is using `dart:io`, `shelf`, or any other web server framework. In the above
+case the `shelf.Request` is used to create an `HttpApiRequest` containing
+the information needed to invoke the correct API method using the
+`ApiServer`'s handleHttpRequest method.
 The result of the invocation is returned as an `HttpApiResponse` which
 contains a stream with the encoded response or in the case of an error it
 contains the encoded JSON error as well as the exception thrown internally.
@@ -340,16 +437,40 @@ for Dart to generate client side libraries to access your API. Discovery
 Document generators for other languages can also be used to call
 your API from e.g Python or Java.
 
-To generate a client library you have to download the discovery document and 
-pass it to the generator:
+There are currently two ways to generate a client library. First you get the
+Discovery Document from the server.
 
-```
 URL='https://your_app_server/api/myApi/v1/rest'
 mkdir input
 curl -o input/myapi.json $URL
-bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
-```
 
-You can then include the library in your project. The libraries can be used 
-like any of the other Google Client API libraries, 
+Then you can either checkout the generator locally or add it as a dependency in
+your pubspec.yaml.
+
+###### Checking out the GitHub generator repository
+
+$ git clone https://github.com/dart-lang/discovery_api_dart_client_generator.git
+$ cd discovery_api_dart_client_generator
+$ pub get
+$ dart bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
+
+You can then include the generated library in your own client project.
+
+###### Using a `pubspec.yaml` dependency to your project
+
+Edit your project's `pubspec.yaml` file to contain a dependency to the client
+generator. It should be sufficient to make it a dev_dependency.
+
+```
+dev_dependencies:
+  discovery_api_client_generator:
+    git:
+      url: https://github.com/dart-lang/discovery_api_dart_client_generator.git
+```
+Run the below commands within your project.
+
+$ pub get
+$ pub run discovery_api_client_generator:generate generate --input-dir=input --output-dir=output --package-name=myapi
+
+The libraries can be used like any of the other Google Client API libraries,
 [some samples here](https://github.com/dart-lang/googleapis_examples).
