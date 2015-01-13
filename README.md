@@ -84,19 +84,6 @@ if omitted.
 class MyApi {
   (...)
 }
-
-  @ApiMethod(path: 'voidMethod')
-  VoidMessage myVoidMethod() {
-    ...
-    return null;
-  }
-
-  @ApiMethod(path: 'someMethod')
-  MyResponse myMethod() {
-    ...
-    return new MyResponse();
-  }
-}
 ```
 
 The above API would be available at the path `/myApi/v1`. E.g. if the server
@@ -121,8 +108,8 @@ field. If omitted it defaults to the empty string.
 
 ###### Response (return value)
 
-A method must always return a response. The response can be either a class or
-a future of the class.
+A method must always return a response. The response can be either an instance 
+of a class or a future of the instance.
 In the case where a method has no response the predefined VoidMessage class
 should be returned.
 
@@ -191,8 +178,8 @@ MyResponse myMethod(String name, String type, MyRequest request) {
 ```
 
 The curly brackets specify path parameters and must appear as positional
-parameters in the same order of the method signature. The request body parameter
-is always specified as the last parameter.
+parameters in the same order as on the method signature. The request body
+parameter is always specified as the last parameter.
 
 Assuming the above method was part of the MyApi class defined above the url to
 the method would be:
