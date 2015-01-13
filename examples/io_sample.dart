@@ -19,7 +19,7 @@ main() async {
 }
 
 /// Handle incoming HttpRequests.
-void handleRequest(HttpRequest request) {
+Future handleRequest(HttpRequest request) async {
   const API = '/api';
   const REST = '/rest';
   var requestPath = request.uri.path;
@@ -35,25 +35,26 @@ void handleRequest(HttpRequest request) {
   } else if (requestPath.startsWith(REST)) {
     _allDiscoveryDocsHandler(request);
   } else  {
-    request.drain().then((_) => _stringResponse(request.response,
-                                                ContentType.TEXT,
-                                                HttpStatus.NOT_IMPLEMENTED,
-                                                'Not Implemented'));
+    await request.drain();
+    _stringResponse(request.response, ContentType.TEXT,
+                    HttpStatus.NOT_IMPLEMENTED, 'Not Implemented');
   }
 }
 
-Future _apiHandler(String requestPath, HttpRequest request) {
+Future _apiHandler(String requestPath, HttpRequest request) async {
   var apiRequest = new HttpApiRequest(request.method, requestPath,
                                       request.headers.contentType.toString(),
                                       request);
-  return _apiServer.handleHttpRequest(apiRequest)
-      .then((apiResponse) => _apiResponse(request.response, apiResponse))
-      .catchError((e) {
-        // Should never happen since the apiServer.handleHttpRequest method
-        // always returns a response.
-        _stringResponse(request.response, ContentType.TEXT,
-                        HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
-      });
+
+  try {
+    var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
+    return _apiResponse(request.response, apiResponse);
+  } catch (e) {
+    // Should never happen since the apiServer.handleHttpRequest method
+    // always returns a response.
+    _stringResponse(request.response, ContentType.TEXT,
+                    HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
+  }
 }
 
 void _discoveryDocHandler(String apiKey, HttpRequest request) {

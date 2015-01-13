@@ -31,7 +31,6 @@ class ApiConfigResource {
 
     // Scan for API methods and nested resources.
     List<ApiConfigResource> resources = [];
-
     scanApi(resourceClass, resourceInstance, id, api, _methods, resources);
 
     // Setup the resources and check for duplicates.

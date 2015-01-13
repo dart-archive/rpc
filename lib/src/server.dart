@@ -49,26 +49,24 @@ class ApiServer {
   ///         message: <message describing the failure>
   ///       }
   ///     }
-  Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) {
+  Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) async {
     ApiConfig api = _apis[request.apiKey];
     if (api == null || !api.isValid) {
       var error =
           new BadRequestError('Could not find API with key ${request.apiKey}.');
       return _wrapErrorAsResponse(request, error);
     }
-    Completer completer = new Completer();
-    api.handleHttpRequest(request)
-        .then((response) => completer.complete(response))
-        .catchError((e) {
-          completer.complete(_wrapErrorAsResponse(request, e));
-          return true;
-        });
-    return completer.future;
+    var response;
+    try {
+      response = await api.handleHttpRequest(request);
+    } catch (e) {
+      response = _wrapErrorAsResponse(request, e);
+    }
+    return response;
   }
 
   Future<HttpApiResponse>_wrapErrorAsResponse(HttpApiRequest request,
-                                              Exception error) {
-    Completer completer = new Completer();
+                                              Exception error) async {
     // TODO support more encodings.
     var headers = {
       HttpHeaders.CONTENT_TYPE: ContentType.JSON.toString(),
@@ -85,16 +83,15 @@ class ApiServer {
           new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
                                     'Unknown API Error.', headers, error);
     }
-    if (request.bodyProcessed) {
-      completer.complete(response);
-    } else {
+    if (!request.bodyProcessed) {
       // Drain the request before responding.
-      request.body.drain().whenComplete(() {
-        // Return the response independent of whether draining failed.
-        completer.complete(response);
-      });
+      try {
+        await request.body.drain();
+      } catch(e) {
+        // Ignore any errors and return the original response generated above.
+      }
     }
-    return completer.future;
+    return response;
   }
 
   /// Returns a map of all discovery documents available at this api server.

@@ -25,7 +25,7 @@ void main() {
 }
 
 /// A shelf handler for '/api' API requests .
-Future<shelf.Response> _apiHandler(shelf.Request request) {
+Future<shelf.Response> _apiHandler(shelf.Request request) async {
   var requestPath = request.url.path;
   if (requestPath.endsWith(REST)) {
     // Return the discovery doc for the given API.
@@ -37,18 +37,18 @@ Future<shelf.Response> _apiHandler(shelf.Request request) {
     }
     return new Future.value(new shelf.Response.ok(doc));
   }
-  var apiRequest =
-      new HttpApiRequest(request.method, requestPath,
-                         request.headers['content-type'], request.read());
-  return _apiServer.handleHttpRequest(apiRequest)
-      .then((apiResponse) {
-         return new shelf.Response(apiResponse.status, body: apiResponse.body,
-                                   headers: apiResponse.headers);
-      }).catchError((e) {
-        // Should never happen since the apiServer.handleHttpRequest method
-        // always returns a response.
-        return new shelf.Response.internalServerError(body: e.toString());
-      });
+  try {
+    var apiRequest =
+        new HttpApiRequest(request.method, requestPath,
+                           request.headers['content-type'], request.read());
+    var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
+    return new shelf.Response(apiResponse.status, body: apiResponse.body,
+                              headers: apiResponse.headers);
+  } catch (e) {
+    // Should never happen since the apiServer.handleHttpRequest method
+    // always returns a response.
+    return new shelf.Response.internalServerError(body: e.toString());
+  }
 }
 
 /// Returns all discovery documents.

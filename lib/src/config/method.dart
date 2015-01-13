@@ -258,7 +258,7 @@ class ApiConfigMethod {
     return json;
   }
 
-  Future<HttpApiResponse> invokeHttpRequest(HttpApiRequest request) {
+  Future<HttpApiResponse> invokeHttpRequest(HttpApiRequest request) async {
     var positionalParams = [];
     // Add path parameters to params in the correct order.
     for (var paramName in _pathParams) {
@@ -287,73 +287,65 @@ class ApiConfigMethod {
     }
     var apiResult;
     if (_bodyLessMethods.contains(httpMethod)) {
-      apiResult = invokeNoBody(request, positionalParams, namedParams);
+      apiResult = await invokeNoBody(request, positionalParams, namedParams);
     } else {
-      apiResult = invokeWithBody(request, positionalParams, namedParams);
+      apiResult = await invokeWithBody(request, positionalParams, namedParams);
     }
-    return apiResult.then((value) {
-      var result;
-      if (_responseSchema != null && value != null &&
-          _responseSchema.hasProperties) {
-        // TODO: Support other encodings.
-        var jsonResult = _responseSchema.toResponse(value);
-        var encodedResultIterable = [_jsonToBytes.convert(jsonResult)];
-        result = new Stream.fromIterable(encodedResultIterable);
-      } else {
-        // Return an empty stream.
-        result = new Stream.fromIterable([]);
-      }
-      var headers = {
-        HttpHeaders.CONTENT_TYPE: request.contentType,
-        HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
-        HttpHeaders.PRAGMA: 'no-cache',
-        HttpHeaders.EXPIRES: '0'
-      };
-      return new HttpApiResponse(HttpStatus.OK, result, headers: headers);
-    });
+    var result;
+    if (_responseSchema != null && apiResult != null &&
+        _responseSchema.hasProperties) {
+      // TODO: Support other encodings.
+      var jsonResult = _responseSchema.toResponse(apiResult);
+      var encodedResultIterable = [_jsonToBytes.convert(jsonResult)];
+      result = new Stream.fromIterable(encodedResultIterable);
+    } else {
+      // Return an empty stream.
+      result = new Stream.fromIterable([]);
+    }
+    var headers = {
+      HttpHeaders.CONTENT_TYPE: request.contentType,
+      HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
+      HttpHeaders.PRAGMA: 'no-cache',
+      HttpHeaders.EXPIRES: '0'
+    };
+    return new HttpApiResponse(HttpStatus.OK, result, headers: headers);
   }
 
   Future<dynamic> invokeNoBody(HttpApiRequest request,
                                List positionalParams,
-                               Map namedParams) {
+                               Map namedParams) async {
     // Drain the request body just in case.
-    return request.body.drain().then((_) {
-      request.bodyProcessed = true;
-      try {
-        var result =
-            _instance.invoke(symbol, positionalParams, namedParams).reflectee;
-        return result;
-      } catch (error) {
-        // We explicitly catch exceptions thrown by the invoke method, otherwise
-        // these exceptions would be shown as 500 Unknown API Error since we
-        // cannot distinguish them from e.g. an internal null pointer exception.
-        return new Future.error(new ApplicationError(error));
-      };
-    });
+    await request.body.drain();
+    request.bodyProcessed = true;
+    try {
+      return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+    } catch (error) {
+      // We explicitly catch exceptions thrown by the invoke method, otherwise
+      // these exceptions would be shown as 500 Unknown API Error since we
+      // cannot distinguish them from e.g. an internal null pointer exception.
+      return new Future.error(new ApplicationError(error));
+    }
   }
 
   Future<dynamic> invokeWithBody(HttpApiRequest request,
                                  List positionalParams,
-                                 Map namedParams) {
+                                 Map namedParams) async {
     // Decode request body parameters to json.
     // TODO: support other encodings
-    return request.body.transform(_bytesToJson).first.then((bodyParams) {
-      request.bodyProcessed = true;
-      if (_requestSchema != null && _requestSchema.hasProperties) {
-        // The request schema is the last positional parameter, so just adding
-        // it to the list of position parameters.
-        positionalParams.add(_requestSchema.fromRequest(bodyParams));
-      }
-      try {
-        var result =
-            _instance.invoke(symbol, positionalParams, namedParams).reflectee;
-        return result;
-      } catch (error) {
-        // We explicitly catch exceptions thrown by the invoke method, otherwise
-        // these exceptions would be shown as 500 Unknown API Error since we
-        // cannot distinguish them from e.g. an internal null pointer exception.
-        return new Future.error(new ApplicationError(error));
-      }
-    });
+    var decodedRequest = await request.body.transform(_bytesToJson).first;
+    request.bodyProcessed = true;
+    if (_requestSchema != null && _requestSchema.hasProperties) {
+      // The request schema is the last positional parameter, so just adding
+      // it to the list of position parameters.
+      positionalParams.add(_requestSchema.fromRequest(decodedRequest));
+    }
+    try {
+      return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+    } catch (error) {
+      // We explicitly catch exceptions thrown by the invoke method, otherwise
+      // these exceptions would be shown as 500 Unknown API Error since we
+      // cannot distinguish them from e.g. an internal null pointer exception.
+      return new Future.error(new ApplicationError(error));
+    }
   }
 }
