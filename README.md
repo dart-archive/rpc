@@ -14,7 +14,7 @@ language which has a Discovery Document client stub generator.
 ### Simple Example
 
 Below follows a simple example to give an quick overview of how to create an
-API. In the following sections follows a more elaborate description of how to
+API. In the following sections a more elaborate description follows of how to
 build the API and setup an API server.
 
 ```dart
