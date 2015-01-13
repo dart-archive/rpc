@@ -53,7 +53,7 @@ class ApiServer {
     ApiConfig api = _apis[request.apiKey];
     if (api == null || !api.isValid) {
       var error =
-          new BadRequestError('Could not find API with key ${request.apiKey}.');
+          new NotFoundError('No valid API with key ${request.apiKey}.');
       return _wrapErrorAsResponse(request, error);
     }
     var response;

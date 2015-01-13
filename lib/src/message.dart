@@ -54,8 +54,8 @@ class HttpApiRequest {
     // request.
     Uri uri = Uri.parse(requestPath);
     if (uri.pathSegments.length < 3) {
-      throw new NotFoundError('Invalid request, missing API '
-                              'name and version: $requestPath.');
+      throw new BadRequestError('Invalid request, missing API '
+                                'name and version: $requestPath.');
     }
     var apiKey = '/${uri.pathSegments[0]}/${uri.pathSegments[1]}';
     var methodKey = '$httpMethod${uri.pathSegments.skip(2).length}';

@@ -1,102 +1,89 @@
-# endpoints
+# RPC
 
 ### Description
 
-Implementation of [Google Cloud Endpoints](https://developers.google.com/appengine/docs/python/endpoints/) in Dart.
+Light-weight RPC package for implementing server-side Dart APIs. The package 
+supports the Google Discovery Document format for message encoding and HTTP 
+rest for routing of requests.
 
-These instructions assume that you are already set-up to run [Dart on App Engine](https://www.dartlang.org/cloud/).
-
-> Important:
-> There currently is a bug in Managed VMs (used to work during the preview)
-> where requests to `/_ah/spi/.*` don't reach the VM which unfortunately means
-> that this currently can't be used in production.
-> You can test in the local dev environment until this issue is fixed:
-> https://code.google.com/p/googleappengine/issues/detail?id=11436
+The discovery documents for the API will be automatically generated and are 
+compatible with existing Discovery Document client stub generators. 
+This way it is easy to create a server side API that can called by any client
+language which has a Discovery Document client stub generator.
 
 ### Usage
 
-##### app.yaml configuration
-
-`app.yaml` needs to contain a handler for `/_ah/spi/.*` so that App Engine
-will check for a Cloud Endpoints configuration when deploying.
-
-```
-version: 1
-runtime: custom
-vm: true
-api_version: 1
-threadsafe: true
-
-manual_scaling:
-  instances: 1
-
-handlers:
-- url: /_ah/spi/.*
-  script: bin/server.dart
-
-- url: /.*
-  script: bin/server.dart
-```
+For a more elaborate example see [Examples](https://github.com/dart-lang/rpc).
 
 ##### Main API Class
 
 Each API is defined by a class with an `@ApiClass` annotation,
-specifying at least a `name` and a `version`.
+specifying at least a `version`. The API name can be specified by the `name`
+field and will default to the class name in camel-case if omitted.
 
 ```
 @ApiClass(
-  name: 'myDartApi',
+  name: 'myApi', // optional (default is the same since class name is MyApi).
   version: 'v1',
-  description: 'My Awesome Dart Cloud Endpoint'
+  description: 'My Awesome Dart server side API' // optional
 )
 class MyApi {
   (...)
 }
 ```
 
-##### Request/Response Messages
-
-The data that is sent to/from the API is defined in (non-abstract) classes.
-These classes need to have an unnamed constructor that doesn't require any parameters.
-The API Backend will call `new MyRequest()` and then set the properties one by one.
-
-```
-class MyRequest {
-  String message;
-  MyRequest([this.message]);
-}
-```
-
-All public properties of this class will be used to construct an according
-JSON object. Allowed types are `int`, `double`, `bool`, `string`, `DateTime`,
-another message class, or a `List<T>` using one of those types.
-
-You can define extra options for the properties by using an @ApiProperty annotation.
-
-The `variant` parameter influences how numbers are handled in the backend.
-
-For `int` properties the parameter can take the values `int32`, `uint32`, `int64` or `uint64`.
-The 64-bit variants will be represented as `String` in the JSON objects.
-
-For `double` properties the `variant` parameter can take the value `double` or `float`
-
+The above API would be available at the path `/myApi/v1`. E.g. if the server
+was serving on `http://localhost:8080` the API base url would be
+`http://localhost:8080/myApi/v1`.
+ 
 ##### Methods
 
 Inside of your API class you can define public methods that will
 correspond to methods that can be called on your API.
 
-API Methods take one non-optional request message class as parameter and return
-a response message class or a Future of a response message class.
+For a method to be exposed as a remote API endpoint it must be annotated with
+the `@ApiMethod` annotation specifying a unique path used for routing requests
+to the method.
+
+The `@ApiMethod` annotation also supports specifying the HTTP method used to
+invoke the method. The `method` field is used for this. If omitted the HTTP
+method defaults to `GET`.
+
+A description of the method can also be specified using the `description` 
+field. If omitted it defaults to the empty string.
+
+###### Response
+
+A method must always return a response. The response can be either a class or
+a future of the class.
+In the case where a method has no response to return the VoidMessage class 
+should be used.
+
+Example returning nothing:
 
 ```
-MyResponse myMethod(MyRequest request) {
+@ApiMethod(path: 'voidMethod')
+VoidMessage myVoidMethod() {
+  ...
+  return null;
+}
+```
 
+Example returning class:
+
+```
+@ApiMethod(path: 'someMethod')
+MyResponse myMethod() {
+  ...
   return new MyResponse();
 }
 ```
 
+Example returning a future:
+
 ```
-Future<MyResponse> myFutureMethod(MyRequest request) {
+@ApiMethod(path: 'futureMethod')
+Future<MyResponse> myFutureMethod() {
   ...
     completer.complete(new MyResponse();
   ...
@@ -104,227 +91,228 @@ Future<MyResponse> myFutureMethod(MyRequest request) {
 }
 ```
 
-If your method doesn't need a request or doesn't return a response you can
-use the `VoidMessage` class instead.
+The `MyResponse` class must be a non-abstract class with an unnamed 
+constructor taking no required parameters. The RPC backend will automatically
+serialize all public fields of the the `MyResponse` instance into JSON
+corresponding to the generated Discovery Document schema.
+
+###### Parameters
+
+Method parameters can be specified in three ways.
+
+- As a path parameter in the method path (supported on all HTTP methods)
+- As a query string parameter (supported for GET)
+- As the request body (supported for POST or PUT)  
+
+Path parameters and the request body parameter are required. The query 
+string parameters are optional named parameters.
+
+An example of a method using POST with both path parameters and a request body.
 
 ```
-VoidMessage hearNoEvilSpeakNoEvil(VoidMessage _) {
-  return null;
+@ApiMethod(
+  method: 'POST',
+  path: 'resource/{name}/type/{type}') 
+MyResponse myMethod(String name, String type, MyRequest request) {
+  ...
+  return new MyResponse();
 }
 ```
 
-To turn your methods into actual API methods you will need to add an
-`@ApiMethod` annotation, specifying at least a `name` and a `path`.
-You can also define the HTTP-`method` if it is different from the default `GET`
-and a `description` to be displayed in the discovery document, API Explorer and
-generated client libraries.
+The curly bracket specify the path parameters and must appear as positional 
+parameters in the same order of the method signature. The request body parameter 
+is always specified as the last parameter.
 
-Some examples:
-```
-@ApiMethod(
-  name: 'resource.list',
-  path: 'resource',
-  description: 'list models'
-)
-MyModelList list(VoidMessage _) {...}
-```
+Assuming the above method was part of the MyApi class defined above the url to 
+the method would be:
 
-```
-@ApiMethod(
-  name: 'resource.insert',
-  path: 'resource',
-  method: 'POST',
-  description: 'insert model'
-)
-MyModel insert(MyModel request) {...}
-```
+`http://localhost:8080/myApi/v1/resource/foo/type/storage`
+
+where the first parameter `name` would get the value `foo` and the `type`
+parameter would get the value `storage`.
+
+The `MyRequest` class must be a non-abstract class with an unnamed constructor
+taking no arguments. The RPC backend will automatically create an instance of 
+the `MyRequest` class, decode the JSON request body, and set the class 
+instance's fields to the values found in the decoded request body.
+
+If the request body is not needed it is possible to use the VoidMessage class or 
+change it to use the GET HTTP method. If using GET the method signature would 
+instead become.
 
 ```
-@ApiMethod(
-  name: 'resource.get',
-  path: 'resource/{id}',
-  description: 'get model'
-)
-MyModel get(MyModelRequest request) {...}
+@ApiMethod(path: '/resource/{name}/type/{type}')
+MyResponse myMethod(String name, String type) {
+   ...
+   return new MyResponse(); 
+}
 ```
 
-```
-@ApiMethod(
-  name: 'resource.update',
-  path: 'resource/{id}',
-  method: 'PUT',
-  description: 'update model'
-)
-MyModel update(MyModel request) {...}
-```
-
-##### Authentication
-
-If you want to use OAuth authentication in your API, you will first have to
-get a Client ID from the [Google Developers Console](https://console.developers.google.com/).
-You then add this Client ID to the `allowedClientIds` property of the
-`@ApiClass` annotation.
+When using GET it is possible to use optional named parameters as below.
 
 ```
-@ApiClass(
-  name: 'myDartApi',
-  version: 'v1',
-  description: 'My Awesome Dart Cloud Endpoint'
-  allowedClientIds: const ['MY_CLIENT_ID']
-)
+@ApiMethod(path: '/resource/{name}/type/{type}')
+MyResponse myMethod(String name, String type, {String filter}) {
+   ...
+   return new MyResponse(); 
+}
 ```
 
-If you want to test your API using the [Google APIs Explorer](https://developers.google.com/apis-explorer/)
-(see below) you can also add the `API_EXPLORER_CLIENT_ID`.
+in which case the caller can pass the filter as part of the query string. E.g.
 
-```
-@ApiClass(
-  name: 'myDartApi',
-  version: 'v1',
-  description: 'My Awesome Dart Cloud Endpoint'
-  allowedClientIds: const ['MY_CLIENT_ID', API_EXPLORER_CLIENT_ID]
-)
-```
+`http://localhost:8080/myApi/v1/resource/foo/type/storage?filter=fast` 
 
-For the methods where you need authentication you add an extra `ApiUser` parameter.
+##### More about Request/Response Messages
 
-```
-@ApiMethod(
-  name: 'resource.auth_get',
-  path: 'resource/{id}',
-  description: 'get model'
-)
-MyModel authGet(MyModelRequest request, ApiUser user) {...}
-```
+The data sent either as a request (using HTTP POST and PUT) or as a response
+body corresponds to a non-abstract class as described above.
 
-If no valid user can be retrieved from the HTTP request, a 401 Unauthorized error will be
-automatically returned before actually calling your method. Otherwise you can access the
-user's Google ID and email adress (if authentication included the `email` scope).
+The RPC backend will automatically decode HTTP request bodies into class
+instances and encode method results into an HTTP response's body. This is done
+according to the generated Discovery Document schemas.
 
-If you want to check successful authentication yourself, or authentication is optional
-for your method you can include the `ApiUser` parameter as optional parameter.
+Only the public fields of the classes are encoded/decoded. Currently supported
+types for the public fields are `int`, `double`, `bool`, `String`,
+`DateTime`, and another message class.
 
-```
-@ApiMethod(
-  name: 'resource.auth_get',
-  path: 'resource/{id}',
-  description: 'get model'
-)
-MyModel authGet(MyModelRequest request, [ApiUser user]) {...}
-```
+A field can be further annotated using the `@ApiProperty` annotation to 
+specify default values, format of an `int` or `double` specifying how to 
+handle it in the backend, min/max value of an `int` property, and whether a
+property is required.
 
-In this case `user` will be `null` if no authentication happened,
-or the authentication wasn't for one of your specified Client IDs.
-If the authentication failed because of invalid or expired tokens,
-this will still trigger a 401 error.
+For `int` properties the `format` field is used to specific the size of the
+integer. It can take the values `int32`, `uint32`, `int64` or `uint64`.
+The 64-bit variants will be represented as `String` in the JSON objects.
 
-##### Errors
+For `int` properties the `minValue` and `maxValue` fields can be used to
+specify the min and max value of the integer.
 
-If you want to return errors to users of your API, e.g. if a requested entity wasn't found,
-you can throw an `EndpointsError` in your method.
+For `double` properties the `format` parameter can take the value
+`double` or `float`.
 
-It's recommended to use one of the predefined error classes:
-
--  400 `throw new BadRequestError('You sent some data we don't understand.');`
--  401 `throw new UnauthorizedError('You need to be authenticated.')`
--  403 `throw new ForbiddenError('You are not allowed to do this!')`
--  404 `throw new NotFoundError('We didn't find what you are looking for.');`
--  500 `throw new InternalServerError('We did something wrong...');`
-
-Any uncaught errors happening in your API method will be returned as `InternalServerError`.
-
+The `defaultValue` field is used to a default value. The `required` fields
+is used to specify whether a field is required.
 
 ##### API Server
 
-In `bin/server.dart` create a new instance of ApiServer and add your Api class instances.
-You then have two options to use the API Server to serve API responses.
+To create a RPC API server you would first create an instance of the
+`ApiServer` class and add an instance of the class annotated with the
+`@ApiClass` annotation.
 
--  `handleRequest`
+You can choose to use any web server framework you prefer for serving HTTP 
+request. The RPC package includes examples for both the standard dart:io
+HttpServer as well as an example using the shelf middleware.
 
-This method takes a `HttpRequest` and handles it accordingly.
-You should only call it for requests to `/_ah/spi/*`,
-it will return a 501 error response for other requests.
+E.g. to use shelf you would do something like:
 
-```
-ApiServer api_server;
+```javascript
 
-void _handler(HttpRequest request) {
-  if (request.uri.path.startsWith('/_ah/spi/')) {
-    api_server.handleRequest(request);
-    return;
+final ApiServer _apiServer = new ApiServer();
+
+void main() {
+  _apiServer.addApi(new ToyApi());
+  var apiRouter = shelf_route.router();
+  apiRouter.add('/api', ['GET', 'POST'], _apiHandler, exactMatch: false);
+  shelf_io.serve(apiRouter.handler, '0.0.0.0', 9090);
+}
+
+/// A shelf handler for '/api' API requests .
+Future<shelf.Response> _apiHandler(shelf.Request request) async {
+  if (request.url.path.endsWith('/rest')) {
+    // Return the discovery doc for the given API.
+    return _discoveryDocumentHandler(request);
   }
-
-  // Do your normal request handling here
-
-  context.assets.serve(request.uri.path);
+  try {
+    var apiRequest =
+        new HttpApiRequest(request.method, request.url.path,
+                           request.headers['content-type'], request.read());
+    HttpApiResponse apiResponse =
+        await _apiServer.handleHttpRequest(apiRequest);
+    return new shelf.Response(apiResponse.status, body: apiResponse.body,
+                              headers: apiResponse.headers);
+  } catch (e) {
+    // Just a precaution. It should never happen since the 
+    // _apiServer.handleHttpRequest method always returns an HttpApiResponse.
+    return new shelf.Response.internalServerError(body: e.toString());
+  }
 }
 
-void main() {
-  api_server = new ApiServer();
-  api_server.addApi(new MyApi());
-
-  runAppEngine(_handler).then((_) {
-    // Server running.
-  });
-}
-```
-
--  Shelf `handler`
-
-ApiServer exposes a shelf handler which you can add to a shelf cascade,
-best before all your other handlers.
-
-Since APIs can return 404 as a valid response, the default configuration of
-`shelf.Cascade` which cascades on 404 and 405 errors doesn't work.
-Instead you will have to use 501 responses to trigger cascading.
-You can also return `ApiServer.cascadeResponse` from your methods to do this.
-
-```
-void main() {
-  var api_server = new ApiServer();
-  api_server.addApi(new MyApi());
-  var cascade = new Cascade(statusCodes: [501])
-    .add(api_server.handler)
-    .add(_myHandler)
-    .add(shelf_ae.assetHandler);
-
-  shelf_ae.serve(cascade.handler);
+Future<shelf.Response> _discoveryDocumentHandler(shelf.Request request) {
+  var requestPath = request.url.path;
+  var apiKey = requestPath.substring(0, requestPath.length - '/rest'.length);
+  var uri = request.requestedUri;
+  var baseUrl = '${uri.scheme}://${uri.host}:${uri.port}/';
+  var doc = _apiServer.getDiscoveryDocument(apiKey, 'api', baseUrl);
+  if (doc == null) {
+    return new Future.value(
+        new shelf.Response.notFound('API \'${apiKey} not found.'));
+  }
+  return new Future.value(new shelf.Response.ok(doc));
 }
 ```
 
-##### Testing
+Notice that the `ApiServer` supports its own `HttpApiRequest` and 
+`HttpApiResponse` format that is agnostic to whether the enclosing web server
+is using `shelf` of `dart:io`. In the above case the `shelf.Request` is used
+to create an `HttpApiRequest` containing the information needed to invoke the
+correct API method using the `ApiServer`'s handleHttpRequest method.
+The result of the invocation is returned as an `HttpApiResponse` which
+contains a stream with the encoded response or in the case of an error it 
+contains the encoded JSON error as well as the exception thrown internally. 
 
-Once you have started the dev server you can access the API Explorer at
-`http://localhost:8080/_ah/api/explorer`
+##### Errors
 
-Using the explorer you can test out all the methods to see if they work like expected.
-If there are errors in generating and or calling your API they will be displayed in the log.
+The following predefined errors are supported: 
 
-After deploying the app to App Engine you can access the API Explorer at
-`https://your_api_id.appspot.com/_ah/api/explorer`
 
+As mentioned above invoking a method is done using the
+`ApiServer::handleHttpRequest` method which in turn returns an
+`HttpApiResponse` containing either the result of an successful invocation or
+an error. In the case of success the `HttpApiResponse`'s status code will be 
+`200`. If it is not `200` the response contains an error. The following 
+predefined errors are currently supported.
+
+- 400 `BadRequestError('You sent some data we don't understand.');`
+- 404 `NotFoundError('We didn't find the api or method you are looking for.');`
+- 500 `ApplicationError('The invoked method failed with an exception.');`
+- 500 `Some internal exception occurred and it was not due to a method invocation.`
+
+The `HttpApiResponse` also contains the internal exception thrown at failure
+time. This can be retrieved via the `HttpApiResponse::exception` getter and
+e.g. be used to return a more elaborate error to the client or to distinguish
+between an `ApplicationError` and another internal error happening.
+
+Any errors thrown by your API method will be returned as an 
+`ApplicationError`.
+
+The JSON format for errors are: 
+
+```
+{
+  error: {
+    code: <http status code>
+    message: <error message>
+  }
+}      
+```
 
 ##### Using your API
 
 Once your API is deployed you can use the [Discovery API Client Generator](https://github.com/dart-lang/discovery_api_dart_client_generator)
-to generate client and server-side libraries to access your API.
+for Dart to generate client side libraries to access your API. Discovery
+Document generators for other languages can of course also be used to e.g call
+your API from Python or Java. 
 
-For this you have to download the discovery document and use it with the generator
+For this you have to download the discovery document and use it with the generator:
 
 ```
-URL='https://your_app_id.appspot.com/_ah/api/discovery/v1/apis/yourApi/v1/rest'
+URL='https://your_app_server/api/myApi/v1/rest'
 mkdir input
-curl -s -o input/myapi.json $URL
+curl -o input/myapi.json $URL
 bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
 ```
 
-You can then include the library in your project. Due to the way that the deploy process works it's easiest to copy the files of the generated client library to the lib folder of your project.
-The libraries can be used like any of the other Google Client API libraries, [some samples here](https://github.com/dart-lang/googleapis_examples).
-
-There's also a [TicTacToe sample](https://github.com/Scarygami/appengine-vm-endpoints-tictactoe-dart)
-with a full client- and server-side implementation.
-
-You can also use client libraries in other languages to access your API.
-See the official [Google Cloud Endpoints docs](https://developers.google.com/appengine/docs/python/endpoints/)
-for more information about this and Endpoints in general.
+You can then include the library in your project. The libraries can be used 
+like any of the other Google Client API libraries, 
+[some samples here](https://github.com/dart-lang/googleapis_examples).
 
