@@ -22,7 +22,7 @@ Each API is defined by a class with an `@ApiClass` annotation,
 specifying at least a `version`. The API name can be specified by the `name`
 field and will default to the class name in camel-case if omitted.
 
-```
+```javascript
 @ApiClass(
   name: 'myApi', // optional (default is the same since class name is MyApi).
   version: 'v1',
@@ -62,7 +62,7 @@ returned.
 
 Example method returning nothing:
 
-```
+```javascript
 @ApiMethod(path: 'voidMethod')
 VoidMessage myVoidMethod() {
   ...
@@ -72,7 +72,7 @@ VoidMessage myVoidMethod() {
 
 Example method returning class:
 
-```
+```javascript
 @ApiMethod(path: 'someMethod')
 MyResponse myMethod() {
   ...
@@ -82,7 +82,7 @@ MyResponse myMethod() {
 
 Example method returning a future:
 
-```
+```javascript
 @ApiMethod(path: 'futureMethod')
 Future<MyResponse> myFutureMethod() {
   ...
@@ -110,7 +110,7 @@ string parameters are optional named parameters.
 
 Example of a method using POST with both path parameters and a request body:
 
-```
+```javascript
 @ApiMethod(
   method: 'POST',
   path: 'resource/{name}/type/{type}')
@@ -141,7 +141,7 @@ If the request body is not needed it is possible to use the VoidMessage class or
 change it to use the GET HTTP method. If using GET the method signature would
 instead become.
 
-```
+```javascript
 @ApiMethod(path: '/resource/{name}/type/{type}')
 MyResponse myMethod(String name, String type) {
    ...
@@ -151,7 +151,7 @@ MyResponse myMethod(String name, String type) {
 
 When using GET it is possible to use optional named parameters as below.
 
-```
+```javascript
 @ApiMethod(path: '/resource/{name}/type/{type}')
 MyResponse myMethod(String name, String type, {String filter}) {
    ...
@@ -193,6 +193,45 @@ For `double` properties the `format` parameter can take the value
 
 The `defaultValue` field is used to a default value. The `required` fields
 is used to specify whether a field is required.
+
+##### Resources
+
+Resources can be used to provide structure to your API by grouping certain API
+methods together under a resource. To create an API resource you will add a
+field to the class annotated with the `@ApiClass` annotation. The field must
+point to another class (the resource) containing the methods that should be 
+exposed together for this resource. The field must be annotated with the
+`@ApiResource` annotation. By default the name of the resource will be the
+field name in camel-case. If another name is desired the `name` field can be
+used in the `@ApiResource` annotation.
+
+Example resource API:
+
+```javascript
+
+@ApiClass(version: 'v1')
+class MyApi {
+
+  @ApiResource(name: 'myResource')
+  MyResource aResource = new MyResource();
+  
+  ...
+}
+
+class MyResource {
+  
+  @ApiMethod(path: 'someMethod')
+  MyResponse myResourceMethod() { return new MyResponse(); }
+}
+```
+
+Notice the @ApiResource annotation is on the field rather than the resource 
+class. This allows for a resource class to be used in multiple places (e.g.
+different versions) of the API.
+
+Also notice the path of the `MyResource::myResourceMethod` is independent 
+from the resource. E.g. in the above case the method would be exposed at the url 
+`http://<ip>:<port>/someMethod`.
 
 ##### API Server
 
