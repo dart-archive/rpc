@@ -49,6 +49,9 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
     var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,
                               headers: apiResponse.headers);
+  } on RpcError catch (e) {
+    var body = '${e.name}\n${e.msg}';
+    return new shelf.Response(e.code, body: body);
   } catch (e) {
     // Should never happen since the apiServer.handleHttpRequest method
     // always returns a response.
