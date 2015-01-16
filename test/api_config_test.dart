@@ -256,7 +256,6 @@ main () {
     });
   });
 
-
   group('api_config_methods', () {
 
     test('misconfig', () {

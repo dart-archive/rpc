@@ -356,7 +356,6 @@ class TesterWithMultipleResourceAnnotations {
   final SomeResource someResource = new SomeResource();
 }
 
-
 class MultipleResourceMethodAnnotations {
 
   @ApiMethod(path: 'multi')
