@@ -436,10 +436,12 @@ your pubspec.yaml.
 
 ###### Checking out the GitHub generator repository
 
+```
 $ git clone https://github.com/dart-lang/discovery_api_dart_client_generator.git
 $ cd discovery_api_dart_client_generator
 $ pub get
 $ dart bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
+```
 
 You can then include the generated library in your own client project.
 
@@ -456,8 +458,10 @@ dev_dependencies:
 ```
 Run the below commands within your project.
 
+```
 $ pub get
 $ pub run discovery_api_client_generator:generate generate --input-dir=input --output-dir=output --package-name=myapi
+```
 
 The libraries can be used like any of the other Google Client API libraries,
 [some samples here](https://github.com/dart-lang/googleapis_examples).

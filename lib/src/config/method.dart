@@ -4,7 +4,6 @@
 
 part of rpc.config;
 
-
 final _bytesToJson = UTF8.decoder.fuse(JSON.decoder);
 final _jsonToBytes = JSON.encoder.fuse(UTF8.encoder);
 final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
@@ -92,7 +91,6 @@ class ApiConfigMethod {
     return new ApiConfigMethod._(id, instance, mm.simpleName,
         name, metadata.path, httpMethod, metadata.description,
         pathParams, queryParamTypes, requestSchema, responseSchema, parser);
-
 
   }
 

@@ -22,7 +22,6 @@ part 'config/resource.dart';
 part 'config/schema.dart';
 part 'config/utils.dart';
 
-
 class ApiConfigError extends Error {
   final String message;
   ApiConfigError(this.message);
