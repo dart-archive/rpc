@@ -15,13 +15,18 @@ final ApiServer _apiServer = new ApiServer();
 const API = '/api';
 const REST = '/rest';
 
-void main() {
+void main() async {
   _apiServer.addApi(new ToyApi());
   var apiRouter = shelf_route.router();
   apiRouter.add(API, ['GET', 'POST'], _apiHandler, exactMatch: false);
   apiRouter.add(REST, ['GET'], _allDiscoveryDocsHandler);
 
-  shelf_io.serve(apiRouter.handler, '0.0.0.0', 9090);
+  var handler = const shelf.Pipeline()
+      .addMiddleware(shelf.logRequests())
+      .addHandler(apiRouter.handler);
+
+  var server = await shelf_io.serve(handler, '0.0.0.0', 9090);
+  print('Listening at port ${server.port}.');
 }
 
 /// A shelf handler for '/api' API requests .
@@ -44,6 +49,9 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
     var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,
                               headers: apiResponse.headers);
+  } on RpcError catch (e) {
+    var body = '${e.name}\n${e.msg}';
+    return new shelf.Response(e.code, body: body);
   } catch (e) {
     // Should never happen since the apiServer.handleHttpRequest method
     // always returns a response.
