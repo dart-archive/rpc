@@ -15,7 +15,7 @@ final ApiServer _apiServer = new ApiServer();
 const API = '/api';
 const REST = '/rest';
 
-void main() async {
+Future main() async {
   _apiServer.addApi(new ToyApi());
   var apiRouter = shelf_route.router();
   apiRouter.add(API, ['GET', 'POST'], _apiHandler, exactMatch: false);
@@ -34,13 +34,7 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
   var requestPath = request.url.path;
   if (requestPath.endsWith(REST)) {
     // Return the discovery doc for the given API.
-    var apiKey = requestPath.substring(0, requestPath.length - REST.length);
-    var doc = _apiServer.getDiscoveryDocument(apiKey, 'api', _rootUrl(request));
-    if (doc == null) {
-      return new Future.value(
-          new shelf.Response.notFound('API \'${apiKey} not found.'));
-    }
-    return new Future.value(new shelf.Response.ok(doc));
+    return _discoveryDocumentHandler(request);
   }
   try {
     var apiRequest =
@@ -49,14 +43,23 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
     var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,
                               headers: apiResponse.headers);
-  } on RpcError catch (e) {
-    var body = '${e.name}\n${e.msg}';
-    return new shelf.Response(e.code, body: body);
   } catch (e) {
     // Should never happen since the apiServer.handleHttpRequest method
     // always returns a response.
     return new shelf.Response.internalServerError(body: e.toString());
   }
+}
+
+/// Returns a discovery document for a given API.
+Future<shelf.Response> _discoveryDocumentHandler(shelf.Request request) {
+  var requestPath = request.url.path;
+  var apiKey = requestPath.substring(0, requestPath.length - REST.length);
+  var doc = _apiServer.getDiscoveryDocument(apiKey, 'api', _rootUrl(request));
+  if (doc == null) {
+    return new Future.value(
+        new shelf.Response.notFound('API \'${apiKey} not found.'));
+  }
+  return new Future.value(new shelf.Response.ok(doc));
 }
 
 /// Returns all discovery documents.

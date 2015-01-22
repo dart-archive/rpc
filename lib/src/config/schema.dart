@@ -8,139 +8,39 @@ String _capitalize(String string) => "${string.substring(0,1).toUpperCase()}${st
 
 class ApiConfigSchema {
   final String schemaName;
-  final ClassMirror _schemaClass;
-  final String _autoName;
-  Map<Symbol, ApiConfigSchemaProperty> _properties = {};
+  final ClassMirror schemaClass;
+  final Map<Symbol, ApiConfigSchemaProperty> _properties = {};
+  bool propertiesInitialized = false;
 
-  factory ApiConfigSchema(ClassMirror schemaClass,
-                          ApiConfig api,
-                          {String name}) {
-    var autoName = MirrorSystem.getName(schemaClass.simpleName);
-    var schemaName = autoName;
-    if (name != null && name.isNotEmpty) {
-      schemaName = name;
-    }
+  ApiConfigSchema(this.schemaName, this.schemaClass);
 
-    var schema = api._getSchema(schemaName);
-    if (schema == null) {
-      schema = new ApiConfigSchema._(schemaClass, schemaName, autoName, api);
-    } else {
-      if (schema._autoName != autoName) {
-        throw new ApiConfigError('$schemaName cannot have two different sets '
-                                 'of properties.');
-      }
-    }
-
-    return schema;
-  }
-
-  ApiConfigSchema._(this._schemaClass, this.schemaName,
-                    this._autoName, ApiConfig api) {
-    var methods = _schemaClass.declarations.values.where(
-      (mm) => mm is MethodMirror && mm.isConstructor
-    );
-    if (!methods.isEmpty && methods.where(
-        (mm) => mm.simpleName == _schemaClass.simpleName).isEmpty) {
-      throw new ApiConfigError('$schemaName needs to have an unnamed '
-                               'constructor.');
-    }
-
-    api.addSchema(schemaName, this);
-
-    _createProperties(api);
-  }
-
-  void _createProperties(ApiConfig api) {
-    var properties = _schemaClass.declarations.values.where(
-      (dm) => dm is VariableMirror &&
-              !dm.isConst && !dm.isFinal && !dm.isPrivate && !dm.isStatic
-    );
-
-    properties.forEach((VariableMirror vm) {
-      var prop = new ApiConfigSchemaProperty(vm, api);
-      if (prop != null) {
-        _properties[vm.simpleName] = prop;
-      }
-    });
+  // Helper to add properties. We use this to be able to create the schema
+  // before having parsed its properties to detect cycles. However we don't
+  // want to support updating properties in general, hence the assert.
+  void initProperties(Map<Symbol, ApiConfigSchemaProperty> properties) {
+    assert(_properties.isEmpty);
+    _properties.addAll(properties);
+    propertiesInitialized = true;
   }
 
   bool get hasProperties => !_properties.isEmpty;
 
-  bool hasSimpleProperty(List<String> path) {
-    var property = _properties[new Symbol(path[0])];
-    if (property == null) {
-      return false;
-    }
-    if (path.length == 1) {
-      return (property.isSimple);
-    }
-    if (property is! SchemaProperty) {
-      return false;
-    }
-    path.removeAt(0);
-    return property._ref.hasSimpleProperty(path);
-  }
-
-  Map getParameter(List<String> path,
-                   {bool repeated: false, bool required: true}) {
-    var property = _properties[new Symbol(path[0])];
-    if (path.length == 1) {
-      var param = property.parameter;
-      if (param != null) {
-        param['repeated'] = repeated || property.repeated;
-        param['required'] = required && property.required;
-      }
-      return param;
-    }
-    if (property is! SchemaProperty) {
-      return null;
-    }
-    path.removeAt(0);
-    return property._ref.getParameter(
-      path,
-      repeated: repeated || property.repeated,
-      required: required && property.required
-    );
-  }
-
   Map get descriptor {
     var descriptor = {};
+    // TOOD: check up on schemaName, currently it is qualified class name...
     descriptor['id'] = schemaName;
     descriptor['type'] = 'object';
     descriptor['properties'] = {};
 
     _properties.values.forEach((prop) {
-      descriptor['properties'][prop.propertyName] = prop.descriptor;
+      descriptor['properties'][prop.name] = prop.descriptor;
     });
 
     return descriptor;
   }
 
-  Map<String, Map> getParameters(
-      {String prefix: '', bool repeated: false, bool required: true}) {
-    var parameters = {};
-    _properties.values.forEach((property) {
-      if (property is! SchemaProperty) {
-        parameters['$prefix${property.propertyName}'] = property.parameter;
-        if (repeated || property.repeated) {
-          parameters['$prefix${property.propertyName}']['repeated'] = true;
-        }
-        if (required && property.required) {
-          parameters['$prefix${property.propertyName}']['required'] = true;
-        }
-      } else {
-        parameters.addAll(property._ref.getParameters(
-          prefix: '$prefix${property.propertyName}.',
-          repeated: repeated || property.repeated,
-          required: required && property.required
-        ));
-      }
-    });
-    return parameters;
-  }
-
   fromRequest(Map request) {
-    InstanceMirror schema = _schemaClass.newInstance(new Symbol(''), []);
+    InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
     if (request != null) {
       request.forEach((name, value) {
         if (value != null) {
@@ -166,7 +66,7 @@ class ApiConfigSchema {
           }
           if (prop.required) {
             throw new BadRequestError(
-                'Required field ${prop.propertyName} is missing');
+                'Required field ${prop.name} is missing');
           }
         }
       }
@@ -180,7 +80,7 @@ class ApiConfigSchema {
     _properties.forEach((sym, prop) {
       var value = prop.toResponse(mirror.getField(sym).reflectee);
       if (value != null) {
-        response[prop.propertyName] = value;
+        response[prop.name] = value;
       }
     });
     return response;

@@ -1,0 +1,725 @@
+// Copyright (c) 2014, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+library rpc.parser;
+
+import 'dart:async';
+import 'dart:mirrors';
+
+import 'package:uri/uri.dart';
+
+import 'annotations.dart';
+import 'config.dart';
+import 'utils.dart';
+
+class ApiParser {
+  // List of all the errors found by the parser.
+  final List<ApiConfigError> errors = [];
+
+  final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
+
+  final Map<String, List<ApiConfigMethod>> _apiMethods = {};
+
+  final Map<String, ApiConfigSchema> _apiSchemas = {};
+
+  // Stack of contextual IDs.
+  // The id itself is composed of a List<String> to allow for easy adding
+  // and removing id segments.
+  final List<List<String>> _idStack = [[]];
+
+  // Returns the current id, which is the last in the list (top of the stack).
+  String get _contextId => _idStack.last.join('.');
+
+  // Push a new id on the stack.
+  void _pushId(String id) {
+    _idStack.add([id]);
+  }
+
+  // Pop the current id of the stack.
+  void _popId() {
+    assert(_idStack.isNotEmpty);
+    _idStack.removeLast().join('.');
+  }
+
+  // Add an id segment to the current id.
+  void _addIdSegment(String id) {
+    assert(_idStack.isNotEmpty);
+    _idStack.last.add(id);
+  }
+
+  // Remove the last id segment from the current id.
+  String _removeIdSegment() {
+    assert(_idStack.isNotEmpty);
+    return _idStack.last.removeLast();
+  }
+
+  // Changes [name] to lower camel case, used for default names and ids.
+  String _camelCaseName(String name) {
+    return name.substring(0, 1).toLowerCase() + name.substring(1);
+  }
+
+  // Returns the annotation of type 'apiType' if exists and valid.
+  // Otherwise returns null.
+  dynamic _getMetadata(DeclarationMirror dm, Type apiType) {
+    var annotations =
+        dm.metadata.where((a) => a.reflectee.runtimeType == apiType).toList();
+    if (annotations.length == 0) {
+      return null;
+    } else if (annotations.length > 1) {
+      var name = MirrorSystem.getName(dm.simpleName);
+      addError('Multiple ${apiType} annotations on declaration \'$name\'.');
+      return null;
+    }
+    return annotations.first.reflectee;
+  }
+
+  void addError(String errorMessage) {
+    // TODO: Make it configurable whether to throw or collect the errors.
+    errors.add(new ApiConfigError('$_contextId: $errorMessage'));
+  }
+
+  bool get isValid => errors.isEmpty;
+
+  // Parses a top level API class and all reachable resources, methods, and
+  // schemas and returns a corresponding ApiConfig instance.
+  ApiConfig parse(dynamic api) {
+    var apiInstance = reflect(api);
+    var apiClass = apiInstance.type;
+
+    // id used for error reporting and part of the discovery doc id for methods.
+    var id =  MirrorSystem.getName(apiClass.simpleName);
+    _addIdSegment(id);
+
+    // Parse ApiClass annotation.
+    ApiClass metaData = _getMetadata(apiClass, ApiClass);
+    if (metaData == null) {
+      addError('Missing required @ApiClass annotation.');
+      metaData = new ApiClass();
+    }
+    var name = metaData.name;
+    if (name == null || name.isEmpty) {
+      // Default to class name in camel case.
+      name = _camelCaseName(id);
+    }
+    var version = metaData.version;
+    if (version == null || version.isEmpty) {
+      addError('@ApiClass.version field is required.');
+    }
+    // The apiKey is used to match a request against a specific API and version.
+    String apiKey = '/$name/$version';
+
+    // Parse API resources and methods.
+    var resources = _parseResources(apiInstance);
+    var methods = _parseMethods(apiInstance);
+
+    var apiConfig = new ApiConfig(apiKey, name, version, metaData.title,
+                                  metaData.description, resources, methods,
+                                  _apiSchemas, _apiMethods);
+    _removeIdSegment();
+    assert(_contextId.isEmpty);
+    return apiConfig;
+  }
+
+  // Scan through all class instance fields and parse the one's annotated
+  // with @ApiResource.
+  Map<String, ApiConfigResource> _parseResources(InstanceMirror classInstance) {
+    var resources= {};
+
+    // Scan through the class instance's declarations and parse fields annotated
+    // with the @ApiResource annotation.
+    classInstance.type.declarations.values.forEach((dm) {
+      var metadata = _getMetadata(dm, ApiResource);
+      if (metadata == null) return;  // Not a valid ApiResource.
+
+      var fieldName = MirrorSystem.getName(dm.simpleName);
+      if (dm is! VariableMirror) {
+        // Only fields can have an @ApiResource annotation.
+        addError('@ApiResource annotation on non-field: \'$fieldName\'');
+        return;
+      }
+
+      // Parse resource and add it to the map of resources for the containing
+      // class.
+      var resourceInstance = classInstance.getField(dm.simpleName);
+      ApiConfigResource resourceConfig =
+          parseResource(fieldName, resourceInstance, metadata);
+      if (resources.containsKey(resourceConfig.name)) {
+        addError('Duplicate resource with name: ${resourceConfig.name}');
+      } else {
+        resources[resourceConfig.name] = resourceConfig;
+      }
+    });
+    return resources;
+  }
+
+  // Parse a specific resource's sub resources and methods and return an
+  // ApiConfigResource.
+  ApiConfigResource parseResource(String defaultResourceName,
+                                  InstanceMirror resourceInstance,
+                                  ApiResource metadata) {
+    var id = _camelCaseName(defaultResourceName);
+    _addIdSegment(id);
+
+    // Recursively parse API sub resources and methods on this resourceInstance.
+    var resources = _parseResources(resourceInstance);
+    var methods = _parseMethods(resourceInstance);
+
+    var name = metadata.name;
+    if (name == null) {
+    // The default name is the camel-case version of the default resource name.
+      name =  id;
+    }
+    _removeIdSegment();
+
+    return new ApiConfigResource(name, resources, methods);
+  }
+
+  // Parse a specific instance's methods and return a list of ApiConfigMethod's
+  // corresponding to each of the method's annotated with @ApiMethod.
+  List<ApiConfigMethod> _parseMethods(InstanceMirror classInstance) {
+    var methods = [];
+    // Parse all methods annotated with the @ApiMethod annotation on this class
+    // instance.
+    classInstance.type.declarations.values.forEach((dm) {
+      var metadata = _getMetadata(dm, ApiMethod);
+      if (metadata == null) return null;
+
+      if (dm is! MethodMirror || !dm.isRegularMethod) {
+        // The @ApiMethod annotation is only supported on regular methods.
+        var name = MirrorSystem.getName(dm.simpleName);
+        addError('@ApiMethod annotation on non-method declaration: \'$name\'');
+      }
+
+      var method = parseMethod(dm, metadata, classInstance);
+      methods.add(method);
+    });
+    return methods;
+  }
+
+  // Parse a specific method, including parameters and return type, and return
+  // the corresponding ApiConfigMethod.
+  ApiConfigMethod parseMethod(MethodMirror mm,
+                              ApiMethod metadata,
+                              InstanceMirror methodOwner) {
+    const List<String> allowedMethods =
+        const ['GET', 'DELETE', 'PUT', 'POST', 'PATCH'];
+
+    // Method name is used for error reporting and as a default for the
+    // name in the discovery document.
+    var methodName = _camelCaseName(MirrorSystem.getName(mm.simpleName));
+    _addIdSegment(methodName);
+
+    // Parse name.
+    var name = metadata.name;
+    if (name == null || name.isEmpty) {
+      // Default method name is method name in camel case.
+      name = methodName;
+    }
+
+    // Method discovery document id.
+    var discoveryId = _contextId;
+
+    // Validate method path.
+    if (metadata.path == null || metadata.path.isEmpty) {
+      addError('ApiMethod.path field is required.');
+    } else if (metadata.path.startsWith('/')) {
+      addError('path cannot start with \'/\'.');
+    }
+
+    // Parse HTTP method.
+    var httpMethod = metadata.method.toUpperCase();
+    if (!allowedMethods.contains(httpMethod)) {
+      addError('Unknown HTTP method: ${httpMethod}.');
+    }
+
+    // Setup a uri parser used to match a uri to this method.
+    var parser;
+    try {
+      parser = new UriParser(new UriTemplate('${metadata.path}'));
+    } catch (e) {
+      addError('Invalid path: ${metadata.path}. Failed with error: $e');
+    }
+
+    // Parse method parameters. Path parameters must be parsed first followed by
+    // either the query string parameters or the request schema.
+    var pathParams = _parsePathParameters(mm, metadata.path);
+    var queryParamTypes;
+    var requestSchema;
+    if (bodyLessMethods.contains(httpMethod)) {
+      // If this is a method without body it can have named parameters
+      // passed via the query string. There must be a named parameter
+      // for each parameter in the query string.
+      queryParamTypes =
+          _parseQueryParameters(mm, metadata.path, pathParams.length);
+    } else {
+      // Methods with a body must have exactly one additional parameter, namely
+      // the class parameter corresponding to the request body.
+      requestSchema =
+          _parseMethodRequestParameter(mm, httpMethod, pathParams.length);
+    }
+
+    // Parse method return type.
+    var responseSchema = _parseMethodReturnType(mm);
+
+    var methodConfig = new ApiConfigMethod(discoveryId, methodOwner,
+        mm.simpleName, name, metadata.path, httpMethod, metadata.description,
+        pathParams, queryParamTypes, requestSchema, responseSchema, parser);
+
+    _setupApiMethod(methodConfig);
+
+    _removeIdSegment();
+    return methodConfig;
+  }
+
+  // Parses a method's url path parameters and validates them against the
+  // method signature.
+  List<String> _parsePathParameters(MethodMirror mm, String path) {
+    var pathParams = [];
+    if (path == null) return pathParams;
+
+    // Parse the path to get the number and order of the path parameters
+    // and to validate the same order is given in the method signature.
+    // The path parameters must be parsed before the query or request
+    // parameters since the number of path parameters is needed.
+    var parsedPathParams = _pathMatcher.allMatches(path);
+    if (parsedPathParams.length > 0 &&
+        (mm.parameters == null ||
+         mm.parameters.length < parsedPathParams.length)) {
+        addError('Missing methods parameters specified in method path: $path.');
+        // We don't process the method mirror if not enough parameters.
+        return pathParams;
+    }
+    for (int i = 0; i < parsedPathParams.length; ++i) {
+      var pm = mm.parameters[i];
+      var pathParamName = parsedPathParams.elementAt(i).group(1);
+      if (pm.simpleName != MirrorSystem.getSymbol(pathParamName)) {
+        addError(
+            'Expected method parameter with name: \'$pathParamName\', but found'
+            ' parameter with name: ${MirrorSystem.getName(pm.simpleName)}.');
+      }
+      if (pm.isOptional || pm.isNamed) {
+        addError('No support for optional path parameters in API methods.');
+      }
+      if (pm.type is! ClassMirror || pm.type.simpleName != #String) {
+        // TODO: Add support for integer.
+        addError('Path parameter must be of type String.');
+      }
+      pathParams.add(pathParamName);
+    }
+    return pathParams;
+  }
+
+  // Parses a method's url query string and matches it against the corresponding
+  // named parameters for this method.
+  Map<String, Symbol> _parseQueryParameters(MethodMirror mm,
+                                            String path,
+                                            int queryParamIndex) {
+    var queryParamTypes = {};
+    if (path == null) {
+      assert(!isValid);
+      return queryParamTypes;
+    }
+    Map queryParameters = Uri.parse(path).queryParameters;
+    if (queryParameters.length != mm.parameters.length - queryParamIndex) {
+      addError('Expected ${queryParameters.length} more parameter(s), but '
+        'method ${MirrorSystem.getName(mm.simpleName)} specified '
+        '${mm.parameters.length} more parameter(s).');
+      return queryParamTypes;
+    }
+    for (int i = queryParamIndex; i < mm.parameters.length; ++i) {
+      var pm = mm.parameters[i];
+      if (!pm.isNamed) {
+        addError('Method parameters populated by query string argument must be '
+                 'a named parameter.');
+      }
+      var methodParamName = MirrorSystem.getName(pm.simpleName);
+      if (!queryParameters.containsKey(methodParamName)) {
+        addError('Missing parameter: $methodParamName in method query string.');
+      }
+      queryParamTypes[methodParamName] = pm.simpleName;
+    }
+    return queryParamTypes;
+  }
+
+  // Parses the method's request parameter. Only called for methods using the
+  // POST HTTP method.
+  ApiConfigSchema _parseMethodRequestParameter(MethodMirror mm,
+                                               String httpMethod,
+                                               int requestParamIndex) {
+    if (mm.parameters.length  != requestParamIndex + 1) {
+      addError('API methods using $httpMethod must have a signature of path '
+               'parameters followed by one request parameter.');
+      return null;
+    }
+
+    // Validate the request parameter, following the path parameters.
+    var requestParam = mm.parameters[requestParamIndex];
+    if (requestParam.isNamed || requestParam.isOptional) {
+      addError('Request parameter cannot be optional or named.');
+    }
+    var requestType = requestParam.type;
+    if (requestType is! ClassMirror ||
+        requestType.simpleName == #dynamic ||
+        requestType.isAbstract) {
+      addError('API Method parameter has to be an instantiable class.');
+      return null;
+    }
+    return parseSchema(requestType);
+  }
+
+  // Parses a method's return type and returns the equivalent ApiConfigSchema.
+  ApiConfigSchema _parseMethodReturnType(MethodMirror mm) {
+    var returnType = mm.returnType;
+    if (returnType.isSubtypeOf(reflectType(Future))) {
+      var types = returnType.typeArguments;
+      if (types.length == 1) {
+        returnType = types[0];
+      } else {
+        addError('Future return type has to have exactly one non-dynamic type '
+                 'parameter.');
+        return null;
+      }
+    }
+    // Note: I cannot use #void to get the symbol since void is a keyword.
+    if (returnType.simpleName == const Symbol('void')) {
+      addError(
+          'API Method cannot be void, use VoidMessage as return type instead.');
+      return null;
+    }
+    if (returnType.simpleName == #bool ||
+        returnType.simpleName == #int  ||
+        returnType.simpleName == #num  ||
+        returnType.simpleName == #double ||
+        returnType.simpleName == #String) {
+      addError('Return type: ${MirrorSystem.getName(returnType.simpleName)} '
+               'is not a valid return type.');
+      return null;
+    }
+    if (returnType is! ClassMirror ||
+        returnType.simpleName == #dynamic ||
+        returnType.isAbstract) {
+      addError('API Method return type has to be a instantiable class.');
+      return null;
+    }
+    return parseSchema(returnType);
+  }
+
+  // Adds the given method to the API's set of methods that can be invoked and
+  // validates there is no conflict with existing methods already in the API.
+  void _setupApiMethod(ApiConfigMethod method) {
+    if (method.path == null) {
+      assert(!isValid);
+      return;
+    }
+    var methodPathSegments = method.path.split('/');
+    var methodKey = '${method.httpMethod}${methodPathSegments.length}';
+
+    // Check for duplicates.
+    //
+    // For a given http method type (GET, POST, etc.) a method path can only
+    // conflict/be ambiguous with another method path that has the same number
+    // of path segments. This relies on path parameters being required.
+    //
+    // All existing methods are grouped by their http method plus their number
+    // of path segments.
+    // E.g. GET a/{b}/c will be in the _methodMap group with key 'GET3'.
+    //
+    // The only way to ensure that two methods within the same group are not
+    // ambiguous is if they have at least one non-parameter path segment in the
+    // same location that does not match each other. That check is done by the
+    // conflictingPaths method call.
+    var existingMethods = _apiMethods.putIfAbsent(methodKey, () => []);
+    for (ApiConfigMethod existingMethod in existingMethods) {
+      List<String> existingMethodPathSegments = existingMethod.path.split('/');
+      if (_conflictingPaths(methodPathSegments, existingMethodPathSegments)) {
+        addError('Method path: ${method.path} conflicts with existing method: '
+                 '${existingMethod.id} with path: ${existingMethod.path}');
+      }
+    }
+    existingMethods.add(method);
+  }
+
+  // Given two method uri paths (as a list of path segments) validates the paths
+  // are not conflicting. They conflict if all the non-variable path segments
+  // are equal. If one of the non-variable path segments are different there is
+  // no conflict since we can always distinguish one from the other.
+  bool _conflictingPaths(List<String> pathSegments1,
+                         List<String> pathSegments2) {
+    assert(pathSegments1.length == pathSegments2.length);
+    for (int i = 0; i < pathSegments1.length; ++i) {
+      if (!pathSegments1[i].startsWith('{') &&
+          !pathSegments2[i].startsWith('{') &&
+          pathSegments1[i] != pathSegments2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Parses a class as a schema and returns the corresponding ApiConfigSchema.
+  // Adds the schema to the API's set of valid schemas.
+  ApiConfigSchema parseSchema(ClassMirror schemaClass) {
+    var name = _camelCaseName(MirrorSystem.getName(schemaClass.qualifiedName));
+    _pushId(name);
+
+    ApiConfigSchema schemaConfig = _apiSchemas[name];
+    if (schemaConfig != null) {
+      if (!schemaConfig.propertiesInitialized) {
+        // We have a cycle within the schema declarations. We don't allow that
+        // so just add an error and return.
+        addError('Schema has a (possibly indirect) cycle to itself.');
+      }
+      assert(schemaConfig.schemaClass == schemaClass);
+      _popId();
+      return schemaConfig;
+    }
+
+    // Check the schema class has an unnamed default constructor.
+    var methods = schemaClass.declarations.values.where(
+        (mm) => mm is MethodMirror && mm.isConstructor);
+    if (!methods.isEmpty && methods.where(
+        (mm) => mm.simpleName == schemaClass.simpleName).isEmpty) {
+      addError('Schema: $name must have an unnamed constructor.');
+    }
+    schemaConfig = new ApiConfigSchema(name, schemaClass);
+
+    // We put in the schema before parsing properties to detect cycles.
+    _apiSchemas[name] = schemaConfig;
+    var properties = _parseProperties(schemaClass);
+    schemaConfig.initProperties(properties);
+    _popId();
+
+    return schemaConfig;
+  }
+
+  // Runs through all fields on a schema class and parses them accordingly.
+  Map<Symbol, ApiConfigSchemaProperty> _parseProperties(
+      ClassMirror schemaClass) {
+    var properties = {};
+    schemaClass.declarations.values.forEach((vm) {
+      var metadata = _getMetadata(vm, ApiProperty);
+      if (metadata == null) {
+        // Generate a metadata with default values
+      metadata = new ApiProperty();
+      }
+      if (vm is! VariableMirror ||
+          vm.isConst || vm.isFinal || vm.isPrivate || vm.isStatic) {
+        // We only serialize non-final, non-const, non-static public fields.
+        return;
+      }
+      var property = parseProperty(vm, metadata);
+      if (property != null) {
+        properties[vm.simpleName] = property;
+      }
+    });
+    return properties;
+  }
+
+  // Parse a specific schema property, further dispatching based on the
+  // property's type.
+  ApiConfigSchemaProperty parseProperty(VariableMirror propertyMirror,
+                                        ApiProperty metadata) {
+    assert(metadata != null);
+    var type = propertyMirror.type;
+    if (type.simpleName == #dynamic) {
+      addError('${propertyMirror.simpleName}: Properties cannot be of type: '
+               '\'dynamic\'.');
+    }
+
+    // Check if this is a List property.
+    var repeated = false;
+    if (type.isSubtypeOf(reflectType(List))) {
+      repeated = true;
+      var types = type.typeArguments;
+      if (types.length != 1 || types[0].simpleName == #dynamic) {
+        addError('${propertyMirror.simpleName}: List property must specify '
+                 'exactly one non-dynamic type parameter');
+      }
+      type = types[0];
+    }
+    switch (type.reflectedType) {
+      case int:
+        return parseIntegerProperty(propertyMirror, metadata, repeated);
+      case double:
+        return parseDoubleProperty(propertyMirror, metadata, repeated);
+      case bool:
+        return parseBooleanProperty(propertyMirror, metadata, repeated);
+      case String:
+        if (metadata.values != null && metadata.values.isNotEmpty) {
+          return parseEnumProperty(propertyMirror, metadata, repeated);
+        }
+        return parseStringProperty(propertyMirror, metadata, repeated);
+      case DateTime:
+        return parseDateTimeProperty(propertyMirror, metadata, repeated);
+    }
+    if (type is ClassMirror && !(type as ClassMirror).isAbstract) {
+      return parseSchemaProperty(propertyMirror, metadata, type, repeated);
+    }
+    addError('${propertyMirror.simpleName}: Unsupported property type: '
+             '${type.reflectedType}');
+    return null;
+  }
+
+  // Parses an 'int' property.
+  IntegerProperty parseIntegerProperty(VariableMirror propertyMirror,
+                                       ApiProperty metadata,
+                                       bool repeated) {
+    assert(metadata != null);
+    String name = MirrorSystem.getName(propertyMirror.simpleName);
+    String apiFormat = metadata.format;
+    if (apiFormat == null || apiFormat.isEmpty) {
+      apiFormat = 'int32';
+    }
+    String apiType;
+    if (apiFormat == 'int32' || apiFormat == 'uint32') {
+      apiType = 'integer';
+    } else if (apiFormat == 'int64' || apiFormat == 'uint64'){
+      apiType = 'string';
+    } else {
+      addError('$name: Invalid integer variant: $apiFormat. Supported variants '
+               'are: int32, uint32, int64, uint64.');
+    }
+    if (_parseInt(metadata.minValue, apiFormat, name, 'Min') &&
+        _parseInt(metadata.maxValue, apiFormat, name, 'Max')) {
+      // We only parse the default if min/max are valid since we need them to
+      // do the range checking.
+      _parseIntDefault(metadata, apiFormat, name);
+    }
+    return new IntegerProperty(name, metadata.description, metadata.required,
+                               metadata.defaultValue, repeated, apiType,
+                               apiFormat, metadata.minValue, metadata.maxValue);
+  }
+
+  // Parses a value to determine if it is a valid integer value.
+  // Return true only if the value contains a valid integer.
+  bool _parseInt(dynamic value,
+                 String format,
+                 String name,
+                 String messagePrefix) {
+    if (value == null) return false;
+    if (value is! int) {
+      addError('$name: $messagePrefix value must be of type: int.');
+      return false;
+    } else if (format == 'int32' && value != value.toSigned(32) ||
+               format == 'uint32' && value != value.toUnsigned(32) ||
+               format == 'uint32' && value != value.toUnsigned(32) ||
+               format == 'uint64' && value != value.toUnsigned(64)) {
+      addError(
+          '$name: $messagePrefix value must be in the range of an \'$format\'');
+      return false;
+    }
+    return true;
+  }
+
+  _parseIntDefault(ApiProperty metadata, String format, String name) {
+    var defaultValue = metadata.defaultValue;
+    if (!_parseInt(metadata.defaultValue, format, name, 'Default')) {
+      // If no defaultValue, just return.
+      return;
+    }
+    if (metadata.minValue != null && defaultValue < metadata.minValue) {
+      addError('$name: Default value must be >= ${metadata.minValue}.');
+    }
+    if (metadata.maxValue != null && defaultValue > metadata.maxValue) {
+      addError('$name: Default value must be <= ${metadata.maxValue}.');
+    }
+  }
+
+  // Parses a 'double' property.
+  DoubleProperty parseDoubleProperty(VariableMirror propertyMirror,
+                                     ApiProperty metadata,
+                                     bool repeated) {
+    assert(metadata != null);
+    String name = MirrorSystem.getName(propertyMirror.simpleName);
+    String apiFormat = metadata.format;
+    if (apiFormat == null || apiFormat == '') {
+      apiFormat = 'double';
+    }
+    if (apiFormat != 'double' && apiFormat != 'float') {
+      addError('$name: Invalid double variant.');
+    }
+    if (metadata.defaultValue != null && metadata.defaultValue is! double) {
+      addError('$name: DefaultValue must be of type \'double\'.');
+    }
+    return new DoubleProperty(name, metadata.description, metadata.required,
+        metadata.defaultValue, repeated, apiFormat);
+  }
+
+  // Parses a 'bool' property.
+  BooleanProperty parseBooleanProperty(VariableMirror propertyMirror,
+                                       ApiProperty metadata,
+                                       bool repeated) {
+    assert(metadata != null);
+    String name = MirrorSystem.getName(propertyMirror.simpleName);
+    if (metadata.defaultValue != null && metadata.defaultValue is! bool) {
+      addError('$name: Default value: ${metadata.defaultValue} must be boolean '
+               '\'true\' or \'false\'.');
+    }
+    return new BooleanProperty(name, metadata.description, metadata.required,
+                               metadata.defaultValue, repeated);
+  }
+
+  // Parses an 'enum' property.
+  EnumProperty parseEnumProperty(VariableMirror propertyMirror,
+                                 ApiProperty metadata,
+                                 bool repeated) {
+    assert(metadata != null);
+    String name = MirrorSystem.getName(propertyMirror.simpleName);
+    var defaultValue = metadata.defaultValue;
+    if (defaultValue != null &&
+        (defaultValue is! String ||
+         !metadata.values.containsKey(defaultValue))) {
+      addError('$name: Default value: $defaultValue must be one of the valid '
+               'enum values: ${metadata.values.keys.toString()}.');
+    }
+    return new EnumProperty(name, metadata.description, metadata.required,
+                            metadata.defaultValue, metadata.values);
+  }
+
+  // Parses a 'String' property.
+  StringProperty parseStringProperty(VariableMirror propertyMirror,
+                                     ApiProperty metadata,
+                                     bool repeated) {
+    assert(metadata != null);
+    String name = MirrorSystem.getName(propertyMirror.simpleName);
+    if (metadata.defaultValue != null && metadata.defaultValue is! String) {
+      addError('$name: Default value: ${metadata.defaultValue} must be of type '
+               '\'String\'.');
+    }
+    return new StringProperty(name, metadata.description, metadata.required,
+                              metadata.defaultValue, repeated);
+  }
+
+  // Parses a 'DateTime' property.
+  DateTimeProperty parseDateTimeProperty(VariableMirror propertyMirror,
+                                         ApiProperty metadata,
+                                         bool repeated) {
+    assert(metadata != null);
+    String name = MirrorSystem.getName(propertyMirror.simpleName);
+    if (metadata.defaultValue != null && metadata.defaultValue is! DateTime) {
+      addError('$name: Default value ${metadata.defaultValue} must be of type '
+               '\'DateTime\'.');
+    }
+    return new DateTimeProperty(name, metadata.description, metadata.required,
+                                metadata.defaultValue, repeated);
+  }
+
+  // Parses a nested class schema property.
+  SchemaProperty parseSchemaProperty(VariableMirror propertyMirror,
+                                     ApiProperty metadata,
+                                     ClassMirror schemaTypeMirror,
+                                     bool repeated) {
+    assert(metadata != null);
+    assert(schemaTypeMirror is ClassMirror && !schemaTypeMirror.isAbstract);
+    var name = MirrorSystem.getName(propertyMirror.simpleName);
+    if (metadata.defaultValue != null &&
+        metadata.defaultValue.runtimeType != schemaTypeMirror.reflectedType) {
+      addError('$name: Default value must be of type '
+               '${schemaTypeMirror.simpleName}');
+    }
+    var schema = parseSchema(schemaTypeMirror);
+    return new SchemaProperty(name, metadata.description, metadata.required,
+                              metadata.defaultValue, repeated, schema);
+  }
+}

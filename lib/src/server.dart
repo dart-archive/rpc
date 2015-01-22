@@ -6,11 +6,12 @@ library rpc.server;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'config.dart';
 import 'errors.dart';
 import 'message.dart';
+import 'parser.dart';
+import 'utils.dart';
 
 final JsonEncoder _encoder = new JsonEncoder.withIndent(' ');
 
@@ -21,16 +22,17 @@ class ApiServer {
 
   /// Add a new api to the API server.
   void addApi(api) {
-    var apiConfig = new ApiConfig(api);
-    if (_apis.containsKey(apiConfig.apiPath)) {
-      apiConfig.addError(new ApiConfigError('${apiConfig.id} API path: '
-          '${apiConfig.apiPath} already in use.'));
+    ApiParser parser = new ApiParser();
+    ApiConfig apiConfig = parser.parse(api);
+    if (_apis.containsKey(apiConfig.apiKey)) {
+      parser.addError('API already exists with path: ${apiConfig.apiKey}.');
     }
-    if (!apiConfig.isValid) {
-      throw new ApiConfigError('RPC: Failed to parse API annotations.\n\n'
-                               '${apiConfig.errors}\n');
+    if (!parser.isValid) {
+      throw new ApiConfigError('RPC: Failed to parse API.\n\n'
+                               '${apiConfig.apiKey}:\n' +
+                                parser.errors.join('\n') + '\n');
     }
-    _apis[apiConfig.apiPath] = apiConfig;
+    _apis[apiConfig.apiKey] = apiConfig;
   }
 
   /// Handles the api call.
@@ -50,46 +52,32 @@ class ApiServer {
   ///       }
   ///     }
   Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) async {
-    ApiConfig api = _apis[request.apiKey];
-    if (api == null || !api.isValid) {
-      var error =
-          new NotFoundError('No valid API with key ${request.apiKey}.');
-      return _wrapErrorAsResponse(request, error);
-    }
+    var drain = true;
     var response;
     try {
-      response = await api.handleHttpRequest(request);
-    } catch (e) {
-      response = _wrapErrorAsResponse(request, e);
-    }
-    return response;
-  }
+      // Parse the request to compute some of the values needed to determine
+      // which method to invoke.
+      var parsedRequest = new ParsedHttpApiRequest(request);
 
-  Future<HttpApiResponse>_wrapErrorAsResponse(HttpApiRequest request,
-                                              Exception error) async {
-    // TODO support more encodings.
-    var headers = {
-      HttpHeaders.CONTENT_TYPE: ContentType.JSON.toString(),
-      HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
-      HttpHeaders.PRAGMA: 'no-cache',
-      HttpHeaders.EXPIRES: '0'
-    };
-    var response;
-    if (error is RpcError) {
-      response =
-          new HttpApiResponse.error(error.code, error.msg, headers, error);
-    } else {
-      response =
-          new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
-                                    'Unknown API Error.', headers, error);
-    }
-    if (!request.bodyProcessed) {
-      // Drain the request before responding.
-      try {
-        await request.body.drain();
-      } catch(e) {
-        // Ignore any errors and return the original response generated above.
+      // The api key is the first two path segments.
+      ApiConfig api = _apis[parsedRequest.apiKey];
+      if (api == null) {
+        return httpErrorResponse(request,
+            new NotFoundError('No API with key: ${parsedRequest.apiKey}.'));
       }
+      drain = false;
+      response = await api.handleHttpRequest(parsedRequest);
+    } catch (e) {
+      // This can happen if the request is invalid and cannot be parsed into a
+      // ParsedHttpApiRequest or in the case of a bug in the handleHttpRequest
+      // code, e.g. a null pointer exception or similar. We don't drain the
+      // request body in that case since we cannot know whether the bug was
+      // before or after invoking the method and we cannot drain the body twice.
+      var exception = e;
+      if (exception is Error) {
+        exception = new Exception(e.toString());
+      }
+      response = httpErrorResponse(request, exception, drainRequest: drain);
     }
     return response;
   }

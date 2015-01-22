@@ -10,6 +10,9 @@ import 'dart:io';
 import 'package:rpc/rpc.dart';
 import 'toyapi.dart';
 
+const API = '/api';
+const REST = '/rest';
+
 final ApiServer _apiServer = new ApiServer();
 
 main() async {
@@ -20,17 +23,16 @@ main() async {
 
 /// Handle incoming HttpRequests.
 Future handleRequest(HttpRequest request) async {
-  const API = '/api';
-  const REST = '/rest';
   var requestPath = request.uri.path;
   if (requestPath.startsWith(API)) {
-    requestPath = requestPath.substring(API.length);
     if (requestPath.endsWith(REST)) {
-      requestPath =
-          requestPath.substring(0, requestPath.length - REST.length);
-      _discoveryDocHandler(requestPath, request);
+      // To get the api key we skip the application prefix '/api' and take
+      // the next two path segments which should contain the api name and
+      // version respectively.
+      var apiKey = '/' + request.uri.pathSegments.skip(1).take(2).join('/');
+      _discoveryDocHandler(apiKey, request);
     } else {
-      _apiHandler(requestPath, request);
+      _apiHandler(request);
     }
   } else if (requestPath.startsWith(REST)) {
     _allDiscoveryDocsHandler(request);
@@ -41,8 +43,12 @@ Future handleRequest(HttpRequest request) async {
   }
 }
 
-Future _apiHandler(String requestPath, HttpRequest request) async {
-  var apiRequest = new HttpApiRequest(request.method, requestPath,
+Future _apiHandler(HttpRequest request) async {
+  // When building the request we skip the first path segment since that
+  // is the application specific '/api' prefix.
+
+  var apiRequest = new HttpApiRequest(request.method,
+                                      request.uri.path.substring(API.length),
                                       request.headers.contentType.toString(),
                                       request);
 

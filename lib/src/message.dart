@@ -8,26 +8,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'errors.dart';
-
 /// Class used when invoking Http API requests.
 ///
 /// It holds the information necessary to route the request and all
 /// the parameters needed to invoke the method.
 class HttpApiRequest {
 
-  /// Key identifying the api for this request.
-  final String apiKey;
-
   /// HTTP method for this request (e.g. GET, POST,...).
   final String httpMethod;
 
-  /// Key identifying the method group within the api this request is for.
-  final String methodKey;
-
-  /// URI determining which method to invoke within the above method group.
-  /// The URI also contains path parameter values.
-  final Uri uri;
+  /// Request path.
+  final String path;
 
   /// Content type for the request's body.
   final String contentType;
@@ -35,42 +26,10 @@ class HttpApiRequest {
   /// Request body containing parameters for a POST request.
   final Stream<List<int>> body;
 
-  /// Used to determine if the body has been processed. This is needed to
-  /// avoid processing the single-subscriber stream twice.
-  bool bodyProcessed = false;
-
-  // Map from path parameter name to path parameter value. This is set once
-  // a method is matching the request and has succesfully parsed the above
-  // uri.
-  Map<String, String> _pathParameters;
-
-  factory HttpApiRequest(String httpMethod,
-                         String requestPath,
-                         String contentType,
-                         Stream<List<int>> body) {
-    // All HTTP api request paths must be of the form:
-    //   /<apiName>/<apiVersion>/<method|resourceName>[/...].
-    // Hence the number of path segments must be at least three for a valid
-    // request.
-    Uri uri = Uri.parse(requestPath);
-    if (uri.pathSegments.length < 3) {
-      throw new BadRequestError('Invalid request, missing API '
-                                'name and version: $requestPath.');
-    }
-    var apiKey = '/${uri.pathSegments[0]}/${uri.pathSegments[1]}';
-    var methodKey = '$httpMethod${uri.pathSegments.skip(2).length}';
-    return new HttpApiRequest._(apiKey, httpMethod, methodKey, uri,
-                                contentType, body, null);
-  }
-
-  HttpApiRequest._(this.apiKey, this.httpMethod, this.methodKey, this.uri,
-                   this.contentType, this.body, this._pathParameters);
-
-  void set pathParameters(Map<String, String> pp) { _pathParameters = pp; }
-  Map<String, String> get pathParameters => _pathParameters;
+  HttpApiRequest(this.httpMethod, this.path, this.contentType, this.body);
 
   Map<String, dynamic> get queryParameters {
-    // TODO: Parse query string and return a valid map.
+    // TODO: Support query parameters for GET requests.
     return null;
   }
 }

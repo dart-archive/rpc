@@ -21,7 +21,7 @@ class WrongMethods {
   void missingAnnotations3() {}
 
   @ApiMethod(name: 'test3', method: 'GET', path: 'test3')
-  VoidMessage wrongMethod(VoidMessage_) { return null;}
+  VoidMessage wrongMethodParameter(VoidMessage _) { return null;}
 
   @ApiMethod(name: 'test4', method: 'GET', path: 'test4/{test}')
   VoidMessage wrongParameterType(bool test) { return null; }
@@ -74,14 +74,15 @@ class WrongMethods {
   VoidMessage invalidPath2() { return null; }
 }
 
-class RecursiveGet {
-  @ApiMethod(name: 'test1', path: 'test1')
-  VoidMessage resursiveGet1(RecursiveMessage1 request) {
+@ApiClass(version: 'v1')
+class Recursive {
+  @ApiMethod(name: 'test1', method: 'POST', path: 'test1')
+  VoidMessage resursiveMethod1(RecursiveMessage1 request) {
     return null;
   }
 
-  @ApiMethod(name: 'test2', path: 'test2')
-  VoidMessage resursiveGet2(RecursiveMessage2 request) {
+  @ApiMethod(name: 'test2', method: 'POST', path: 'test2')
+  VoidMessage resursiveMethod2(RecursiveMessage2 request) {
     return null;
   }
 }
@@ -179,11 +180,8 @@ class CorrectMethods {
 class NoAnnotation {}
 
 @ApiClass()
-class NoVersion1 {
+class NoVersion {
 }
-
-@ApiClass(name: 'test')
-class NoVersion2 {}
 
 @ApiClass(version: 'test')
 class AmbiguousMethodPaths1 {
@@ -356,7 +354,8 @@ class TesterWithMultipleResourceAnnotations {
   final SomeResource someResource = new SomeResource();
 }
 
-class MultipleResourceMethodAnnotations {
+@ApiClass(version: 'v1test')
+class MultipleMethodAnnotations {
 
   @ApiMethod(path: 'multi')
   @ApiMethod(path: 'multi2')

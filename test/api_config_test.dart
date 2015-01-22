@@ -7,6 +7,7 @@ import 'dart:mirrors';
 
 import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
+import 'package:rpc/src/parser.dart';
 import 'package:unittest/unittest.dart';
 
 import 'src/test_api.dart';
@@ -15,18 +16,23 @@ main () {
   group('api_config_misconfig', () {
 
     test('no_apiclass_annotation', () {
-      expect(
-        () => new ApiConfig(new NoAnnotation()),
-        throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
-      );
-    });
-
-    List _noversionApis = [new NoVersion1(), new NoVersion2()];
-    _noversionApis.forEach((api) {
-      test(api.runtimeType.toString(), () {
-        var apiConfig = new ApiConfig(api);
-        expect(apiConfig.isValid, isFalse);
+      var parser = new ApiParser();
+      ApiConfig apiCfg = parser.parse(new NoAnnotation());
+      var expected = [
+          new ApiConfigError(
+              'NoAnnotation: Missing required @ApiClass annotation.'),
+          new ApiConfigError(
+              'NoAnnotation: @ApiClass.version field is required.')
+        ];
+        expect(parser.errors.toString(), expected.toString());
       });
+
+    test('no_apiclass_version', () {
+      var parser = new ApiParser();
+      parser.parse(new NoVersion());
+      var expected = [new ApiConfigError(
+          'NoVersion: @ApiClass.version field is required.')];
+      expect(parser.errors.toString(), expected.toString());
     });
 
     List ambiguousPaths = [new AmbiguousMethodPaths1(),
@@ -38,8 +44,9 @@ main () {
                            new AmbiguousMethodPaths7()];
     ambiguousPaths.forEach((ambiguous) {
       test(ambiguous.toString(), () {
-        var apiConfig = new ApiConfig(ambiguous);
-        expect(apiConfig.isValid, isFalse);
+        var parser = new ApiParser();
+        ApiConfig apiConfig = parser.parse(ambiguous);
+        expect(parser.isValid, isFalse);
         var config = apiConfig.toJson('rootUrl/');
         expect(config['version'], 'test');
       });
@@ -49,8 +56,9 @@ main () {
   group('api_config_correct', () {
 
     test('correct_simple', () {
-      var apiConfig = new ApiConfig(new Tester());
-      expect(apiConfig.isValid, isTrue);
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new Tester());
+      expect(parser.isValid, isTrue);
       Map expectedJson = {
         'kind': 'discovery#restDescription',
         'etag': '9a0bdcd569d244abfc83d507ea2e78031d5c7db9',
@@ -76,11 +84,17 @@ main () {
     });
 
     test('correct_simple2', () {
-      var apiConfig = new ApiConfig(new CorrectSimple());
-      expect(apiConfig.isValid, isTrue);
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new CorrectSimple());
+      expect(parser.isValid, isTrue);
       Map expectedSchemas = {
-        'TestMessage1': {
-          'id': 'TestMessage1',
+        'test_api.TestMessage2': {
+          'id': 'test_api.TestMessage2',
+          'type': 'object',
+          'properties': {'count': {'type': 'integer', 'format': 'int32'}}
+        },
+        'test_api.TestMessage1': {
+          'id': 'test_api.TestMessage1',
           'type': 'object',
           'properties': {
             'count': {'type': 'integer', 'format': 'int32'},
@@ -89,19 +103,27 @@ main () {
             'check': {'type': 'boolean'},
             'date': {'type': 'string', 'format': 'date-time'},
             'messages': {'type': 'array', 'items': {'type': 'string'}},
-            'submessage': {'\$ref': 'TestMessage2'},
-            'submessages':
-                {'type': 'array', 'items': {'\$ref': 'TestMessage2'}},
-            'enumValue': {'type': 'string'},
-            'defaultValue':
-                {'type': 'integer', 'format': 'int32', 'default': 10},
-            'limit': {'type': 'integer', 'format': 'int32'}
+            'submessage': {'\$ref': 'test_api.TestMessage2'},
+            'submessages': {'type': 'array',
+                            'items': {'\$ref': 'test_api.TestMessage2'}
+                           },
+            'enumValue': {
+              'type': 'string',
+              'enum': ['test1', 'test2', 'test3'],
+              'enumDescriptions': ['test1', 'test2', 'test3']
+            },
+            'defaultValue': {
+              'type': 'integer',
+              'format': 'int32',
+              'default': 10
+            },
+            'limit': {
+              'type': 'integer',
+              'format': 'int32',
+              'minimum': 10,
+              'maximum': 100
+            }
           }
-        },
-        'TestMessage2': {
-          'id': 'TestMessage2',
-          'type': 'object',
-          'properties': {'count': {'type': 'integer', 'format': 'int32'}}
         }
       };
       Map expectedMethods = {
@@ -127,8 +149,8 @@ main () {
           'description': null,
           'parameters': {},
           'parameterOrder': [],
-          'request': {'\$ref': 'TestMessage1'},
-          'response': {'\$ref': 'TestMessage1'}
+          'request': {'\$ref': 'test_api.TestMessage1'},
+          'response': {'\$ref': 'test_api.TestMessage1'}
         }
       };
       var json = apiConfig.toJson('http://localhost:8080/');
@@ -137,49 +159,237 @@ main () {
     });
 
     test('correct_extended', () {
-      var apiConfig = new ApiConfig(new CorrectMethods());
-      expect(apiConfig.isValid, isTrue);
-      var config = apiConfig.toJson('rootUrl/');
-      expect(config['name'], 'correct');
-      expect(config['version'], 'v1');
-      expect(config['schemas'].keys.length, 2);
-      expect(config['methods'].keys.length, 13);
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new CorrectMethods());
+      expect(parser.isValid, isTrue);
+      var json = apiConfig.toJson('http://localhost:8080/');
+      var expectedJsonMethods = {
+        'test1': {
+          'id': 'CorrectMethods.method1',
+          'path': 'test1',
+          'httpMethod': 'GET',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': []
+        },
+        'test2': {
+          'id': 'CorrectMethods.method2',
+          'path': 'test2',
+          'httpMethod': 'GET',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': [],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test3': {
+          'id': 'CorrectMethods.method3',
+          'path': 'test3/{count}',
+          'httpMethod': 'GET',
+          'description': null,
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'count\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test4': {
+          'id': 'CorrectMethods.method4',
+          'path': 'test4/{count}/{more}',
+          'httpMethod': 'GET',
+          'description': null,
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'count\'.',
+              'location': 'path'
+            },
+            'more': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'more\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count', 'more'],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test5': {
+          'id': 'CorrectMethods.method5',
+          'path': 'test5/{count}/some/{more}',
+          'httpMethod': 'GET',
+          'description': null,
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'count\'.',
+              'location': 'path'
+            },
+            'more': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'more\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count', 'more'],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test6': {
+          'id': 'CorrectMethods.method6',
+          'path': 'test6',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': [],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test7': {
+          'id': 'CorrectMethods.method7',
+          'path': 'test7',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': [],
+          'request': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test8': {
+          'id': 'CorrectMethods.method8',
+          'path': 'test8',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': [],
+          'request': {'\$ref': 'test_api.TestMessage1'},
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test9': {
+          'id': 'CorrectMethods.method9',
+          'path': 'test9/{count}',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'count\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test10': {
+          'id': 'CorrectMethods.method10',
+          'path': 'test10/{count}',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'count\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'request': {'\$ref': 'test_api.TestMessage1'},
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test11': {
+          'id': 'CorrectMethods.method14',
+          'path': 'test11/{count}/bar',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'required': true,
+              'description': 'Path parameter: \'count\'.',
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'request': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test12': {
+          'id': 'CorrectMethods.method12',
+          'path': 'test12',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': [],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test13': {
+          'id': 'CorrectMethods.method13',
+          'path': 'test13',
+          'httpMethod': 'POST',
+          'description': null,
+          'parameters': {},
+          'parameterOrder': []
+        }
+      };
+      expect(json['methods'], expectedJsonMethods);
     });
   });
 
   group('api_config_resources_misconfig', () {
 
     test('multiple_method_annotations', () {
-      var tester = new ApiConfig(new Tester());
-      var resource = new MultipleResourceMethodAnnotations();
-      var resourceMirror = reflect(resource);
-      new ApiConfigResource(resourceMirror, null, 'multiMethodAnnotations',
-                            tester);
-      expect(tester.isValid, isFalse);
+      var parser = new ApiParser();
+      var metadata = new ApiResource();
+      parser.parseResource(
+          'foo', reflect(new MultipleMethodAnnotations()), metadata);
+      expect(parser.isValid, isFalse);
+      var errors = [
+        new ApiConfigError(
+            'foo: Multiple ApiMethod annotations on declaration '
+            '\'multiAnnotations\'.')];
+      expect(parser.errors.toString(), errors.toString());
     });
 
     test('multiple_resource_annotations', () {
-      var tester = new ApiConfig(new TesterWithMultipleResourceAnnotations());
-      expect(tester.isValid, isFalse);
+      var parser = new ApiParser();
+      ApiConfig apiConfig =
+          parser.parse(new TesterWithMultipleResourceAnnotations());
+      expect(parser.isValid, isFalse);
+      var errors = [
+        new ApiConfigError('TesterWithMultipleResourceAnnotations: Multiple '
+            'ApiResource annotations on declaration \'someResource\'.')];
+      expect(parser.errors.toString(), errors.toString());
     });
 
     test('duplicate_resources', () {
-      var tester = new ApiConfig(new TesterWithDuplicateResourceNames());
-      expect(tester.isValid, isFalse);
+      var parser = new ApiParser();
+      ApiConfig apiConfig =
+          parser.parse(new TesterWithDuplicateResourceNames());
+      expect(parser.isValid, isFalse);
+      var errors = [
+        new ApiConfigError('TesterWithDuplicateResourceNames: Duplicate '
+                           'resource with name: someResource')];
+      expect(parser.errors.toString(), errors.toString());
     });
   });
 
   group('api_config_resources_correct', () {
 
     test('simple', () {
-      var tester = new ApiConfig(new TesterWithOneResource());
-      expect(tester.isValid, isTrue);
-      var json = tester.toJson('http://localhost:8080/');
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new TesterWithOneResource());
+      expect(parser.isValid, isTrue);
+      var json = apiConfig.toJson('http://localhost:8080/');
       Map expectedResources = {
         'someResource': {
           'methods': {
             'method1': {
-              'id': 'SomeResource.method1',
+              'id': 'TesterWithOneResource.someResource.method1',
               'path': 'someResourceMethod',
               'httpMethod': 'GET',
               'description': null,
@@ -194,13 +404,14 @@ main () {
     });
 
     test('two_resources', () {
-      var tester = new ApiConfig(new TesterWithTwoResources());
-      expect(tester.isValid, isTrue);
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new TesterWithTwoResources());
+      expect(parser.isValid, isTrue);
       var expectedResources = {
         'someResource': {
           'methods': {
             'method1': {
-              'id': 'SomeResource.method1',
+              'id': 'TesterWithTwoResources.someResource.method1',
               'path': 'someResourceMethod',
               'httpMethod': 'GET',
               'description': null,
@@ -213,7 +424,7 @@ main () {
         'nice_name': {
           'methods': {
             'method1': {
-              'id': 'NamedResource.method1',
+              'id': 'TesterWithTwoResources.namedResource.method1',
               'path': 'namedResourceMethod',
               'httpMethod': 'GET',
               'description': null,
@@ -224,13 +435,14 @@ main () {
           'resources': {}
         }
       };
-      var json = tester.toJson('http://localhost:8080/');
+      var json = apiConfig.toJson('http://localhost:8080/');
       expect(json['resources'], expectedResources);
     });
 
     test('nested_resources', () {
-      var tester = new ApiConfig(new TesterWithNestedResources());
-      expect(tester.isValid, isTrue);
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new TesterWithNestedResources());
+      expect(parser.isValid, isTrue);
       var expectedResources = {
         'resourceWithNested': {
           'methods': {},
@@ -238,7 +450,8 @@ main () {
             'nestedResource': {
               'methods': {
                 'method1': {
-                  'id': 'NestedResource.method1',
+                  'id': 'TesterWithNestedResources.resourceWithNested'
+                        '.nestedResource.method1',
                   'path': 'nestedResourceMethod',
                   'httpMethod': 'GET',
                   'description': null,
@@ -251,7 +464,7 @@ main () {
           }
         }
       };
-      var json = tester.toJson('http://localhost:8080/');
+      var json = apiConfig.toJson('http://localhost:8080/');
       expect(json['resources'], expectedResources);
     });
   });
@@ -259,113 +472,124 @@ main () {
   group('api_config_methods', () {
 
     test('misconfig', () {
-      var testMirror = reflectClass(WrongMethods);
-      var tester = new ApiConfig(new Tester());
-      var methods = testMirror.declarations.values.where(
-        (dm) => dm is MethodMirror &&
-                dm.isRegularMethod &&
-                dm.metadata.length > 0 &&
-                dm.metadata.first.reflectee.runtimeType == ApiMethod
-      );
-      methods.forEach((MethodMirror mm) {
-        var metadata = mm.metadata.first.reflectee;
-        expect(metadata.runtimeType, ApiMethod);
-        expect(
-          () => new ApiConfigMethod(
-              mm, metadata, tester.id, tester, reflect(tester)),
-          throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
-        );
-      });
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new WrongMethods());
+      expect(parser.isValid, isFalse);
+      var errors = [
+        new ApiConfigError(
+            'WrongMethods: Missing required @ApiClass annotation.'),
+        new ApiConfigError(
+            'WrongMethods: @ApiClass.version field is required.'),
+        new ApiConfigError('WrongMethods.missingAnnotations1: ApiMethod.path '
+            'field is required.'),
+        new ApiConfigError('WrongMethods.missingAnnotations1: API Method '
+            'cannot be void, use VoidMessage as return type instead.'),
+        new ApiConfigError('WrongMethods.missingAnnotations2: ApiMethod.path '
+            'field is required.'),
+        new ApiConfigError('WrongMethods.missingAnnotations2: API Method '
+            'cannot be void, use VoidMessage as return type instead.'),
+        new ApiConfigError('WrongMethods.missingAnnotations3: API Method '
+            'cannot be void, use VoidMessage as return type instead.'),
+        new ApiConfigError('WrongMethods.wrongMethodParameter: Expected 0 '
+            'more parameter(s), but method wrongMethodParameter specified 1 '
+            'more parameter(s).'),
+        new ApiConfigError('WrongMethods.wrongParameterType: Path parameter '
+            'must be of type String.'),
+        new ApiConfigError('WrongMethods.wrongPathAnnotation: Expected 0 more '
+            'parameter(s), but method wrongPathAnnotation specified 1 more '
+            'parameter(s).'),
+        new ApiConfigError('WrongMethods.wrongResponseType1: Return type: '
+            'String is not a valid return type.'),
+        new ApiConfigError('WrongMethods.wrongResponseType2: Return type: '
+            'bool is not a valid return type.'),
+        new ApiConfigError('WrongMethods.wrongFutureResponse: Return type: '
+            'bool is not a valid return type.'),
+        new ApiConfigError('WrongMethods.genericFutureResponse: API Method '
+            'return type has to be a instantiable class.'),
+        new ApiConfigError('WrongMethods.missingPathParam1: Missing methods '
+            'parameters specified in method path: test10/{id}.'),
+        new ApiConfigError('WrongMethods.missingPathParam2: Expected method '
+            'parameter with name: \'id\', but found parameter with name: '
+            'request.'),
+        new ApiConfigError('WrongMethods.missingPathParam2: Path parameter '
+            'must be of type String.'),
+        new ApiConfigError('WrongMethods.missingPathParam2: API methods using '
+            'POST must have a signature of path parameters followed by one '
+            'request parameter.'),
+        new ApiConfigError('WrongMethods.voidResponse: API Method cannot be '
+            'void, use VoidMessage as return type instead.'),
+        new ApiConfigError('WrongMethods.noRequest1: API methods using POST '
+            'must have a signature of path parameters followed by one request '
+            'parameter.'),
+        new ApiConfigError('WrongMethods.noRequest2: API methods using POST '
+            'must have a signature of path parameters followed by one request '
+            'parameter.'),
+        new ApiConfigError('WrongMethods.genericRequest: API Method parameter '
+            'has to be an instantiable class.'),
+        new ApiConfigError('WrongMethods.invalidPath1: Invalid path: '
+            'test16/{wrong. Failed with error: ParseException: test16/{wrong'),
+        new ApiConfigError('WrongMethods.invalidPath2: Invalid path: '
+            'test17/wrong}. Failed with error: ParseException: test17/wrong}')
+      ];
+      expect(parser.errors.toString(), errors.toString());
     });
 
     test('recursion', () {
-      var testMirror = reflectClass(RecursiveGet);
-      var tester = new ApiConfig(new Tester());
-      var methods = testMirror.declarations.values.where(
-        (dm) => dm is MethodMirror &&
-                dm.isRegularMethod &&
-                dm.metadata.length > 0 &&
-                dm.metadata.first.reflectee.runtimeType == ApiMethod
-      );
-      methods.forEach((MethodMirror mm) {
-        var metadata = mm.metadata.first.reflectee;
-        expect(metadata.runtimeType, ApiMethod);
-        expect(
-          () => new ApiConfigMethod(
-              mm, metadata, tester.id, tester, reflect(tester)),
-          throwsA(new isInstanceOf<ApiConfigError>('ApiConfigError'))
-        );
-      });
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new Recursive());
+      expect(parser.isValid, isFalse);
+      var errors = [
+        new ApiConfigError('test_api.RecursiveMessage1: Schema has a (possibly '
+                           'indirect) cycle to itself.'),
+        new ApiConfigError('test_api.RecursiveMessage2: Schema has a (possibly '
+                           'indirect) cycle to itself.')];
+      expect(parser.errors.toString(), errors.toString());
     });
 
     test('correct', () {
-      var testMirror = reflectClass(CorrectMethods);
-      var tester = new ApiConfig(new Tester());
-      var methods = testMirror.declarations.values.where(
-        (dm) => dm is MethodMirror &&
-                dm.isRegularMethod &&
-                dm.metadata.length > 0 &&
-                dm.metadata.first.reflectee.runtimeType == ApiMethod
-      );
-      methods.forEach((MethodMirror mm) {
-        var metadata = mm.metadata.first.reflectee;
-        expect(metadata.runtimeType, ApiMethod);
-        expect(
-            () => new ApiConfigMethod(
-                mm, metadata, tester.id, tester, reflect(tester)),
-            returnsNormally);
-      });
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new CorrectMethods());
+      expect(parser.isValid, isTrue);
     });
   });
 
   group('api_config_schema', () {
 
     group('misconfig', () {
-      List _wrongSchemas = [WrongSchema1];
-      _wrongSchemas.forEach((schema) {
-        test(schema.toString(), () {
-          var tester = new ApiConfig(new Tester());
-          expect(
-            () => new ApiConfigSchema(reflectClass(schema), tester),
-            throwsA(new isInstanceOf<ApiConfigError>())
-          );
-        });
-      });
-
-      test('double_name1', () {
-        var tester = new ApiConfig(new Tester());
-        new ApiConfigSchema(reflectClass(TestMessage1), tester, name: "MyMessage");
-        expect(
-          () => new ApiConfigSchema(reflectClass(TestMessage2), tester, name: "MyMessage"),
-          throwsA(new isInstanceOf<ApiConfigError>())
-        );
+      test('wrong_schema', () {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(WrongSchema1));
+        var errors = [new ApiConfigError('test_api.WrongSchema1: Schema: '
+            'test_api.WrongSchema1 must have an unnamed constructor.')];
+        expect(parser.errors.toString(), errors.toString());
       });
     });
 
     test('recursion', () {
       expect(new Future.sync(() {
-        var tester = new ApiConfig(new Tester());
-        var m1 = new ApiConfigSchema(reflectClass(RecursiveMessage1), tester);
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage1));
       }), completes);
       expect(new Future.sync(() {
-        var tester = new ApiConfig(new Tester());
-        var m2 = new ApiConfigSchema(reflectClass(RecursiveMessage2), tester);
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage2));
       }), completes);
       expect(new Future.sync(() {
-        var tester = new ApiConfig(new Tester());
-        var m3 = new ApiConfigSchema(reflectClass(RecursiveMessage3), tester);
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage3));
       }), completes);
       expect(new Future.sync(() {
-        var tester = new ApiConfig(new Tester());
-        var m2 = new ApiConfigSchema(reflectClass(RecursiveMessage2), tester);
-        var m3 = new ApiConfigSchema(reflectClass(RecursiveMessage3), tester);
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage2));
+        parser.parseSchema(reflectClass(RecursiveMessage3));
       }), completes);
     });
 
     test('variants', () {
-      var tester = new ApiConfig(new Tester());
-      var message = new ApiConfigSchema(reflectClass(TestMessage3), tester);
-      var instance = message.fromRequest({'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
+      var parser = new ApiParser();
+      var message = parser.parseSchema(reflectClass(TestMessage3));
+      var instance = message.fromRequest(
+          {'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
       expect(instance.count32, 1);
       expect(instance.count32u, 2);
       expect(instance.count64, 3);
@@ -378,8 +602,8 @@ main () {
     });
 
     test('request-parsing', () {
-      var tester = new ApiConfig(new Tester());
-      var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
+      var parser = new ApiParser();
+      var m1 = parser.parseSchema(reflectClass(TestMessage1));
       var instance = m1.fromRequest({'requiredValue': 10});
       expect(instance, new isInstanceOf<TestMessage1>());
       instance = m1.fromRequest({
@@ -425,14 +649,14 @@ main () {
     });
 
     test('required', () {
-      var tester = new ApiConfig(new Tester());
-      var m1 = new ApiConfigSchema(reflectClass(TestMessage4), tester);
+      var parser = new ApiParser();
+      var m1 = parser.parseSchema(reflectClass(TestMessage4));
       expect(() => m1.fromRequest({'requiredValue': 1}), returnsNormally);
     });
 
     test('bad-request-creation', () {
-      var tester = new ApiConfig(new Tester());
-      var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
+      var parser = new ApiParser();
+      var m1 = parser.parseSchema(reflectClass(TestMessage1));
       var requests = [
         {'count': 'x'},
         {'date': 'x'},
@@ -455,8 +679,8 @@ main () {
     });
 
     test('missing-required', () {
-      var tester = new ApiConfig(new Tester());
-      var m1 = new ApiConfigSchema(reflectClass(TestMessage4), tester);
+      var parser = new ApiParser();
+      var m1 = parser.parseSchema(reflectClass(TestMessage4));
       var requests = [{}, {'count': 1}];
       requests.forEach((request) {
         expect(
@@ -467,8 +691,8 @@ main () {
     });
 
     test('response-creation', () {
-      var tester = new ApiConfig(new Tester());
-      var m1 = new ApiConfigSchema(reflectClass(TestMessage1), tester);
+      var parser = new ApiParser();
+      var m1 = parser.parseSchema(reflectClass(TestMessage1));
       var instance = new TestMessage1();
       instance.count = 1;
       instance.message = 'message';

@@ -5,81 +5,21 @@
 part of rpc.config;
 
 class ApiConfigSchemaProperty {
-  String _propertyName;
-  String get propertyName => _propertyName;
+  final String name;
+  final String description;
+  final bool repeated;
+  final bool required;
 
-  bool _repeated = false;
-  bool get repeated => _repeated;
+  final dynamic defaultValue;
+  bool get hasDefault => (defaultValue != null);
 
-  bool _required = false;
-  bool get required => _required;
+  final String _apiType;
+  final String _apiFormat;
+  final String _apiParameterType;
 
-  var _defaultValue;
-  get defaultValue => _defaultValue;
-  bool get hasDefault => (_defaultValue != null);
-
-  String _apiType;
-  String _apiFormat;
-  String _apiParameterType;
-  ApiProperty _meta;
-
-  factory ApiConfigSchemaProperty(
-      VariableMirror property, ApiConfig parent, {String name}) {
-    var type = property.type;
-    var repeated = false;
-    ApiProperty meta = null;
-    var metas =
-        property.metadata.where((m) => m.reflectee.runtimeType == ApiProperty);
-    if (metas.length > 0) {
-      meta = metas.first.reflectee;
-    }
-    if (type.simpleName == #dynamic) {
-      throw new ApiConfigError('${property.simpleName}: '
-                               'Property needs to have a type defined.');
-    }
-    if (type.isSubtypeOf(reflectType(List))) {
-      repeated = true;
-      var types = type.typeArguments;
-      if (types.length != 1 || types[0].simpleName == #dynamic) {
-        throw new ApiConfigError('${property.simpleName}: '
-            'List property must specify exactly one type parameter');
-      }
-      type = types[0];
-    }
-    switch (type.reflectedType) {
-      case int:
-        return new IntegerProperty._(property, repeated, meta, parent);
-      case double:
-        return new DoubleProperty._(property, repeated, meta, parent);
-      case bool:
-        return new BooleanProperty._(property, repeated, meta, parent);
-      case String:
-        if (meta != null && meta.values != null && meta.values.isNotEmpty) {
-          return new EnumProperty._(property, repeated, meta, parent);
-        }
-        return new StringProperty._(property, repeated, meta, parent);
-      case DateTime:
-        return new DateTimeProperty._(
-            property, repeated, meta, parent);
-    }
-    if (type is ClassMirror && !(type as ClassMirror).isAbstract) {
-      return new SchemaProperty._(
-          property, type, repeated, meta, parent, name: name);
-    }
-    throw new ApiConfigError('${property.simpleName}: Invalid type.');
-  }
-
-  ApiConfigSchemaProperty._(VariableMirror property,
-                            bool this._repeated,
-                            this._meta,
-                            ApiConfig parent) {
-    _propertyName = MirrorSystem.getName(property.simpleName);
-
-    if (_meta != null) {
-      _required = _meta.required;
-      _defaultValue = _meta.defaultValue;
-    }
-  }
+  ApiConfigSchemaProperty(this.name, this.description, this.required,
+                          this.defaultValue, this.repeated, this._apiType,
+                          this._apiFormat, this._apiParameterType);
 
   Map get typeDescriptor {
     var property = {};
@@ -94,41 +34,25 @@ class ApiConfigSchemaProperty {
 
   Map get descriptor {
     var property = typeDescriptor;
-
-    if (_meta != null && _meta.description != null) {
-      property['description'] = _meta.description;
+    if (description != null) {
+      property['description'] = description;
     }
-
-    if (_repeated) {
+    if (repeated) {
       property = {
         'type': 'array',
         'items': property
       };
     }
-
-    if (_required) {
+    if (required) {
       property['required'] = true;
     }
-    if (_defaultValue != null) {
-      property['default'] = toResponse(_defaultValue);
+    if (defaultValue != null) {
+      property['default'] = toResponse(defaultValue);
     }
     return property;
   }
 
   bool get isSimple => true;
-
-  Map get parameter {
-    var parameter = {};
-    if (!isSimple) { return null; }
-    parameter['type'] = _apiParameterType;
-    if (_meta != null && _meta.description != null) {
-      parameter['description'] = _meta.description;
-    }
-    if (_defaultValue != null) {
-      parameter['default'] = toResponse(_defaultValue);
-    }
-    return parameter;
-  }
 
   _singleRequestValue(value) {
     return value;
@@ -139,7 +63,7 @@ class ApiConfigSchemaProperty {
     if (value == null) {
       return null;
     }
-    if (_repeated) {
+    if (repeated) {
       if (value is! List) {
         throw new BadRequestError('Expected repeated value to be List');
       }
@@ -159,7 +83,7 @@ class ApiConfigSchemaProperty {
     if (value == null) {
       return null;
     }
-    if (_repeated) {
+    if (repeated) {
       if (value is! List) {
         throw new RpcError(500, 'Bad response', 'Invalid response');
       }
@@ -167,33 +91,20 @@ class ApiConfigSchemaProperty {
       value.forEach((v) => response.add(_singleResponseValue(v)));
       return response;
     }
-
     return _singleResponseValue(value);
   }
 }
 
 class IntegerProperty extends ApiConfigSchemaProperty {
 
-  int _minValue;
-  int _maxValue;
+  final int minValue;
+  final int maxValue;
 
-  IntegerProperty._(property, repeated, meta, parent)
-      : super._(property, repeated, meta, parent) {
-    if (_meta != null) {
-      _apiFormat = _meta.format;
-      _minValue = _meta.minValue;
-      _maxValue = _meta.maxValue;
-    }
-    if (_apiFormat == null || _apiFormat == '') { _apiFormat = 'int32'; }
-    if (_apiFormat == 'int32' || _apiFormat == 'uint32') {
-      _apiType = 'integer';
-    } else if (_apiFormat == 'int64' || _apiFormat == 'uint64'){
-      _apiType = 'string';
-    } else {
-      throw new ApiConfigError('${_propertyName}: Invalid integer variant.');
-    }
-    _apiParameterType = _apiFormat;
-  }
+  IntegerProperty(String name, String description, bool required,
+                  int defaultValue, bool repeated, String apiType,
+                  String apiFormat, this.minValue, this.maxValue)
+      : super(name, description, required, defaultValue, repeated,
+              apiType, apiFormat, apiFormat);
 
   _singleResponseValue(value) {
     if (value != null && _apiType == 'string') {
@@ -203,7 +114,7 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   }
 
   _singleRequestValue(value) {
-    if (value == null) { return value; }
+    if (value == null) return value;
     if (value is! int) {
       try {
         value = int.parse(value);
@@ -211,45 +122,35 @@ class IntegerProperty extends ApiConfigSchemaProperty {
         throw new BadRequestError('Invalid integer format: $e');
       }
     }
-    if (_minValue != null && value < _minValue) {
-      throw new BadRequestError('$_propertyName needs to be >= $_minValue');
+    if (minValue != null && value < minValue) {
+      throw new BadRequestError('$name needs to be >= $minValue');
     }
-    if (_maxValue != null && value > _maxValue) {
-      throw new BadRequestError('$_propertyName needs to be <= $_maxValue');
+    if (maxValue != null && value > maxValue) {
+      throw new BadRequestError('$name needs to be <= $maxValue');
     }
     return value;
   }
 
-  Map get parameter {
-    var parameter = super.parameter;
+  Map get descriptor {
+    var descriptor = super.descriptor;
 
-    if (_minValue != null) {
-      parameter['minValue'] = _singleResponseValue(_minValue);
+    if (minValue != null) {
+      descriptor['minimum'] = _singleResponseValue(minValue);
     }
-    if (_maxValue != null) {
-      parameter['maxValue'] = _singleResponseValue(_maxValue);
+    if (maxValue != null) {
+      descriptor['maximum'] = _singleResponseValue(maxValue);
     }
 
-    return parameter;
+    return descriptor;
   }
 }
 
 class DoubleProperty extends ApiConfigSchemaProperty {
 
-  DoubleProperty._(property, repeated, meta, parent)
-      : super._(property, repeated, meta, parent) {
-    _apiType = 'number';
-    if (_meta != null) {
-      _apiFormat = _meta.format;
-    }
-    if (_apiFormat == null || _apiFormat == '') {
-      _apiFormat = 'double';
-    }
-    if (_apiFormat != 'double' && _apiFormat != 'float') {
-      throw new ApiConfigError('${_propertyName}: Invalid double variant.');
-    }
-    _apiParameterType = _apiFormat;
-  }
+  DoubleProperty(String name, String description, bool required,
+                 double defaultValue, bool repeated, String apiFormat)
+      : super(name, description, required, defaultValue, repeated, 'number',
+              apiFormat, apiFormat);
 
   _singleRequestValue(value) {
     if (value == null || value is num) { return value; }
@@ -263,51 +164,45 @@ class DoubleProperty extends ApiConfigSchemaProperty {
 
 class StringProperty extends ApiConfigSchemaProperty {
 
-  StringProperty._(property, repeated, meta, parent)
-      : super._(property, repeated, meta, parent) {
-    _apiType = 'string';
-    _apiFormat = null;
-    _apiParameterType = _apiType;
-  }
+  StringProperty(String name, String description, bool required,
+                 String defaultValue, bool repeated)
+      : super(name, description, required, defaultValue, repeated, 'string',
+          null, 'string');
 }
 
 class EnumProperty extends ApiConfigSchemaProperty {
 
-  EnumProperty._(property, repeated, meta, parent)
-      : super._(property, repeated, meta, parent) {
-    _apiType = 'string';
-    _apiFormat = null;
-    _apiParameterType = _apiType;
-  }
+  final Map<String, String> _values;
 
-  Map get parameter {
-    var parameter = super.parameter;
+  EnumProperty(String name, String description, bool required,
+               String defaultValue, this._values)
+      : super(name, description, required, defaultValue, false, 'string', null,
+              'string');
 
-    parameter['enum'] = {};
-    _meta.values.forEach((value, description) {
-      parameter['enum'][value] = {
-        'backendValue': value,
-        'description': description
-      };
+  Map get descriptor {
+    var descriptor = super.descriptor;
+    descriptor['enum'] = [];
+    descriptor['enumDescriptions'] = [];
+    _values.forEach((value, description) {
+      descriptor['enum'].add(value);
+      descriptor['enumDescriptions'].add(description);
     });
 
-    return parameter;
+    return descriptor;
   }
 
   _singleRequestValue(value) {
-    if (value == null || _meta.values.containsKey(value)) { return value; }
+    if (value == null || _values.containsKey(value)) { return value; }
     throw new BadRequestError('Value is not a valid enum value');
   }
 }
 
 class BooleanProperty extends ApiConfigSchemaProperty {
 
-  BooleanProperty._(property, repeated, meta, parent)
-      : super._(property, repeated, meta, parent) {
-    _apiType = 'boolean';
-    _apiFormat = null;
-    _apiParameterType = _apiType;
-  }
+  BooleanProperty(String name, String description, bool required,
+                  bool defaultValue, bool repeated)
+      : super(name, description, required, defaultValue, repeated, 'boolean',
+              null, 'boolean');
 
   _singleRequestValue(value) {
     if (value == null || value is bool) { return value; }
@@ -317,12 +212,10 @@ class BooleanProperty extends ApiConfigSchemaProperty {
 
 class DateTimeProperty extends ApiConfigSchemaProperty {
 
-  DateTimeProperty._(property, repeated, meta, parent)
-      : super._(property, repeated, meta, parent) {
-    _apiType = 'string';
-    _apiFormat = 'date-time';
-    _apiParameterType = _apiType;
-  }
+  DateTimeProperty(String name, String description, bool required,
+                   DateTime defaultValue, bool repeated)
+      : super(name, description, required, defaultValue, repeated, 'string',
+              'date-time', 'string');
 
   _singleResponseValue(value) {
     if (value == null) { return null; }
@@ -341,17 +234,11 @@ class DateTimeProperty extends ApiConfigSchemaProperty {
 
 class SchemaProperty extends ApiConfigSchemaProperty {
 
-  ApiConfigSchema _ref;
+  final ApiConfigSchema _ref;
 
-  SchemaProperty._(
-      property, ClassMirror type, repeated, meta, parent, {String name})
-      : super._(property, repeated, meta, parent) {
-    _ref = new ApiConfigSchema(type, parent, name: name);
-
-    _apiType = null;
-    _apiFormat = null;
-    _apiParameterType = null;
-  }
+  SchemaProperty(String name, String description, bool required,
+                 dynamic defaultValue, bool repeated, this._ref)
+      : super(name, description, required, null, repeated, null, null, null);
 
   _singleResponseValue(value) {
     if (value == null) { return null; }
