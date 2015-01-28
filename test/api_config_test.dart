@@ -486,14 +486,14 @@ main () {
             'cannot be void, use VoidMessage as return type instead.'),
         new ApiConfigError('WrongMethods.missingAnnotations3: API Method '
             'cannot be void, use VoidMessage as return type instead.'),
-        new ApiConfigError('WrongMethods.wrongMethodParameter: Expected 0 '
-            'more parameter(s), but method wrongMethodParameter specified 1 '
-            'more parameter(s).'),
+        new ApiConfigError('WrongMethods.wrongMethodParameter: Non-path '
+            'parameter \'_\' must be a named parameter.'),
+        new ApiConfigError('WrongMethods.wrongMethodParameter: Query '
+            'parameter \'_\' must be of type String.'),
         new ApiConfigError('WrongMethods.wrongParameterType: Path parameter '
-            'must be of type String.'),
-        new ApiConfigError('WrongMethods.wrongPathAnnotation: Expected 0 more '
-            'parameter(s), but method wrongPathAnnotation specified 1 more '
-            'parameter(s).'),
+            '\'test\' must be of type String.'),
+        new ApiConfigError('WrongMethods.wrongPathAnnotation: Non-path '
+            'parameter \'test\' must be a named parameter.'),
         new ApiConfigError('WrongMethods.wrongResponseType1: Return type: '
             'String is not a valid return type.'),
         new ApiConfigError('WrongMethods.wrongResponseType2: Return type: '
@@ -505,10 +505,10 @@ main () {
         new ApiConfigError('WrongMethods.missingPathParam1: Missing methods '
             'parameters specified in method path: test10/{id}.'),
         new ApiConfigError('WrongMethods.missingPathParam2: Expected method '
-            'parameter with name: \'id\', but found parameter with name: '
-            'request.'),
+            'parameter with name \'id\', but found parameter with name '
+            '\'request\'.'),
         new ApiConfigError('WrongMethods.missingPathParam2: Path parameter '
-            'must be of type String.'),
+            '\'id\' must be of type String.'),
         new ApiConfigError('WrongMethods.missingPathParam2: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
@@ -743,6 +743,38 @@ main () {
       expect(response['submessages'][1]['count'], 6);
       expect(response['submessages'][2]['count'], 7);
       expect(response['enumValue'], 'test1');
+    });
+  });
+
+  group('api_config_query_methods', () {
+
+    test('correct', () {
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new CorrectQueryParameterTester());
+      expect(parser.isValid, isTrue);
+    });
+
+    test('misconfig', () {
+      var parser = new ApiParser();
+      ApiConfig apiConfig = parser.parse(new WrongQueryParameterTester());
+      expect(parser.isValid, isFalse);
+      var errors = [
+        new ApiConfigError('WrongQueryParameterTester.query1: Non-path '
+            'parameter \'path\' must be a named parameter.'),
+        new ApiConfigError('WrongQueryParameterTester.query2: Query parameter '
+            '\'query\' must be of type String.'),
+        new ApiConfigError('WrongQueryParameterTester.query3: Expected method '
+            'parameter with name \'queryParam\', but found parameter with '
+            'name \'pathParam\'.'),
+        new ApiConfigError('WrongQueryParameterTester.query4: Query parameter '
+            '\'queryParam\' must be of type String.'),
+        new ApiConfigError('WrongQueryParameterTester.query5: No support for '
+            'optional path parameters in API methods.'),
+        new ApiConfigError('WrongQueryParameterTester.query6: Query parameter '
+            '\'queryParam2\' must be of type String.'),
+        new ApiConfigError('WrongQueryParameterTester.query7: Non-path '
+            'parameter \'queryParam\' must be a named parameter.')];
+      expect(parser.errors.toString(), errors.toString());
     });
   });
 }

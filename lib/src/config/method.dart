@@ -32,7 +32,7 @@ class ApiConfigMethod {
       return false;
     }
     assert(match.rest.path.length == 0);
-    request.pathParameterValues = match.parameters;
+    request.pathParameters = match.parameters;
     return true;
   }
 
@@ -53,6 +53,17 @@ class ApiConfigMethod {
             ..location = 'path';
       method.parameters[param] = schema;
     });
+    if (_queryParamTypes != null) {
+      _queryParamTypes.keys.forEach((String param) {
+        var schema = new discovery.JsonSchema();
+        // TODO: Add support for integers.
+        schema..type = 'string'
+              ..required = false
+              ..description = 'Query parameter: \'$param\'.'
+              ..location = 'query';
+        method.parameters[param] = schema;
+      });
+    }
     if (_requestSchema != null && _requestSchema.hasProperties) {
       method.request =
           new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
@@ -68,29 +79,28 @@ class ApiConfigMethod {
       ParsedHttpApiRequest request) async {
     var positionalParams = [];
     // Add path parameters to params in the correct order.
-    for (var paramName in _pathParams) {
-      assert(request.pathParameterValues != null);
-      var value = request.pathParameterValues[paramName];
+    assert(_pathParams != null);
+    assert(request.pathParameters != null);
+    _pathParams.forEach((paramName) {
+      var value = request.pathParameters[paramName];
       if (value == null) {
         return httpErrorResponse(request.originalRequest,
             new BadRequestError('Required parameter: $paramName missing.'));
       }
       positionalParams.add(value);
-    }
+    });
     // Build named parameter map for query parameters.
     var namedParams = {};
-    // TODO: Support query parameters.
-    var queryParameters = request.queryParameters;
-    if (_queryParamTypes != null && queryParameters != null) {
-      for (var queryParamName in queryParameters.keys) {
-        Symbol querySymbol = _queryParamTypes[queryParamName];
-        if (querySymbol != null) {
-          // TODO: Check for duplicates. Currently latest dup wins.
-          namedParams[querySymbol] = queryParameters[queryParamName];
+    if (_queryParamTypes != null && request.queryParameters != null) {
+      _queryParamTypes.forEach((name, symbol) {
+        // Check if there is a parameter value for the given name.
+        var value = request.queryParameters[name];
+        if (value != null) {
+          namedParams[symbol] = value;
         }
-        // We ignore query parameters that doesn't match a named method
+        // We ignore query parameters that don't match a named method
         // parameter.
-      }
+      });
     }
     var apiResult;
     try {

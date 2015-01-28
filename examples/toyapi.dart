@@ -84,6 +84,11 @@ class ToyApi {
     };
     return new ToyMapResponse('foo', map);
   }
+
+  @ApiMethod(path: 'helloQuery/{name}')
+  ToyResponse helloNameQueryAgeFoo(String name, {String foo, String age}) {
+    return new ToyResponse('Hello $name of age $age with $foo!');
+  }
 }
 
 class ToyCompute {

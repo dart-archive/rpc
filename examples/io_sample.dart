@@ -37,9 +37,9 @@ Future handleRequest(HttpRequest request) async {
   var apiRequest =
       new HttpApiRequest(request.method,
                          request.uri.path.substring(_API_PREFIX.length),
+                         request.uri.queryParameters,
                          request.headers.contentType.toString(),
                          request);
-
   try {
     var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
     return _apiResponse(request.response, apiResponse);

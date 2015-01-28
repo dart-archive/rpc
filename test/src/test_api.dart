@@ -385,3 +385,60 @@ class NestedResource {
   @ApiMethod(path: 'nestedResourceMethod')
   VoidMessage method1() { return null; }
 }
+
+@ApiClass(version: 'v1test')
+class CorrectQueryParameterTester {
+
+  @ApiMethod(path: 'query1')
+  VoidMessage query1({String name}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query2/{pathParam}')
+  VoidMessage query2(String pathParam, {String queryParam}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query3')
+  VoidMessage query3({String qp1, String qp2}) {
+    return null;
+  }
+}
+
+@ApiClass(version: 'v1test')
+class WrongQueryParameterTester {
+  @ApiMethod(path: 'query1')
+  VoidMessage query1(String path) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query2')
+  VoidMessage query2({int query}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query3/{queryParam}')
+  VoidMessage query3(String pathParam, {String queryParam}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query4')
+  VoidMessage query4({queryParam}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query5/{queryParam}')
+  VoidMessage query5({String queryParam}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query6')
+  VoidMessage query6({String queryParam1, int queryParam2}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query7')
+  VoidMessage query7([String queryParam]) {
+    return null;
+  }
+}

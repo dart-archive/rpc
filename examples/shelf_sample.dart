@@ -37,6 +37,7 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
   try {
     var apiRequest =
         new HttpApiRequest(request.method, request.url.path,
+                           request.url.queryParameters,
                            request.headers['content-type'], request.read());
     var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,

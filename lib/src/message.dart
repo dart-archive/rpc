@@ -20,18 +20,17 @@ class HttpApiRequest {
   /// Request path.
   final String path;
 
+  /// Query string parsed as a key/value map.
+  final Map<String, String> queryParameters;
+
   /// Content type for the request's body.
   final String contentType;
 
   /// Request body containing parameters for a POST request.
   final Stream<List<int>> body;
 
-  HttpApiRequest(this.httpMethod, this.path, this.contentType, this.body);
-
-  Map<String, dynamic> get queryParameters {
-    // TODO: Support query parameters for GET requests.
-    return null;
-  }
+  HttpApiRequest(this.httpMethod, this.path, this.queryParameters,
+                 this.contentType, this.body);
 }
 
 /// Class for holding an HTTP API response.

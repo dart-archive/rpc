@@ -243,20 +243,22 @@ class ApiParser {
 
     // Parse method parameters. Path parameters must be parsed first followed by
     // either the query string parameters or the request schema.
-    var pathParams = _parsePathParameters(mm, metadata.path);
+    var pathParams;
     var queryParamTypes;
     var requestSchema;
-    if (bodyLessMethods.contains(httpMethod)) {
-      // If this is a method without body it can have named parameters
-      // passed via the query string. There must be a named parameter
-      // for each parameter in the query string.
-      queryParamTypes =
-          _parseQueryParameters(mm, metadata.path, pathParams.length);
-    } else {
-      // Methods with a body must have exactly one additional parameter, namely
-      // the class parameter corresponding to the request body.
-      requestSchema =
-          _parseMethodRequestParameter(mm, httpMethod, pathParams.length);
+    if (metadata.path != null) {
+      pathParams = _parsePathParameters(mm, metadata.path);
+      if (bodyLessMethods.contains(httpMethod)) {
+        // If this is a method without body it can have named parameters
+        // passed via the query string. Basically any named parameter following
+        // the path parameters can be passed via the request's query string.
+        queryParamTypes = _parseQueryParameters(mm, pathParams.length);
+      } else {
+        // Methods with a body must have exactly one additional parameter,
+        // namely the class parameter corresponding to the request body.
+        requestSchema =
+            _parseMethodRequestParameter(mm, httpMethod, pathParams.length);
+      }
     }
 
     // Parse method return type.
@@ -293,51 +295,43 @@ class ApiParser {
     for (int i = 0; i < parsedPathParams.length; ++i) {
       var pm = mm.parameters[i];
       var pathParamName = parsedPathParams.elementAt(i).group(1);
-      if (pm.simpleName != MirrorSystem.getSymbol(pathParamName)) {
+      var methodParamName = MirrorSystem.getName(pm.simpleName);
+      if (methodParamName != pathParamName) {
         addError(
-            'Expected method parameter with name: \'$pathParamName\', but found'
-            ' parameter with name: ${MirrorSystem.getName(pm.simpleName)}.');
+            'Expected method parameter with name \'$pathParamName\', but found'
+            ' parameter with name \'$methodParamName\'.');
       }
       if (pm.isOptional || pm.isNamed) {
         addError('No support for optional path parameters in API methods.');
       }
       if (pm.type is! ClassMirror || pm.type.simpleName != #String) {
         // TODO: Add support for integer.
-        addError('Path parameter must be of type String.');
+        addError('Path parameter \'$pathParamName\' must be of type String.');
       }
       pathParams.add(pathParamName);
     }
     return pathParams;
   }
 
-  // Parses a method's url query string and matches it against the corresponding
-  // named parameters for this method.
+  // Validates that all remaining method parameters are named parameters.
+  // Returns a map with the name and symbol of the parameter. The parameters
+  // are (optionally) passed via the request's query string parameters on
+  // invocation.
   Map<String, Symbol> _parseQueryParameters(MethodMirror mm,
-                                            String path,
                                             int queryParamIndex) {
     var queryParamTypes = {};
-    if (path == null) {
-      assert(!isValid);
-      return queryParamTypes;
-    }
-    Map queryParameters = Uri.parse(path).queryParameters;
-    if (queryParameters.length != mm.parameters.length - queryParamIndex) {
-      addError('Expected ${queryParameters.length} more parameter(s), but '
-        'method ${MirrorSystem.getName(mm.simpleName)} specified '
-        '${mm.parameters.length} more parameter(s).');
-      return queryParamTypes;
-    }
     for (int i = queryParamIndex; i < mm.parameters.length; ++i) {
       var pm = mm.parameters[i];
+      var paramName = MirrorSystem.getName(pm.simpleName);
       if (!pm.isNamed) {
-        addError('Method parameters populated by query string argument must be '
-                 'a named parameter.');
+        addError(
+            'Non-path parameter \'$paramName\' must be a named parameter.');
       }
-      var methodParamName = MirrorSystem.getName(pm.simpleName);
-      if (!queryParameters.containsKey(methodParamName)) {
-        addError('Missing parameter: $methodParamName in method query string.');
+      if (pm.type is! ClassMirror || pm.type.simpleName != #String) {
+        // TODO: Add support for integer.
+        addError('Query parameter \'$paramName\' must be of type String.');
       }
-      queryParamTypes[methodParamName] = pm.simpleName;
+      queryParamTypes[paramName] = pm.simpleName;
     }
     return queryParamTypes;
   }

@@ -48,7 +48,7 @@ class ParsedHttpApiRequest {
   final Uri methodUri;
 
   // A map from path parameter name to path parameter value.
-  Map<String, String> pathParameterValues;
+  Map<String, String> pathParameters;
 
   factory ParsedHttpApiRequest(HttpApiRequest request,
                                Converter<Object, dynamic> jsonToBytes) {
@@ -62,14 +62,13 @@ class ParsedHttpApiRequest {
     // Hence the number of path segments must be at least three for a valid
     // request.
     if (pathSegments.length < 3) {
-      throw new BadRequestError('Invalid request, missing API name and '
-                                'version: ${request.path}.');
+      throw new BadRequestError(
+          'Invalid request, missing API name and ' 'version: ${request.path}.');
     }
     var apiKey = '/${pathSegments[0]}/${pathSegments[1]}';
     var methodPathSegments = pathSegments.skip(2);
     var methodKey = '${request.httpMethod}${methodPathSegments.length}';
     var methodUri = Uri.parse(methodPathSegments.join('/'));
-
     return new ParsedHttpApiRequest._(request, apiKey, methodKey, methodUri,
                                       jsonToBytes);
   }
@@ -81,9 +80,9 @@ class ParsedHttpApiRequest {
 
   String get path => originalRequest.path;
 
+  Map<String, String> get queryParameters => originalRequest.queryParameters;
+
   String get contentType => originalRequest.contentType;
 
   Stream<List<int>> get body => originalRequest.body;
-
-  Map<String, dynamic> get queryParameters => originalRequest.queryParameters;
 }
