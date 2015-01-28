@@ -7,10 +7,9 @@ part of rpc.config;
 class ApiConfigSchemaProperty {
   final String name;
   final String description;
-  final bool repeated;
   final bool required;
 
-  final dynamic defaultValue;
+  final String defaultValue;
   bool get hasDefault => (defaultValue != null);
 
   final String _apiType;
@@ -18,36 +17,25 @@ class ApiConfigSchemaProperty {
   final String _apiParameterType;
 
   ApiConfigSchemaProperty(this.name, this.description, this.required,
-                          this.defaultValue, this.repeated, this._apiType,
+                          this.defaultValue, this._apiType,
                           this._apiFormat, this._apiParameterType);
 
-  Map get typeDescriptor {
-    var property = {};
-    if (_apiType != null) {
-      property['type'] = _apiType;
-    }
-    if (_apiFormat != null) {
-      property['format'] = _apiFormat;
-    }
-    return property;
+  discovery.JsonSchema get typeAsDiscovery {
+    return new discovery.JsonSchema()
+        ..type = _apiType
+        ..format = _apiFormat;
   }
 
-  Map get descriptor {
-    var property = typeDescriptor;
-    if (description != null) {
-      property['description'] = description;
-    }
-    if (repeated) {
-      property = {
-        'type': 'array',
-        'items': property
-      };
-    }
+  discovery.JsonSchema get asDiscovery {
+    var property = typeAsDiscovery;
     if (required) {
-      property['required'] = true;
+      property.required = required;
+    }
+    if (description != null) {
+      property.description = description;
     }
     if (defaultValue != null) {
-      property['default'] = toResponse(defaultValue);
+      property.default_ = defaultValue;
     }
     return property;
   }
@@ -59,20 +47,8 @@ class ApiConfigSchemaProperty {
   }
 
   fromRequest(value) {
-    var response = null;
-    if (value == null) {
-      return null;
-    }
-    if (repeated) {
-      if (value is! List) {
-        throw new BadRequestError('Expected repeated value to be List');
-      }
-      response = [];
-      value.forEach((v) => response.add(_singleRequestValue(v)));
-    } else {
-      response = _singleRequestValue(value);
-    }
-    return response;
+    if (value == null) return null;
+    return _singleRequestValue(value);
   }
 
   _singleResponseValue(value) {
@@ -80,17 +56,7 @@ class ApiConfigSchemaProperty {
   }
 
   toResponse(value) {
-    if (value == null) {
-      return null;
-    }
-    if (repeated) {
-      if (value is! List) {
-        throw new RpcError(500, 'Bad response', 'Invalid response');
-      }
-      var response = [];
-      value.forEach((v) => response.add(_singleResponseValue(v)));
-      return response;
-    }
+    if (value == null) return null;
     return _singleResponseValue(value);
   }
 }
@@ -101,9 +67,10 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   final int maxValue;
 
   IntegerProperty(String name, String description, bool required,
-                  int defaultValue, bool repeated, String apiType,
-                  String apiFormat, this.minValue, this.maxValue)
-      : super(name, description, required, defaultValue, repeated,
+                  int defaultValue, String apiType, String apiFormat,
+                  this.minValue, this.maxValue)
+      : super(name, description, required,
+              defaultValue != null ? defaultValue.toString() : null,
               apiType, apiFormat, apiFormat);
 
   _singleResponseValue(value) {
@@ -131,26 +98,25 @@ class IntegerProperty extends ApiConfigSchemaProperty {
     return value;
   }
 
-  Map get descriptor {
-    var descriptor = super.descriptor;
-
-    if (minValue != null) {
-      descriptor['minimum'] = _singleResponseValue(minValue);
-    }
-    if (maxValue != null) {
-      descriptor['maximum'] = _singleResponseValue(maxValue);
-    }
-
-    return descriptor;
+  discovery.JsonSchema get asDiscovery {
+      var property = super.asDiscovery;
+      if (minValue != null) {
+        property.minimum = minValue;
+      }
+      if (maxValue != null) {
+        property.maximum = maxValue;
+      }
+      return property;
   }
 }
 
 class DoubleProperty extends ApiConfigSchemaProperty {
 
   DoubleProperty(String name, String description, bool required,
-                 double defaultValue, bool repeated, String apiFormat)
-      : super(name, description, required, defaultValue, repeated, 'number',
-              apiFormat, apiFormat);
+                 double defaultValue, String apiFormat)
+      : super(name, description, required,
+              defaultValue != null ? defaultValue.toString() : null,
+              'number', apiFormat, apiFormat);
 
   _singleRequestValue(value) {
     if (value == null || value is num) { return value; }
@@ -165,8 +131,8 @@ class DoubleProperty extends ApiConfigSchemaProperty {
 class StringProperty extends ApiConfigSchemaProperty {
 
   StringProperty(String name, String description, bool required,
-                 String defaultValue, bool repeated)
-      : super(name, description, required, defaultValue, repeated, 'string',
+                 String defaultValue)
+      : super(name, description, required, defaultValue, 'string',
           null, 'string');
 }
 
@@ -176,19 +142,13 @@ class EnumProperty extends ApiConfigSchemaProperty {
 
   EnumProperty(String name, String description, bool required,
                String defaultValue, this._values)
-      : super(name, description, required, defaultValue, false, 'string', null,
+      : super(name, description, required, defaultValue, 'string', null,
               'string');
 
-  Map get descriptor {
-    var descriptor = super.descriptor;
-    descriptor['enum'] = [];
-    descriptor['enumDescriptions'] = [];
-    _values.forEach((value, description) {
-      descriptor['enum'].add(value);
-      descriptor['enumDescriptions'].add(description);
-    });
-
-    return descriptor;
+  discovery.JsonSchema get asDiscovery {
+    return super.asDiscovery
+        ..enum_ = _values.keys.toList()
+        ..enumDescriptions = _values.values.toList();
   }
 
   _singleRequestValue(value) {
@@ -200,9 +160,10 @@ class EnumProperty extends ApiConfigSchemaProperty {
 class BooleanProperty extends ApiConfigSchemaProperty {
 
   BooleanProperty(String name, String description, bool required,
-                  bool defaultValue, bool repeated)
-      : super(name, description, required, defaultValue, repeated, 'boolean',
-              null, 'boolean');
+                  bool defaultValue)
+      : super(name, description, required,
+              defaultValue != null ? defaultValue.toString() : null,
+              'boolean', null, 'boolean');
 
   _singleRequestValue(value) {
     if (value == null || value is bool) { return value; }
@@ -213,9 +174,10 @@ class BooleanProperty extends ApiConfigSchemaProperty {
 class DateTimeProperty extends ApiConfigSchemaProperty {
 
   DateTimeProperty(String name, String description, bool required,
-                   DateTime defaultValue, bool repeated)
-      : super(name, description, required, defaultValue, repeated, 'string',
-              'date-time', 'string');
+                   DateTime defaultValue)
+      : super(name, description, required,
+          defaultValue != null ? defaultValue.toUtc().toIso8601String() : null,
+          'string', 'date-time', 'string');
 
   _singleResponseValue(value) {
     if (value == null) { return null; }
@@ -236,9 +198,8 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 
   final ApiConfigSchema _ref;
 
-  SchemaProperty(String name, String description, bool required,
-                 dynamic defaultValue, bool repeated, this._ref)
-      : super(name, description, required, null, repeated, null, null, null);
+  SchemaProperty(String name, String description, bool required, this._ref)
+      : super(name, description, required, null, null, null, null);
 
   _singleResponseValue(value) {
     if (value == null) { return null; }
@@ -253,7 +214,73 @@ class SchemaProperty extends ApiConfigSchemaProperty {
     return _ref.fromRequest(value);
   }
 
-  Map get typeDescriptor => {'\$ref': _ref.schemaName};
+  discovery.JsonSchema get typeAsDiscovery =>
+      new discovery.JsonSchema()..P_ref = _ref.schemaName;
 
   bool get isSimple => false;
+}
+
+class ListProperty extends ApiConfigSchemaProperty {
+  final ApiConfigSchemaProperty _itemsProperty;
+
+  ListProperty(String name, String description, bool required,
+               this._itemsProperty)
+      : super(name, description, required, null, null, null, null);
+
+  discovery.JsonSchema get typeAsDiscovery =>
+      new discovery.JsonSchema()..type = 'array';
+
+  discovery.JsonSchema get asDiscovery =>
+    super.asDiscovery..items = _itemsProperty.asDiscovery;
+
+  _singleResponseValue(listObject) {
+    if (listObject is! List) {
+      throw new BadRequestError('Invalid property, should be of type \'List\'');
+    }
+    return (listObject as List).map(_itemsProperty.toResponse).toList();
+  }
+
+  _singleRequestValue(encodedList) {
+    if (encodedList is! List) {
+      throw new BadRequestError('Invalid list request value');
+    }
+    return (encodedList as List).map(_itemsProperty.fromRequest).toList();
+  }
+}
+
+class MapProperty extends ApiConfigSchemaProperty {
+  final ApiConfigSchemaProperty _additionalProperty;
+
+  MapProperty(String name, String description, bool required,
+              this._additionalProperty)
+      : super(name, description, required, null, null, null, null);
+
+  discovery.JsonSchema get typeAsDiscovery =>
+      new discovery.JsonSchema()..type = 'object';
+
+  discovery.JsonSchema get asDiscovery =>
+    super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
+
+  _singleResponseValue(mapObject) {
+    if (mapObject is! Map) {
+      throw new BadRequestError('Invalid property, should be of type \'Map\'');
+    }
+    var result = {};
+    (mapObject as Map).forEach((String key, object) {
+      result[key] = _additionalProperty.toResponse(object);
+    });
+    return result;
+  }
+
+  _singleRequestValue(encodedMap) {
+    if (encodedMap is! Map) {
+      throw new BadRequestError('Invalid map request value');
+    }
+    // Map from String to the type of the additional property.
+    var result = {};
+    (encodedMap as Map).forEach((String key, encodedObject) {
+      result[key] = _additionalProperty.fromRequest(encodedObject);
+    });
+    return result;
+  }
 }

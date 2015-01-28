@@ -466,11 +466,10 @@ class ApiParser {
     ApiConfigSchema schemaConfig = _apiSchemas[name];
     if (schemaConfig != null) {
       if (!schemaConfig.propertiesInitialized) {
-        // We have a cycle within the schema declarations. We don't allow that
-        // so just add an error and return.
-        addError('Schema has a (possibly indirect) cycle to itself.');
+        // This schema is in the process of parsing its properties. Just return
+        // its reference.
+        assert(!schemaConfig.hasProperties);
       }
-      assert(schemaConfig.schemaClass == schemaClass);
       _popId();
       return schemaConfig;
     }
@@ -501,14 +500,18 @@ class ApiParser {
       var metadata = _getMetadata(vm, ApiProperty);
       if (metadata == null) {
         // Generate a metadata with default values
-      metadata = new ApiProperty();
+        metadata = new ApiProperty();
       }
       if (vm is! VariableMirror ||
           vm.isConst || vm.isFinal || vm.isPrivate || vm.isStatic) {
         // We only serialize non-final, non-const, non-static public fields.
         return;
       }
-      var property = parseProperty(vm, metadata);
+      var propertyName = metadata.name;
+      if (propertyName == null) {
+        propertyName = MirrorSystem.getName(vm.simpleName);
+      }
+      var property = parseProperty(vm.type, propertyName, metadata);
       if (property != null) {
         properties[vm.simpleName] = property;
       }
@@ -518,55 +521,46 @@ class ApiParser {
 
   // Parse a specific schema property, further dispatching based on the
   // property's type.
-  ApiConfigSchemaProperty parseProperty(VariableMirror propertyMirror,
+  ApiConfigSchemaProperty parseProperty(TypeMirror propertyType,
+                                        String propertyName,
                                         ApiProperty metadata) {
-    assert(metadata != null);
-    var type = propertyMirror.type;
-    if (type.simpleName == #dynamic) {
-      addError('${propertyMirror.simpleName}: Properties cannot be of type: '
-               '\'dynamic\'.');
+    if (propertyType.simpleName == #dynamic) {
+      addError('$propertyName: Properties cannot be of type: \'dynamic\'.');
+      return null;
     }
-
-    // Check if this is a List property.
-    var repeated = false;
-    if (type.isSubtypeOf(reflectType(List))) {
-      repeated = true;
-      var types = type.typeArguments;
-      if (types.length != 1 || types[0].simpleName == #dynamic) {
-        addError('${propertyMirror.simpleName}: List property must specify '
-                 'exactly one non-dynamic type parameter');
-      }
-      type = types[0];
-    }
-    switch (type.reflectedType) {
+    switch (propertyType.reflectedType) {
       case int:
-        return parseIntegerProperty(propertyMirror, metadata, repeated);
+        return parseIntegerProperty(propertyName, metadata);
       case double:
-        return parseDoubleProperty(propertyMirror, metadata, repeated);
+        return parseDoubleProperty(propertyName, metadata);
       case bool:
-        return parseBooleanProperty(propertyMirror, metadata, repeated);
+        return parseBooleanProperty(propertyName, metadata);
       case String:
         if (metadata.values != null && metadata.values.isNotEmpty) {
-          return parseEnumProperty(propertyMirror, metadata, repeated);
+          return parseEnumProperty(propertyName, metadata);
         }
-        return parseStringProperty(propertyMirror, metadata, repeated);
+        return parseStringProperty(propertyName, metadata);
       case DateTime:
-        return parseDateTimeProperty(propertyMirror, metadata, repeated);
+        return parseDateTimeProperty(propertyName, metadata);
     }
-    if (type is ClassMirror && !(type as ClassMirror).isAbstract) {
-      return parseSchemaProperty(propertyMirror, metadata, type, repeated);
+    // TODO: Could support list and maps that are subclasses rather
+    // than only the specific Dart List and Map.
+    if (propertyType is ClassMirror && !propertyType.isAbstract) {
+      return parseSchemaProperty(propertyName, metadata, propertyType);
+    } else if (propertyType.originalDeclaration == reflectClass(List)) {
+      return parseListProperty(propertyName, metadata, propertyType);
+    } else if (propertyType.originalDeclaration == reflectClass(Map)) {
+      return parseMapProperty(propertyName, metadata, propertyType);
     }
-    addError('${propertyMirror.simpleName}: Unsupported property type: '
-             '${type.reflectedType}');
+    addError('$propertyName: Unsupported property type: '
+             '${propertyType.reflectedType}');
     return null;
   }
 
   // Parses an 'int' property.
-  IntegerProperty parseIntegerProperty(VariableMirror propertyMirror,
-                                       ApiProperty metadata,
-                                       bool repeated) {
+  IntegerProperty parseIntegerProperty(String propertyName,
+                                       ApiProperty metadata) {
     assert(metadata != null);
-    String name = MirrorSystem.getName(propertyMirror.simpleName);
     String apiFormat = metadata.format;
     if (apiFormat == null || apiFormat.isEmpty) {
       apiFormat = 'int32';
@@ -577,18 +571,19 @@ class ApiParser {
     } else if (apiFormat == 'int64' || apiFormat == 'uint64'){
       apiType = 'string';
     } else {
-      addError('$name: Invalid integer variant: $apiFormat. Supported variants '
-               'are: int32, uint32, int64, uint64.');
+      addError('$propertyName: Invalid integer variant: $apiFormat. Supported '
+               'variants are: int32, uint32, int64, uint64.');
     }
-    if (_parseInt(metadata.minValue, apiFormat, name, 'Min') &&
-        _parseInt(metadata.maxValue, apiFormat, name, 'Max')) {
+    if (_parseInt(metadata.minValue, apiFormat, propertyName, 'Min') &&
+        _parseInt(metadata.maxValue, apiFormat, propertyName, 'Max')) {
       // We only parse the default if min/max are valid since we need them to
       // do the range checking.
-      _parseIntDefault(metadata, apiFormat, name);
+      _parseIntDefault(metadata, apiFormat, propertyName);
     }
-    return new IntegerProperty(name, metadata.description, metadata.required,
-                               metadata.defaultValue, repeated, apiType,
-                               apiFormat, metadata.minValue, metadata.maxValue);
+    return new IntegerProperty(propertyName, metadata.description,
+                               metadata.required, metadata.defaultValue,
+                               apiType, apiFormat, metadata.minValue,
+                               metadata.maxValue);
   }
 
   // Parses a value to determine if it is a valid integer value.
@@ -627,99 +622,115 @@ class ApiParser {
   }
 
   // Parses a 'double' property.
-  DoubleProperty parseDoubleProperty(VariableMirror propertyMirror,
-                                     ApiProperty metadata,
-                                     bool repeated) {
+  DoubleProperty parseDoubleProperty(String propertyName,
+                                     ApiProperty metadata) {
     assert(metadata != null);
-    String name = MirrorSystem.getName(propertyMirror.simpleName);
     String apiFormat = metadata.format;
     if (apiFormat == null || apiFormat == '') {
       apiFormat = 'double';
     }
     if (apiFormat != 'double' && apiFormat != 'float') {
-      addError('$name: Invalid double variant.');
+      addError('$propertyName: Invalid double variant.');
     }
     if (metadata.defaultValue != null && metadata.defaultValue is! double) {
-      addError('$name: DefaultValue must be of type \'double\'.');
+      addError('$propertyName: DefaultValue must be of type \'double\'.');
     }
-    return new DoubleProperty(name, metadata.description, metadata.required,
-        metadata.defaultValue, repeated, apiFormat);
+    return new DoubleProperty(propertyName, metadata.description,
+                              metadata.required, metadata.defaultValue,
+                              apiFormat);
   }
 
   // Parses a 'bool' property.
-  BooleanProperty parseBooleanProperty(VariableMirror propertyMirror,
-                                       ApiProperty metadata,
-                                       bool repeated) {
+  BooleanProperty parseBooleanProperty(String propertyName,
+                                       ApiProperty metadata) {
     assert(metadata != null);
-    String name = MirrorSystem.getName(propertyMirror.simpleName);
     if (metadata.defaultValue != null && metadata.defaultValue is! bool) {
-      addError('$name: Default value: ${metadata.defaultValue} must be boolean '
-               '\'true\' or \'false\'.');
+      addError('$propertyName: Default value: ${metadata.defaultValue} must be '
+               'boolean \'true\' or \'false\'.');
     }
-    return new BooleanProperty(name, metadata.description, metadata.required,
-                               metadata.defaultValue, repeated);
+    return new BooleanProperty(propertyName, metadata.description,
+                               metadata.required, metadata.defaultValue);
   }
 
   // Parses an 'enum' property.
-  EnumProperty parseEnumProperty(VariableMirror propertyMirror,
-                                 ApiProperty metadata,
-                                 bool repeated) {
+  EnumProperty parseEnumProperty(String propertyName,
+                                 ApiProperty metadata) {
     assert(metadata != null);
-    String name = MirrorSystem.getName(propertyMirror.simpleName);
     var defaultValue = metadata.defaultValue;
     if (defaultValue != null &&
         (defaultValue is! String ||
          !metadata.values.containsKey(defaultValue))) {
-      addError('$name: Default value: $defaultValue must be one of the valid '
-               'enum values: ${metadata.values.keys.toString()}.');
+      addError('$propertyName: Default value: $defaultValue must be one of the '
+               'valid enum values: ${metadata.values.keys.toString()}.');
     }
-    return new EnumProperty(name, metadata.description, metadata.required,
-                            metadata.defaultValue, metadata.values);
+    return new EnumProperty(propertyName, metadata.description,
+                            metadata.required, metadata.defaultValue,
+                            metadata.values);
   }
 
   // Parses a 'String' property.
-  StringProperty parseStringProperty(VariableMirror propertyMirror,
-                                     ApiProperty metadata,
-                                     bool repeated) {
+  StringProperty parseStringProperty(String propertyName,
+                                     ApiProperty metadata) {
     assert(metadata != null);
-    String name = MirrorSystem.getName(propertyMirror.simpleName);
     if (metadata.defaultValue != null && metadata.defaultValue is! String) {
-      addError('$name: Default value: ${metadata.defaultValue} must be of type '
-               '\'String\'.');
+      addError('$propertyName: Default value: ${metadata.defaultValue} must be '
+               'of type \'String\'.');
     }
-    return new StringProperty(name, metadata.description, metadata.required,
-                              metadata.defaultValue, repeated);
+    return new StringProperty(propertyName, metadata.description,
+                              metadata.required, metadata.defaultValue);
   }
 
   // Parses a 'DateTime' property.
-  DateTimeProperty parseDateTimeProperty(VariableMirror propertyMirror,
-                                         ApiProperty metadata,
-                                         bool repeated) {
+  DateTimeProperty parseDateTimeProperty(String propertyName,
+                                         ApiProperty metadata) {
     assert(metadata != null);
-    String name = MirrorSystem.getName(propertyMirror.simpleName);
     if (metadata.defaultValue != null && metadata.defaultValue is! DateTime) {
-      addError('$name: Default value ${metadata.defaultValue} must be of type '
-               '\'DateTime\'.');
+      addError('$propertyName: Default value ${metadata.defaultValue} must be '
+               'of type \'DateTime\'.');
     }
-    return new DateTimeProperty(name, metadata.description, metadata.required,
-                                metadata.defaultValue, repeated);
+    return new DateTimeProperty(propertyName, metadata.description,
+                                metadata.required, metadata.defaultValue);
   }
 
   // Parses a nested class schema property.
-  SchemaProperty parseSchemaProperty(VariableMirror propertyMirror,
+  SchemaProperty parseSchemaProperty(String propertyName,
                                      ApiProperty metadata,
-                                     ClassMirror schemaTypeMirror,
-                                     bool repeated) {
+                                     ClassMirror schemaTypeMirror) {
     assert(metadata != null);
     assert(schemaTypeMirror is ClassMirror && !schemaTypeMirror.isAbstract);
-    var name = MirrorSystem.getName(propertyMirror.simpleName);
-    if (metadata.defaultValue != null &&
-        metadata.defaultValue.runtimeType != schemaTypeMirror.reflectedType) {
-      addError('$name: Default value must be of type '
-               '${schemaTypeMirror.simpleName}');
+    if (metadata.defaultValue != null) {
+      addError('$propertyName: Default value not supported for non-primitive '
+               'types.');
     }
     var schema = parseSchema(schemaTypeMirror);
-    return new SchemaProperty(name, metadata.description, metadata.required,
-                              metadata.defaultValue, repeated, schema);
+    return new SchemaProperty(propertyName, metadata.description,
+                              metadata.required, schema);
+  }
+
+  ListProperty parseListProperty(String propertyName,
+                                 ApiProperty metadata,
+                                 ClassMirror listPropertyType) {
+    var listTypeArguments = listPropertyType.typeArguments;
+    assert(listTypeArguments.length == 1);
+    // TODO: Figure out what to do about metadata for the items property.
+    var listItemsProperty =
+        parseProperty(listTypeArguments[0], propertyName, new ApiProperty());
+    return new ListProperty(propertyName, metadata.description,
+                            metadata.required, listItemsProperty);
+  }
+
+  MapProperty parseMapProperty(String propertyName,
+                               ApiProperty metadata,
+                               ClassMirror mapPropertyType) {
+    var mapTypeArguments = mapPropertyType.typeArguments;
+    assert(mapTypeArguments.length == 2);
+    if (mapTypeArguments[0].reflectedType != String) {
+      addError('$propertyName: Maps must have keys of type \'String\'.');
+    }
+    // TODO: Figure out what to do about metadata for the additional property.
+    var additionalProperty =
+        parseProperty(mapTypeArguments[1], propertyName, new ApiProperty());
+    return new MapProperty(propertyName, metadata.description,
+                           metadata.required, additionalProperty);
   }
 }

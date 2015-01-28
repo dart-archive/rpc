@@ -38,45 +38,72 @@ class ApiConfig extends ApiConfigResource {
         'and method url path: ${request.path}.'));
   }
 
-  Map toJson(String serverUrl, [String apiPathPrefix]) {
+  discovery.RestDescription generateDiscoveryDocument(String baseUrl,
+                                                      String apiPrefix) {
     String servicePath;
-    if (apiPathPrefix != null) {
-      servicePath = '$apiPathPrefix$apiKey/';
+    if (apiPrefix != null && apiPrefix.isNotEmpty) {
+      if (apiPrefix.startsWith('/')) {
+        apiPrefix = apiPrefix.substring(1);
+      }
+      servicePath = '$apiPrefix$apiKey/';
     } else {
       servicePath = '${apiKey.substring(1)}/';
     }
-    Map json = {
-      'kind': 'discovery#restDescription',
-      'etag': '',
-      'discoveryVersion': 'v1',
-      'id': '$name:$_version',
-      'name': name,
-      'version': _version,
-      'revision': '0',
-      'title': _title == null ? name : _title,
-      'description': _description == null ? '' : _description,
-      // TODO: Handle icons and documentationLink fields.
-      'protocol': 'rest',
-      'baseUrl': '$serverUrl$servicePath',
-      'basePath': '/$servicePath',
-      'rootUrl': serverUrl,
-      'servicePath': servicePath,
-      // TODO: Handle batch requests, ie. 'batchPath'.
-      // TODO: Add support for toplevel API parameters.
-      'parameters': {},
-      'schemas': {},
-    };
-    _schemaMap.values.where(
-        (schema) => (schema.hasProperties)).forEach((schema) {
-      json['schemas'][schema.schemaName] = schema.descriptor;
-    });
-    // Add methods and resources by calling the inherited asJson getter.
-    json.addAll(asJson);
-    // TODO: Check if this is stable or not. E.g. if the hash map is
-    // deterministic.
+    var doc = new discovery.RestDescription();
+    doc..kind = 'discovery#restDescription'
+       ..discoveryVersion = 'v1'
+       ..id = '$name:$_version'
+       ..name = '$name'
+       ..version = _version
+       ..revision = '0'
+       ..protocol = 'rest'
+       ..baseUrl = '$baseUrl$servicePath'
+       ..basePath = '/$servicePath'
+       ..rootUrl = baseUrl
+       ..servicePath = servicePath
+       ..parameters = {}
+       ..schemas = _schemasAsDiscovery
+       ..methods = _methodsAsDiscovery
+       ..resources = _resourcesAsDiscovery;
+    if (_title != null) {
+      doc.title = _title;
+    }
+    if (_description != null) {
+      doc.description = _description;
+    }
+    // TODO: Figure out the best way to compute the sha1. E.g. update toString
+    // to change as needed when (nested) fields change.
     var sha1 = new SHA1();
-    sha1.add(UTF8.encode(json.toString()));
-    json['etag'] = CryptoUtils.bytesToHex(sha1.close());
-    return json;
+    sha1.add(UTF8.encode(doc.toString()));
+    doc.etag = CryptoUtils.bytesToHex(sha1.close());
+    return doc;
+  }
+
+  Map<String, discovery.JsonSchema> get _schemasAsDiscovery {
+    var schemas = new Map<String, discovery.JsonSchema>();
+    _schemaMap.forEach((String name, ApiConfigSchema schema) {
+      if (schema.hasProperties) {
+        schemas[name] = schema.asDiscovery;
+      }
+    });
+    return schemas;
+  }
+
+  discovery.DirectoryListItems get asDirectoryListItem {
+    var item = new discovery.DirectoryListItems();
+    // TODO: Support preferred, icons, and documentation link as part
+    // of metadata.
+    item..kind = 'discovery#directoryItem'
+        ..id = '$name:$_version'
+        ..name = name
+        ..version = _version
+        ..preferred = true;
+    if (_title != null) {
+      item.title = _title;
+    }
+    if (_description != null) {
+      item.description = _description;
+    }
+    return item;
   }
 }

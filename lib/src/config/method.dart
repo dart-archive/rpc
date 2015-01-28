@@ -4,7 +4,6 @@
 
 part of rpc.config;
 
-final _jsonToBytes = JSON.encoder.fuse(UTF8.encoder);
 final _bytesToJson = UTF8.decoder.fuse(JSON.decoder);
 
 class ApiConfigMethod {
@@ -37,39 +36,32 @@ class ApiConfigMethod {
     return true;
   }
 
-  Map get asJson {
-    Map json = {
-      'id': id,
-      'path': path,
-      'httpMethod': httpMethod.toUpperCase(),
-      'description': description,
-      'parameters': {},
-      // TODO: query string parameters
-      'parameterOrder': _pathParams,
-    };
+  discovery.RestMethod get asDiscovery {
+    var method = new discovery.RestMethod();
+    method..id = id
+          ..path = path
+          ..httpMethod = httpMethod.toUpperCase()
+          ..description = description
+          ..parameterOrder = _pathParams;
+    method.parameters = new Map<String, discovery.JsonSchema>();
     _pathParams.forEach((param) {
-      json['parameters'][param] =
-        {
-         // TODO: Add support for integers.
-         'type'       : 'string',
-         'required'   : true,
-         // TODO: Make it possible to give a description for each parameter
-         // in the ApiMethod annotatation.
-         'description': 'Path parameter: \'${param}\'.',
-         'location'   : 'path'
-        };
+      var schema = new discovery.JsonSchema();
+      // TODO: Add support for integers.
+      schema..type = 'string'
+            ..required = true
+            ..description = 'Path parameter: \'$param\'.'
+            ..location = 'path';
+      method.parameters[param] = schema;
     });
     if (_requestSchema != null && _requestSchema.hasProperties) {
-      json['request'] = {
-        '\$ref': _requestSchema.schemaName
-      };
+      method.request =
+          new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
     }
     if (_responseSchema != null && _responseSchema.hasProperties) {
-      json['response'] = {
-        '\$ref': _responseSchema.schemaName
-      };
+      method.response = new discovery.RestMethodResponse()
+                            ..P_ref = _responseSchema.schemaName;
     }
-    return json;
+    return method;
   }
 
   Future<HttpApiResponse> invokeHttpRequest(
@@ -121,7 +113,7 @@ class ApiConfigMethod {
         _responseSchema.hasProperties) {
       // TODO: Support other encodings.
       var jsonResult = _responseSchema.toResponse(apiResult);
-      var encodedResultIterable = [_jsonToBytes.convert(jsonResult)];
+      var encodedResultIterable = [request.jsonToBytes.convert(jsonResult)];
       result = new Stream.fromIterable(encodedResultIterable);
     } else {
       // Return an empty stream.

@@ -25,50 +25,27 @@ class ApiConfigSchema {
 
   bool get hasProperties => !_properties.isEmpty;
 
-  Map get descriptor {
-    var descriptor = {};
-    // TOOD: check up on schemaName, currently it is qualified class name...
-    descriptor['id'] = schemaName;
-    descriptor['type'] = 'object';
-    descriptor['properties'] = {};
-
+  discovery.JsonSchema get asDiscovery {
+    var schema = new discovery.JsonSchema();
+    // TODO: Check up on schema name, currently it is qualified symbol name.
+    schema..id = schemaName
+          ..type = 'object'
+          ..properties = new Map<String, discovery.JsonSchema>();
     _properties.values.forEach((prop) {
-      descriptor['properties'][prop.name] = prop.descriptor;
+      schema.properties[prop.name] = prop.asDiscovery;
     });
-
-    return descriptor;
+    return schema;
   }
 
   fromRequest(Map request) {
     InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
-    if (request != null) {
-      request.forEach((name, value) {
-        if (value != null) {
-          var sym = new Symbol(name);
-          var prop = _properties[sym];
-          if (prop != null) {
-            schema.setField(sym, prop.fromRequest(value));
-          }
-        }
-      });
-    }
-    // Check required/default
     _properties.forEach((sym, prop) {
-      if (prop.required || prop.hasDefault) {
-        var value = schema.getField(sym);
-        if (value.hasReflectee) {
-          value = value.reflectee;
-        }
-        if (value == null) {
-          if (prop.hasDefault) {
-            schema.setField(sym, prop.defaultValue);
-            return;
-          }
-          if (prop.required) {
-            throw new BadRequestError(
-                'Required field ${prop.name} is missing');
-          }
-        }
+      if (request.containsKey(prop.name)) {
+        schema.setField(sym, prop.fromRequest(request[prop.name]));
+      } else if (prop.hasDefault) {
+        schema.setField(sym, prop.fromRequest(prop.defaultValue));
+      } else if (prop.required) {
+        throw new BadRequestError('Required field ${prop.name} is missing');
       }
     });
     return schema.reflectee;

@@ -83,6 +83,9 @@ class ApiMethod {
 
 /// Optional annotation for parameters inside of API request/response messages.
 class ApiProperty {
+  /// Optional name to use when serializing and deserializing the property.
+  final String name;
+
   /// description of the property to be included in the discovery document.
   final String description;
 
@@ -117,6 +120,7 @@ class ApiProperty {
   final Map<String, String> values;
 
   const ApiProperty({
+      this.name,
       this.description,
       this.format,
       this.required: false,

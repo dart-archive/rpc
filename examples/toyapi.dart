@@ -16,6 +16,18 @@ class ToyResourceResponse {
   ToyResourceResponse(this.result);
 }
 
+class NestedResponse {
+  String nestedResult;
+  NestedResponse(this.nestedResult);
+}
+
+class ToyMapResponse {
+  String result;
+  Map<String, NestedResponse> mapResult;
+
+  ToyMapResponse(this.result, this.mapResult);
+}
+
 class ToyRequest {
   @ApiProperty(required: true)
   String name;
@@ -62,6 +74,15 @@ class ToyApi {
   @ApiMethod(path: 'helloPost/{name}', method: 'POST')
   ToyResponse helloNamePostAge(String name, ToyAgeRequest request) {
     return new ToyResponse('Hello ${name} of age ${request.age}!');
+  }
+
+  @ApiMethod(path: 'helloMap')
+  ToyMapResponse helloMap() {
+    var map = {
+      'bar': new NestedResponse('somethingNested'),
+      'var': new NestedResponse('someotherNested')
+    };
+    return new ToyMapResponse('foo', map);
   }
 }
 

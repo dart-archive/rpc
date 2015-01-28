@@ -11,34 +11,32 @@ import 'package:shelf_route/shelf_route.dart' as shelf_route;
 import 'package:rpc/rpc.dart';
 import 'toyapi.dart';
 
-final ApiServer _apiServer = new ApiServer();
-const API = '/api';
-const REST = '/rest';
+const _API_PREFIX = '/api';
+
+final ApiServer _apiServer = new ApiServer(prettyPrint: true);
 
 Future main() async {
   _apiServer.addApi(new ToyApi());
   var apiRouter = shelf_route.router();
-  apiRouter.add(API, ['GET', 'POST'], _apiHandler, exactMatch: false);
-  apiRouter.add(REST, ['GET'], _allDiscoveryDocsHandler);
-
+  apiRouter.add(_API_PREFIX, ['GET', 'POST'], _apiHandler, exactMatch: false);
   var handler = const shelf.Pipeline()
       .addMiddleware(shelf.logRequests())
       .addHandler(apiRouter.handler);
 
   var server = await shelf_io.serve(handler, '0.0.0.0', 9090);
+  // TODO: Figure out a better way to determine the server ip.
+  // E.g. set it on the first request. '${server.address.host}:${server.port}'
+  // return 0.0.0.0:9090 which is not useful.
+  var url = 'http://localhost:9090/';
+  _apiServer.enableDiscoveryApi(url, _API_PREFIX);
   print('Listening at port ${server.port}.');
 }
 
 /// A shelf handler for '/api' API requests .
 Future<shelf.Response> _apiHandler(shelf.Request request) async {
-  var requestPath = request.url.path;
-  if (requestPath.endsWith(REST)) {
-    // Return the discovery doc for the given API.
-    return _discoveryDocumentHandler(request);
-  }
   try {
     var apiRequest =
-        new HttpApiRequest(request.method, requestPath,
+        new HttpApiRequest(request.method, request.url.path,
                            request.headers['content-type'], request.read());
     var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,
@@ -48,28 +46,4 @@ Future<shelf.Response> _apiHandler(shelf.Request request) async {
     // always returns a response.
     return new shelf.Response.internalServerError(body: e.toString());
   }
-}
-
-/// Returns a discovery document for a given API.
-Future<shelf.Response> _discoveryDocumentHandler(shelf.Request request) {
-  var requestPath = request.url.path;
-  var apiKey = requestPath.substring(0, requestPath.length - REST.length);
-  var doc = _apiServer.getDiscoveryDocument(apiKey, 'api', _rootUrl(request));
-  if (doc == null) {
-    return new Future.value(
-        new shelf.Response.notFound('API \'${apiKey} not found.'));
-  }
-  return new Future.value(new shelf.Response.ok(doc));
-}
-
-/// Returns all discovery documents.
-shelf.Response _allDiscoveryDocsHandler(shelf.Request request) {
-  return new shelf.Response.ok(
-      _apiServer.getAllDiscoveryDocuments('api', _rootUrl(request))
-      .toString());
-}
-
-String _rootUrl(shelf.Request request) {
-  Uri uri = request.requestedUri;
-  return '${uri.scheme}://${uri.host}:${uri.port}/';
 }

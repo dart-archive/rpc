@@ -11,17 +11,23 @@ class ApiConfigResource {
 
   ApiConfigResource(this.name, this._resources, this._methods);
 
-  Map get asJson {
-    Map json = {
-      'methods': {},
-      'resources': {}
-    };
-    _methods.forEach((method) {
-      json['methods'][method.name] = method.asJson;
-    });
-    _resources.values.forEach((resource) {
-      json['resources'][resource.name] = resource.asJson;
-    });
-    return json;
+  Map<String, discovery.RestMethod> get _methodsAsDiscovery {
+    var methods = new Map<String, discovery.RestMethod>();
+    _methods.forEach((method) => methods[method.name] = method.asDiscovery);
+    return methods;
+  }
+
+  Map<String, discovery.RestResource> get _resourcesAsDiscovery {
+    var resources = new Map<String, discovery.RestResource>();
+    _resources.values.forEach(
+        (resource) => resources[resource.name] = resource.asDiscovery);
+    return resources;
+  }
+
+  discovery.RestResource get asDiscovery {
+    var resource = new discovery.RestResource();
+    resource..resources = _resourcesAsDiscovery
+            ..methods = _methodsAsDiscovery;
+    return resource;
   }
 }

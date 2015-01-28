@@ -8,9 +8,13 @@ import 'dart:mirrors';
 import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
+import 'package:rpc/src/discovery/config.dart';
 import 'package:unittest/unittest.dart';
 
 import 'src/test_api.dart';
+
+final ApiConfigSchema discoveryDocSchema =
+    new ApiParser().parseSchema(reflectType(RestDescription));
 
 main () {
   group('api_config_misconfig', () {
@@ -47,8 +51,8 @@ main () {
         var parser = new ApiParser();
         ApiConfig apiConfig = parser.parse(ambiguous);
         expect(parser.isValid, isFalse);
-        var config = apiConfig.toJson('rootUrl/');
-        expect(config['version'], 'test');
+        var config = apiConfig.generateDiscoveryDocument('baseUrl', '');
+        expect(config.version, 'test');
       });
     });
   });
@@ -61,14 +65,12 @@ main () {
       expect(parser.isValid, isTrue);
       Map expectedJson = {
         'kind': 'discovery#restDescription',
-        'etag': '9a0bdcd569d244abfc83d507ea2e78031d5c7db9',
+        'etag': 'f0c37e3991119bf8abfe2c1625b5779a389c2bd5',
         'discoveryVersion': 'v1',
         'id': 'Tester:v1test',
         'name': 'Tester',
         'version': 'v1test',
         'revision': '0',
-        'title': 'Tester',
-        'description': '',
         'protocol': 'rest',
         'baseUrl': 'http://localhost:8080/Tester/v1test/',
         'basePath': '/Tester/v1test/',
@@ -79,7 +81,10 @@ main () {
         'methods': {},
         'resources': {}
       };
-      var json = apiConfig.toJson('http://localhost:8080/');
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080/', '');
+      // Encode the discovery document for the Tester API as json.
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
       expect(json, expectedJson);
     });
 
@@ -114,8 +119,8 @@ main () {
             },
             'defaultValue': {
               'type': 'integer',
-              'format': 'int32',
-              'default': 10
+              'default': '10',
+              'format': 'int32'
             },
             'limit': {
               'type': 'integer',
@@ -131,7 +136,6 @@ main () {
           'id': 'CorrectSimple.simple1',
           'path': 'test1/{path}',
           'httpMethod': 'GET',
-          'description': null,
           'parameters': {
             'path': {
               'type': 'string',
@@ -146,14 +150,15 @@ main () {
           'id': 'CorrectSimple.simple2',
           'path': 'test2',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {},
           'parameterOrder': [],
           'request': {'\$ref': 'test_api.TestMessage1'},
           'response': {'\$ref': 'test_api.TestMessage1'}
         }
       };
-      var json = apiConfig.toJson('http://localhost:8080/');
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080/', null);
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
       expect(json['schemas'], expectedSchemas);
       expect(json['methods'], expectedMethods);
     });
@@ -162,13 +167,14 @@ main () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new CorrectMethods());
       expect(parser.isValid, isTrue);
-      var json = apiConfig.toJson('http://localhost:8080/');
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080', null);
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
       var expectedJsonMethods = {
         'test1': {
           'id': 'CorrectMethods.method1',
           'path': 'test1',
           'httpMethod': 'GET',
-          'description': null,
           'parameters': {},
           'parameterOrder': []
         },
@@ -176,7 +182,6 @@ main () {
           'id': 'CorrectMethods.method2',
           'path': 'test2',
           'httpMethod': 'GET',
-          'description': null,
           'parameters': {},
           'parameterOrder': [],
           'response': {'\$ref': 'test_api.TestMessage1'}
@@ -185,7 +190,6 @@ main () {
           'id': 'CorrectMethods.method3',
           'path': 'test3/{count}',
           'httpMethod': 'GET',
-          'description': null,
           'parameters': {
             'count': {
               'type': 'string',
@@ -201,7 +205,6 @@ main () {
           'id': 'CorrectMethods.method4',
           'path': 'test4/{count}/{more}',
           'httpMethod': 'GET',
-          'description': null,
           'parameters': {
             'count': {
               'type': 'string',
@@ -223,7 +226,6 @@ main () {
           'id': 'CorrectMethods.method5',
           'path': 'test5/{count}/some/{more}',
           'httpMethod': 'GET',
-          'description': null,
           'parameters': {
             'count': {
               'type': 'string',
@@ -245,7 +247,6 @@ main () {
           'id': 'CorrectMethods.method6',
           'path': 'test6',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {},
           'parameterOrder': [],
           'response': {'\$ref': 'test_api.TestMessage1'}
@@ -254,7 +255,6 @@ main () {
           'id': 'CorrectMethods.method7',
           'path': 'test7',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {},
           'parameterOrder': [],
           'request': {'\$ref': 'test_api.TestMessage1'}
@@ -263,7 +263,6 @@ main () {
           'id': 'CorrectMethods.method8',
           'path': 'test8',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {},
           'parameterOrder': [],
           'request': {'\$ref': 'test_api.TestMessage1'},
@@ -273,7 +272,6 @@ main () {
           'id': 'CorrectMethods.method9',
           'path': 'test9/{count}',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {
             'count': {
               'type': 'string',
@@ -289,7 +287,6 @@ main () {
           'id': 'CorrectMethods.method10',
           'path': 'test10/{count}',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {
             'count': {
               'type': 'string',
@@ -306,7 +303,6 @@ main () {
           'id': 'CorrectMethods.method14',
           'path': 'test11/{count}/bar',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {
             'count': {
               'type': 'string',
@@ -322,7 +318,6 @@ main () {
           'id': 'CorrectMethods.method12',
           'path': 'test12',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {},
           'parameterOrder': [],
           'response': {'\$ref': 'test_api.TestMessage1'}
@@ -331,7 +326,6 @@ main () {
           'id': 'CorrectMethods.method13',
           'path': 'test13',
           'httpMethod': 'POST',
-          'description': null,
           'parameters': {},
           'parameterOrder': []
         }
@@ -384,7 +378,9 @@ main () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new TesterWithOneResource());
       expect(parser.isValid, isTrue);
-      var json = apiConfig.toJson('http://localhost:8080/');
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080', null);
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
       Map expectedResources = {
         'someResource': {
           'methods': {
@@ -392,7 +388,6 @@ main () {
               'id': 'TesterWithOneResource.someResource.method1',
               'path': 'someResourceMethod',
               'httpMethod': 'GET',
-              'description': null,
               'parameters': {},
               'parameterOrder': []
             }
@@ -414,7 +409,6 @@ main () {
               'id': 'TesterWithTwoResources.someResource.method1',
               'path': 'someResourceMethod',
               'httpMethod': 'GET',
-              'description': null,
               'parameters': {},
               'parameterOrder': []
             }
@@ -427,7 +421,6 @@ main () {
               'id': 'TesterWithTwoResources.namedResource.method1',
               'path': 'namedResourceMethod',
               'httpMethod': 'GET',
-              'description': null,
               'parameters': {},
               'parameterOrder': []
             }
@@ -435,7 +428,9 @@ main () {
           'resources': {}
         }
       };
-      var json = apiConfig.toJson('http://localhost:8080/');
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080', null);
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
       expect(json['resources'], expectedResources);
     });
 
@@ -454,7 +449,6 @@ main () {
                         '.nestedResource.method1',
                   'path': 'nestedResourceMethod',
                   'httpMethod': 'GET',
-                  'description': null,
                   'parameters': {},
                   'parameterOrder': []
                 }
@@ -464,7 +458,9 @@ main () {
           }
         }
       };
-      var json = apiConfig.toJson('http://localhost:8080/');
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080', null);
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
       expect(json['resources'], expectedResources);
     });
   });
@@ -537,13 +533,7 @@ main () {
     test('recursion', () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new Recursive());
-      expect(parser.isValid, isFalse);
-      var errors = [
-        new ApiConfigError('test_api.RecursiveMessage1: Schema has a (possibly '
-                           'indirect) cycle to itself.'),
-        new ApiConfigError('test_api.RecursiveMessage2: Schema has a (possibly '
-                           'indirect) cycle to itself.')];
-      expect(parser.errors.toString(), errors.toString());
+      expect(parser.isValid, isTrue);
     });
 
     test('correct', () {
@@ -646,6 +636,29 @@ main () {
       expect(instance.submessages[2].count, 7);
       expect(instance.enumValue, 'test1');
       expect(instance.defaultValue, 10);
+    });
+
+    test('request-parsing-map-list', () {
+      var parser = new ApiParser();
+      var schema = parser.parseSchema(reflectClass(TestMessage5));
+      var jsonRequest ={
+        'myStrings': ['foo', 'bar'],
+        'listOfObjects' : [
+          {'count': 4},
+          {'count': 2}
+        ],
+        'mapStringToString': {
+          'foo': 'bar',
+          'bar': 'foo'
+        },
+        'mapStringToObject': {
+          'some':  {'count': 2},
+          'other': {'count': 4}
+        }
+      };
+      var schemaInstance = schema.fromRequest(jsonRequest);
+      var jsonResponse = schema.toResponse(schemaInstance);
+      expect(jsonResponse, jsonRequest);
     });
 
     test('required', () {

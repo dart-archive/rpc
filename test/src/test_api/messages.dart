@@ -72,6 +72,17 @@ class TestMessage4 {
   int count;
 }
 
+class TestMessage5 {
+  @ApiProperty(name: 'myStrings')
+  List<String> listOfStrings;
+
+  List<TestMessage2> listOfObjects;
+
+  Map<String, String> mapStringToString;
+
+  Map<String, TestMessage2> mapStringToObject;
+}
+
 class WrongSchema1 {
   WrongSchema1.myConstructor();
 }

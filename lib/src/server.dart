@@ -12,16 +12,27 @@ import 'errors.dart';
 import 'message.dart';
 import 'parser.dart';
 import 'utils.dart';
-
-final JsonEncoder _encoder = new JsonEncoder.withIndent(' ');
+import 'discovery/api.dart';
+import 'discovery/config.dart';
 
 /// The main class for handling all API requests.
 class ApiServer {
+  String _baseUrl;
+  String _apiPrefix;
+  String _discoveryApiKey;
 
-  Map<String, ApiConfig> _apis = {};
+  Converter<Object, dynamic> _jsonToBytes;
+
+  final Map<String, ApiConfig> _apis = {};
+
+  ApiServer({bool prettyPrint: false}) {
+    _jsonToBytes = prettyPrint ?
+        new JsonEncoder.withIndent(' ').fuse(UTF8.encoder) :
+        JSON.encoder.fuse(UTF8.encoder);
+  }
 
   /// Add a new api to the API server.
-  void addApi(api) {
+  String addApi(api) {
     ApiParser parser = new ApiParser();
     ApiConfig apiConfig = parser.parse(api);
     if (_apis.containsKey(apiConfig.apiKey)) {
@@ -33,6 +44,7 @@ class ApiServer {
                                 parser.errors.join('\n') + '\n');
     }
     _apis[apiConfig.apiKey] = apiConfig;
+    return apiConfig.apiKey;
   }
 
   /// Handles the api call.
@@ -57,7 +69,7 @@ class ApiServer {
     try {
       // Parse the request to compute some of the values needed to determine
       // which method to invoke.
-      var parsedRequest = new ParsedHttpApiRequest(request);
+      var parsedRequest = new ParsedHttpApiRequest(request, _jsonToBytes);
 
       // The api key is the first two path segments.
       ApiConfig api = _apis[parsedRequest.apiKey];
@@ -82,23 +94,41 @@ class ApiServer {
     return response;
   }
 
-  /// Returns a map of all discovery documents available at this api server.
-  Map<String, String> getAllDiscoveryDocuments(
-      [String apiPathPrefix = '',
-       String root = 'http://localhost:8080/']) {
-    Map docs = {};
-    _apis.forEach(
-        (apiPath, api) =>
-            docs[apiPath] = _encoder.convert(api.toJson(root, apiPathPrefix)));
-    return docs;
+  void enableDiscoveryApi(String baseUrl, String apiPrefix) {
+    _baseUrl = baseUrl;
+    _apiPrefix = apiPrefix;
+    _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl));
   }
 
-  /// Returns the discovery document matching the given key.
-  String getDiscoveryDocument(String apiKey,
-                              [String apiPathPrefix = '',
-                               String root = 'http://localhost:8080/']) {
+  void disableDiscoveryApi() {
+    _apis.remove(_discoveryApiKey);
+    _baseUrl = null;
+    _apiPrefix = null;
+    _discoveryApiKey = null;
+  }
+
+  /// Returns a list containing all Discovery directory items listing
+  /// information about the APIs available at this API server.
+  List<DirectoryListItems> getDiscoveryDirectory() {
+    if (_baseUrl == null) {
+      // The Discovery API has not been enabled for this ApiServer.
+      throw new BadRequestError('Discovery API not enabled.');
+    }
+    var apiDirectory = [];
+    _apis.values.forEach((api) => apiDirectory.add(api.asDirectoryListItem));
+    return apiDirectory;
+  }
+
+  /// Returns the discovery document matching the given api key.
+  RestDescription getDiscoveryDocument(String apiKey) {
+    if (_baseUrl == null) {
+      // The Discovery API has not been enabled for this ApiServer.
+      throw new BadRequestError('Discovery API not enabled.');
+    }
     var api = _apis[apiKey];
-    if (api != null) return _encoder.convert(api.toJson(root, apiPathPrefix));
-    return null;
+    if (api == null) {
+      throw new NotFoundError('Discovery API \'$apiKey\' not found.');
+    }
+    return api.generateDiscoveryDocument(_baseUrl, _apiPrefix);
   }
 }

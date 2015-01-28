@@ -14,6 +14,7 @@ import 'package:uri/uri.dart';
 import 'errors.dart';
 import 'message.dart';
 import 'utils.dart';
+import 'discovery/config.dart' as discovery;
 
 part 'config/api.dart';
 part 'config/method.dart';
@@ -32,6 +33,8 @@ class ParsedHttpApiRequest {
   /// The original request given as input.
   final HttpApiRequest originalRequest;
 
+  final Converter<Object, dynamic> jsonToBytes;
+
   // The first two segments of the request path is the api name and
   // version. The key is '/name/version'.
   // The method path is the remaining path segments.
@@ -47,7 +50,8 @@ class ParsedHttpApiRequest {
   // A map from path parameter name to path parameter value.
   Map<String, String> pathParameterValues;
 
-  factory ParsedHttpApiRequest(HttpApiRequest request) {
+  factory ParsedHttpApiRequest(HttpApiRequest request,
+                               Converter<Object, dynamic> jsonToBytes) {
     var path = request.path;
     if (path.startsWith('/')) {
       path = path.substring(1);
@@ -66,11 +70,12 @@ class ParsedHttpApiRequest {
     var methodKey = '${request.httpMethod}${methodPathSegments.length}';
     var methodUri = Uri.parse(methodPathSegments.join('/'));
 
-    return new ParsedHttpApiRequest._(request, apiKey, methodKey, methodUri);
+    return new ParsedHttpApiRequest._(request, apiKey, methodKey, methodUri,
+                                      jsonToBytes);
   }
 
   ParsedHttpApiRequest._(this.originalRequest, this.apiKey,
-                         this.methodKey, this.methodUri);
+                         this.methodKey, this.methodUri, this.jsonToBytes);
 
   String get httpMethod => originalRequest.httpMethod;
 
