@@ -86,3 +86,13 @@ class ParsedHttpApiRequest {
 
   Stream<List<int>> get body => originalRequest.body;
 }
+
+/// Helper class describing a method parameter.
+class ApiParameter {
+  final String name;
+  final Symbol symbol;
+  final bool isInt;
+
+  ApiParameter(this.name, ParameterMirror pm)
+      : this.symbol = pm.simpleName, isInt = pm.type == reflectType(int);
+}

@@ -244,7 +244,7 @@ class ApiParser {
     // Parse method parameters. Path parameters must be parsed first followed by
     // either the query string parameters or the request schema.
     var pathParams;
-    var queryParamTypes;
+    var queryParams;
     var requestSchema;
     if (metadata.path != null) {
       pathParams = _parsePathParameters(mm, metadata.path);
@@ -252,7 +252,7 @@ class ApiParser {
         // If this is a method without body it can have named parameters
         // passed via the query string. Basically any named parameter following
         // the path parameters can be passed via the request's query string.
-        queryParamTypes = _parseQueryParameters(mm, pathParams.length);
+        queryParams = _parseQueryParameters(mm, pathParams.length);
       } else {
         // Methods with a body must have exactly one additional parameter,
         // namely the class parameter corresponding to the request body.
@@ -266,7 +266,7 @@ class ApiParser {
 
     var methodConfig = new ApiConfigMethod(discoveryId, methodOwner,
         mm.simpleName, name, metadata.path, httpMethod, metadata.description,
-        pathParams, queryParamTypes, requestSchema, responseSchema, parser);
+        pathParams, queryParams, requestSchema, responseSchema, parser);
 
     _setupApiMethod(methodConfig);
 
@@ -276,7 +276,7 @@ class ApiParser {
 
   // Parses a method's url path parameters and validates them against the
   // method signature.
-  List<String> _parsePathParameters(MethodMirror mm, String path) {
+  List<ApiParameter> _parsePathParameters(MethodMirror mm, String path) {
     var pathParams = [];
     if (path == null) return pathParams;
 
@@ -304,11 +304,11 @@ class ApiParser {
       if (pm.isOptional || pm.isNamed) {
         addError('No support for optional path parameters in API methods.');
       }
-      if (pm.type is! ClassMirror || pm.type.simpleName != #String) {
-        // TODO: Add support for integer.
-        addError('Path parameter \'$pathParamName\' must be of type String.');
+      if (pm.type.simpleName != #int && pm.type.simpleName != #String) {
+        addError(
+            'Path parameter \'$pathParamName\' must be of type int or String.');
       }
-      pathParams.add(pathParamName);
+      pathParams.add(new ApiParameter(pathParamName, pm));
     }
     return pathParams;
   }
@@ -317,9 +317,9 @@ class ApiParser {
   // Returns a map with the name and symbol of the parameter. The parameters
   // are (optionally) passed via the request's query string parameters on
   // invocation.
-  Map<String, Symbol> _parseQueryParameters(MethodMirror mm,
-                                            int queryParamIndex) {
-    var queryParamTypes = {};
+  List<ApiParameter> _parseQueryParameters(MethodMirror mm,
+                                           int queryParamIndex) {
+    var queryParams = [];
     for (int i = queryParamIndex; i < mm.parameters.length; ++i) {
       var pm = mm.parameters[i];
       var paramName = MirrorSystem.getName(pm.simpleName);
@@ -327,13 +327,13 @@ class ApiParser {
         addError(
             'Non-path parameter \'$paramName\' must be a named parameter.');
       }
-      if (pm.type is! ClassMirror || pm.type.simpleName != #String) {
-        // TODO: Add support for integer.
-        addError('Query parameter \'$paramName\' must be of type String.');
+      if (pm.type.simpleName != #int && pm.type.simpleName != #String) {
+        addError(
+            'Query parameter \'$paramName\' must be of type int or String.');
       }
-      queryParamTypes[paramName] = pm.simpleName;
+      queryParams.add(new ApiParameter(paramName, pm));
     }
-    return queryParamTypes;
+    return queryParams;
   }
 
   // Parses the method's request parameter. Only called for methods using the
@@ -592,7 +592,7 @@ class ApiParser {
       return false;
     } else if (format == 'int32' && value != value.toSigned(32) ||
                format == 'uint32' && value != value.toUnsigned(32) ||
-               format == 'uint32' && value != value.toUnsigned(32) ||
+               format == 'int64' && value != value.toSigned(64) ||
                format == 'uint64' && value != value.toUnsigned(64)) {
       addError(
           '$name: $messagePrefix value must be in the range of an \'$format\'');

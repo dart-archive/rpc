@@ -300,14 +300,14 @@ main () {
           'response': {'\$ref': 'test_api.TestMessage1'}
         },
         'test11': {
-          'id': 'CorrectMethods.method14',
-          'path': 'test11/{count}/bar',
+          'id': 'CorrectMethods.method11',
+          'path': 'test11/{count}',
           'httpMethod': 'POST',
           'parameters': {
             'count': {
               'type': 'string',
-              'required': true,
               'description': 'Path parameter: \'count\'.',
+              'required': true,
               'location': 'path'
             }
           },
@@ -328,6 +328,68 @@ main () {
           'httpMethod': 'POST',
           'parameters': {},
           'parameterOrder': []
+        },
+        'test14': {
+          'id': 'CorrectMethods.method14',
+          'path': 'test14/{count}/bar',
+          'httpMethod': 'POST',
+          'parameters': {
+            'count': {
+              'type': 'string',
+              'description': 'Path parameter: \'count\'.',
+              'required': true,
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'request': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test15': {
+          'id': 'CorrectMethods.method15',
+          'path': 'test15/{count}',
+          'httpMethod': 'POST',
+          'parameters': {
+            'count': {
+              'type': 'integer',
+              'description': 'Path parameter: \'count\'.',
+              'required': true,
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test16': {
+          'id': 'CorrectMethods.method16',
+          'path': 'test16/{count}',
+          'httpMethod': 'POST',
+          'parameters': {
+            'count': {
+              'type': 'integer',
+              'description': 'Path parameter: \'count\'.',
+              'required': true,
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'request': {'\$ref': 'test_api.TestMessage1'},
+          'response': {'\$ref': 'test_api.TestMessage1'}
+        },
+        'test17': {
+          'id': 'CorrectMethods.method17',
+          'path': 'test17/{count}/bar',
+          'httpMethod': 'POST',
+          'parameters': {
+            'count': {
+              'type': 'integer',
+              'description': 'Path parameter: \'count\'.',
+              'required': true,
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['count'],
+          'request': {'\$ref': 'test_api.TestMessage1'},
+          'response': {'\$ref': 'test_api.TestMessage1'}
         }
       };
       expect(json['methods'], expectedJsonMethods);
@@ -489,9 +551,9 @@ main () {
         new ApiConfigError('WrongMethods.wrongMethodParameter: Non-path '
             'parameter \'_\' must be a named parameter.'),
         new ApiConfigError('WrongMethods.wrongMethodParameter: Query '
-            'parameter \'_\' must be of type String.'),
+            'parameter \'_\' must be of type int or String.'),
         new ApiConfigError('WrongMethods.wrongParameterType: Path parameter '
-            '\'test\' must be of type String.'),
+            '\'test\' must be of type int or String.'),
         new ApiConfigError('WrongMethods.wrongPathAnnotation: Non-path '
             'parameter \'test\' must be a named parameter.'),
         new ApiConfigError('WrongMethods.wrongResponseType1: Return type: '
@@ -508,7 +570,7 @@ main () {
             'parameter with name \'id\', but found parameter with name '
             '\'request\'.'),
         new ApiConfigError('WrongMethods.missingPathParam2: Path parameter '
-            '\'id\' must be of type String.'),
+            '\'id\' must be of type int or String.'),
         new ApiConfigError('WrongMethods.missingPathParam2: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
@@ -749,9 +811,145 @@ main () {
   group('api_config_query_methods', () {
 
     test('correct', () {
+      var expectedJsonMethods = {
+        'query1': {
+          'id': 'CorrectQueryParameterTester.query1',
+          'path': 'query1',
+          'httpMethod': 'GET',
+          'parameters': {
+            'name': {
+              'type': 'string',
+              'description': 'Query parameter: \'name\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': []
+        },
+        'query2': {
+          'id': 'CorrectQueryParameterTester.query2',
+          'path': 'query2/{pathParam}',
+          'httpMethod': 'GET',
+          'parameters': {
+            'pathParam': {
+              'type': 'string',
+              'description': 'Path parameter: \'pathParam\'.',
+              'required': true,
+              'location': 'path'
+            },
+            'queryParam': {
+              'type': 'string',
+              'description': 'Query parameter: \'queryParam\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': ['pathParam']
+        },
+        'query3': {
+          'id': 'CorrectQueryParameterTester.query3',
+          'path': 'query3',
+          'httpMethod': 'GET',
+          'parameters': {
+            'qp1': {
+              'type': 'string',
+              'description': 'Query parameter: \'qp1\'.',
+              'required': false,
+              'location': 'query'
+            },
+            'qp2': {
+              'type': 'string',
+              'description': 'Query parameter: \'qp2\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': []
+        },
+        'query4': {
+          'id': 'CorrectQueryParameterTester.query4',
+          'path': 'query4',
+          'httpMethod': 'GET',
+          'parameters': {
+            'qp': {
+              'type': 'integer',
+              'description': 'Query parameter: \'qp\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': []
+        },
+        'query5': {
+          'id': 'CorrectQueryParameterTester.query5',
+          'path': 'query5',
+          'httpMethod': 'GET',
+          'parameters': {
+            'qp1': {
+              'type': 'string',
+              'description': 'Query parameter: \'qp1\'.',
+              'required': false,
+              'location': 'query'
+            },
+            'qp2': {
+              'type': 'integer',
+              'description': 'Query parameter: \'qp2\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': []
+        },
+        'query6': {
+          'id': 'CorrectQueryParameterTester.query6',
+          'path': 'query6',
+          'httpMethod': 'GET',
+          'parameters': {
+            'qp1': {
+              'type': 'integer',
+              'description': 'Query parameter: \'qp1\'.',
+              'required': false,
+              'location': 'query'
+            },
+            'qp2': {
+              'type': 'string',
+              'description': 'Query parameter: \'qp2\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': []
+        },
+        'query7': {
+          'id': 'CorrectQueryParameterTester.query7',
+          'path': 'query7',
+          'httpMethod': 'GET',
+          'parameters': {
+            'qp1': {
+              'type': 'integer',
+              'description': 'Query parameter: \'qp1\'.',
+              'required': false,
+              'location': 'query'
+            },
+            'qp2': {
+              'type': 'integer',
+              'description': 'Query parameter: \'qp2\'.',
+              'required': false,
+              'location': 'query'
+            }
+          },
+          'parameterOrder': []
+        }
+      };
+
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new CorrectQueryParameterTester());
       expect(parser.isValid, isTrue);
+      var discoveryDoc =
+          apiConfig.generateDiscoveryDocument('http://localhost:8080/', null);
+      // Encode the discovery document for the Tester API as json.
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
+      expect(json['methods'], expectedJsonMethods);
     });
 
     test('misconfig', () {
@@ -761,18 +959,14 @@ main () {
       var errors = [
         new ApiConfigError('WrongQueryParameterTester.query1: Non-path '
             'parameter \'path\' must be a named parameter.'),
-        new ApiConfigError('WrongQueryParameterTester.query2: Query parameter '
-            '\'query\' must be of type String.'),
-        new ApiConfigError('WrongQueryParameterTester.query3: Expected method '
+        new ApiConfigError('WrongQueryParameterTester.query2: Expected method '
             'parameter with name \'queryParam\', but found parameter with '
             'name \'pathParam\'.'),
-        new ApiConfigError('WrongQueryParameterTester.query4: Query parameter '
-            '\'queryParam\' must be of type String.'),
-        new ApiConfigError('WrongQueryParameterTester.query5: No support for '
+        new ApiConfigError('WrongQueryParameterTester.query3: Query parameter '
+            '\'queryParam\' must be of type int or String.'),
+        new ApiConfigError('WrongQueryParameterTester.query4: No support for '
             'optional path parameters in API methods.'),
-        new ApiConfigError('WrongQueryParameterTester.query6: Query parameter '
-            '\'queryParam2\' must be of type String.'),
-        new ApiConfigError('WrongQueryParameterTester.query7: Non-path '
+        new ApiConfigError('WrongQueryParameterTester.query5: Non-path '
             'parameter \'queryParam\' must be a named parameter.')];
       expect(parser.errors.toString(), errors.toString());
     });

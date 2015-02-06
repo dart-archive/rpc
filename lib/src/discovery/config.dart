@@ -105,6 +105,18 @@ class JsonSchemaVariant {
 
 /** Not documented yet. */
 class JsonSchema {
+  /** Used to describe parameters of type int. */
+  static const PARAM_INTEGER_TYPE = 'integer';
+
+  /* Used to describe parameters of type string. */
+  static const PARAM_STRING_TYPE  = 'string';
+
+  /** Designates a parameter is part of the url path. */
+  static const PARAM_LOCATION_PATH = 'path';
+
+  /** Designates a parameter is part of the url query string. */
+  static const PARAM_LOCATION_QUERY = 'query';
+
   /** Unique identifier for this schema. */
   String id;
 

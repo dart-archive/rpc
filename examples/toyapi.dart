@@ -32,13 +32,13 @@ class ToyRequest {
   @ApiProperty(required: true)
   String name;
 
-  @ApiProperty(defaultValue: '1000')
-  String age;
+  @ApiProperty(defaultValue: 1000)
+  int age;
 }
 
 class ToyAgeRequest {
-  @ApiProperty(defaultValue: '1000')
-  String age;
+  @ApiProperty(defaultValue: 1000)
+  int age;
 }
 
 @ApiClass(version: '0.1')
@@ -62,7 +62,7 @@ class ToyApi {
   ToyResponse hello() { return new ToyResponse('Hello there!'); }
 
   @ApiMethod(path: 'hello/{name}/age/{age}')
-  ToyResponse helloNameAge(String name, String age) {
+  ToyResponse helloNameAge(String name, int age) {
     return new ToyResponse('Hello ${name} of age ${age}!');
   }
 
@@ -86,7 +86,7 @@ class ToyApi {
   }
 
   @ApiMethod(path: 'helloQuery/{name}')
-  ToyResponse helloNameQueryAgeFoo(String name, {String foo, String age}) {
+  ToyResponse helloNameQueryAgeFoo(String name, {String foo, int age}) {
     return new ToyResponse('Hello $name of age $age with $foo!');
   }
 }

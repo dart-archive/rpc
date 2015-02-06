@@ -171,9 +171,24 @@ class CorrectMethods {
     return new Future.value(new VoidMessage());
   }
 
-  @ApiMethod(name: 'test11', method: 'POST', path: 'test11/{count}/bar')
+  @ApiMethod(name: 'test14', method: 'POST', path: 'test14/{count}/bar')
   VoidMessage method14(String count, TestMessage1 request) {
     return null;
+  }
+
+  @ApiMethod(name: 'test15', method: 'POST', path: 'test15/{count}')
+  TestMessage1 method15(int count, VoidMessage _) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test16', method: 'POST', path: 'test16/{count}')
+  TestMessage1 method16(int count, TestMessage1 request) {
+    return new TestMessage1();
+  }
+
+  @ApiMethod(name: 'test17', method: 'POST', path: 'test17/{count}/bar')
+  TestMessage1 method17(int count, TestMessage1 request) {
+    return new TestMessage1();
   }
 }
 
@@ -403,6 +418,26 @@ class CorrectQueryParameterTester {
   VoidMessage query3({String qp1, String qp2}) {
     return null;
   }
+
+  @ApiMethod(path: 'query4')
+  VoidMessage query4({int qp}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query5')
+  VoidMessage query5({String qp1, int qp2}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query6')
+  VoidMessage query6({int qp1, String qp2}) {
+    return null;
+  }
+
+  @ApiMethod(path: 'query7')
+  VoidMessage query7({int qp1, int qp2}) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1test')
@@ -412,33 +447,23 @@ class WrongQueryParameterTester {
     return null;
   }
 
-  @ApiMethod(path: 'query2')
-  VoidMessage query2({int query}) {
+  @ApiMethod(path: 'query2/{queryParam}')
+  VoidMessage query2(String pathParam, {String queryParam}) {
     return null;
   }
 
-  @ApiMethod(path: 'query3/{queryParam}')
-  VoidMessage query3(String pathParam, {String queryParam}) {
+  @ApiMethod(path: 'query3')
+  VoidMessage query3({queryParam}) {
     return null;
   }
 
-  @ApiMethod(path: 'query4')
-  VoidMessage query4({queryParam}) {
+  @ApiMethod(path: 'query4/{queryParam}')
+  VoidMessage query4({String queryParam}) {
     return null;
   }
 
-  @ApiMethod(path: 'query5/{queryParam}')
-  VoidMessage query5({String queryParam}) {
-    return null;
-  }
-
-  @ApiMethod(path: 'query6')
-  VoidMessage query6({String queryParam1, int queryParam2}) {
-    return null;
-  }
-
-  @ApiMethod(path: 'query7')
-  VoidMessage query7([String queryParam]) {
+  @ApiMethod(path: 'query5')
+  VoidMessage query5([String queryParam]) {
     return null;
   }
 }

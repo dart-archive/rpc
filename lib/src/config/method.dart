@@ -15,15 +15,15 @@ class ApiConfigMethod {
   final String description;
 
   final InstanceMirror _instance;
-  final List<String> _pathParams;
-  final Map<String, Symbol> _queryParamTypes;
+  final List<ApiParameter> _pathParams;
+  final List<ApiParameter> _queryParams;
   final ApiConfigSchema _requestSchema;
   final ApiConfigSchema _responseSchema;
   final UriParser _parser;
 
   ApiConfigMethod(this.id, this._instance, this.symbol, this.name, this.path,
                   this.httpMethod, this.description, this._pathParams,
-                  this._queryParamTypes, this._requestSchema,
+                  this._queryParams, this._requestSchema,
                   this._responseSchema, this._parser);
 
   bool matches(ParsedHttpApiRequest request) {
@@ -42,26 +42,26 @@ class ApiConfigMethod {
           ..path = path
           ..httpMethod = httpMethod.toUpperCase()
           ..description = description
-          ..parameterOrder = _pathParams;
+          ..parameterOrder = _pathParams.map((param) => param.name).toList();
     method.parameters = new Map<String, discovery.JsonSchema>();
     _pathParams.forEach((param) {
       var schema = new discovery.JsonSchema();
-      // TODO: Add support for integers.
-      schema..type = 'string'
+      schema..type = param.isInt ? discovery.JsonSchema.PARAM_INTEGER_TYPE
+                                 : discovery.JsonSchema.PARAM_STRING_TYPE
             ..required = true
-            ..description = 'Path parameter: \'$param\'.'
-            ..location = 'path';
-      method.parameters[param] = schema;
+            ..description = 'Path parameter: \'${param.name}\'.'
+            ..location = discovery.JsonSchema.PARAM_LOCATION_PATH;
+      method.parameters[param.name] = schema;
     });
-    if (_queryParamTypes != null) {
-      _queryParamTypes.keys.forEach((String param) {
+    if (_queryParams != null) {
+      _queryParams.forEach((param) {
         var schema = new discovery.JsonSchema();
-        // TODO: Add support for integers.
-        schema..type = 'string'
+        schema..type = param.isInt ? discovery.JsonSchema.PARAM_INTEGER_TYPE
+                                   : discovery.JsonSchema.PARAM_STRING_TYPE
               ..required = false
-              ..description = 'Query parameter: \'$param\'.'
-              ..location = 'query';
-        method.parameters[param] = schema;
+              ..description = 'Query parameter: \'${param.name}\'.'
+              ..location = discovery.JsonSchema.PARAM_LOCATION_QUERY;
+        method.parameters[param.name] = schema;
       });
     }
     if (_requestSchema != null && _requestSchema.hasProperties) {
@@ -81,26 +81,50 @@ class ApiConfigMethod {
     // Add path parameters to params in the correct order.
     assert(_pathParams != null);
     assert(request.pathParameters != null);
-    _pathParams.forEach((paramName) {
-      var value = request.pathParameters[paramName];
+    for (int i = 0; i < _pathParams.length; ++i) {
+      var param = _pathParams[i];
+      var value = request.pathParameters[param.name];
       if (value == null) {
         return httpErrorResponse(request.originalRequest,
-            new BadRequestError('Required parameter: $paramName missing.'));
+            new BadRequestError('Required parameter: ${param.name} missing.'));
       }
-      positionalParams.add(value);
-    });
+      if (param.isInt) {
+        try {
+          positionalParams.add(int.parse(value));
+        } on FormatException catch (error) {
+          return httpErrorResponse(request.originalRequest,
+              new BadRequestError('Invalid integer value: $value for '
+                                  'path parameter: ${param.name}. '
+                                  '${error.toString()}'));
+        }
+      } else {
+        positionalParams.add(value);
+      }
+    }
     // Build named parameter map for query parameters.
     var namedParams = {};
-    if (_queryParamTypes != null && request.queryParameters != null) {
-      _queryParamTypes.forEach((name, symbol) {
+    if (_queryParams != null && request.queryParameters != null) {
+      for (int i = 0; i < _queryParams.length; ++i) {
+        var param = _queryParams[i];
         // Check if there is a parameter value for the given name.
-        var value = request.queryParameters[name];
+        var value = request.queryParameters[param.name];
         if (value != null) {
-          namedParams[symbol] = value;
+          if (param.isInt) {
+            try {
+              namedParams[param.symbol] = int.parse(value);
+            } on FormatException catch (error) {
+              return httpErrorResponse(request.originalRequest,
+                  new BadRequestError('Invalid integer value: $value for '
+                                      'query parameter: ${param.name}. '
+                                      '${error.toString()}'));
+            }
+          } else {
+            namedParams[param.symbol] = value;
+          }
         }
         // We ignore query parameters that don't match a named method
         // parameter.
-      });
+      }
     }
     var apiResult;
     try {
