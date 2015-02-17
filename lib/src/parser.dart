@@ -496,9 +496,8 @@ class ApiParser {
         // Generate a metadata with default values
         metadata = new ApiProperty();
       }
-      if (vm is! VariableMirror ||
-          vm.isConst || vm.isFinal || vm.isPrivate || vm.isStatic) {
-        // We only serialize non-final, non-const, non-static public fields.
+      if (vm is! VariableMirror || vm.isConst || vm.isPrivate || vm.isStatic) {
+        // We only serialize non-const, non-static public fields.
         return;
       }
       var propertyName = metadata.name;

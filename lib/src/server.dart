@@ -97,7 +97,7 @@ class ApiServer {
   void enableDiscoveryApi(String baseUrl, String apiPrefix) {
     _baseUrl = baseUrl;
     _apiPrefix = apiPrefix;
-    _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl));
+    _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl, apiPrefix));
   }
 
   void disableDiscoveryApi() {

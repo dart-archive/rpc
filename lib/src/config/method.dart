@@ -135,10 +135,15 @@ class ApiConfigMethod {
         apiResult =
             await invokeWithBody(request.body, positionalParams, namedParams);
       }
+    } on RpcError catch (error) {
+      // Catch RpcError explicitly and wrap them in the http error response.
+      return httpErrorResponse(request.originalRequest, error,
+                               drainRequest: false);
     } catch (error) {
-      // We explicitly catch exceptions thrown by the invoke method, otherwise
-      // these exceptions would be shown as 500 Unknown API Error since we
-      // cannot distinguish them from e.g. an internal null pointer exception.
+      // All other exceptions thrown are caught and wrapped as ApplicationError
+      // with status code 500. Otherwise these exceptions would be shown as
+      // Unknown API Error since we cannot distinguish them from e.g. an
+      // internal null pointer exception.
       return httpErrorResponse(request.originalRequest,
           new ApplicationError(error), drainRequest: false);
     }

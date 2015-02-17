@@ -16,13 +16,32 @@ class DiscoveryApi {
   @ApiResource(name: 'apis')
   final DiscoveryResource apis;
 
-  DiscoveryApi(ApiServer server, String baseUrl)
-      : apis = new DiscoveryResource(server, baseUrl);
+  factory DiscoveryApi(ApiServer server, String baseUrl, String apiPrefix) {
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+    }
+    if (apiPrefix == null) {
+      apiPrefix = '';
+    }
+    if (apiPrefix.isNotEmpty && !apiPrefix.startsWith('/')) {
+      apiPrefix = '/$apiPrefix';
+    }
+    if (apiPrefix.endsWith('/')) {
+      apiPrefix = apiPrefix.substring(0, apiPrefix.length - 1);
+    }
+    var apis = new DiscoveryResource(server, baseUrl, apiPrefix);
+    return new DiscoveryApi._(apis);
+  }
+
+  DiscoveryApi._(this.apis);
 }
 
 class DiscoveryResource {
   final ApiServer _server;
   final String _baseUrl;
+  final String _apiPrefix;
+
+  DiscoveryResource(this._server, this._baseUrl, this._apiPrefix);
 
   @ApiMethod(path: 'apis/{api}/{version}/rest',
              description:
@@ -35,19 +54,20 @@ class DiscoveryResource {
              description:
                'Retrieve the list of APIs supported at this endpoint.')
   DirectoryList list() {
+    assert(!_baseUrl.endsWith('/'));
+    assert(_apiPrefix.isEmpty || _apiPrefix.startsWith('/'));
+    assert(!_apiPrefix.endsWith('/'));
     var apiDirectory = _server.getDiscoveryDirectory();
     apiDirectory.forEach((item) {
       // Update each item with the discovery url and path.
-      var path =
-          '$_API_NAME/$_API_VERSION/apis/${item.name}/${item.version}/rest';
+      var path = '$_apiPrefix/$_API_NAME/$_API_VERSION/apis/${item.name}/'
+                 '${item.version}/rest';
       item..discoveryRestUrl = '$_baseUrl$path'
-          ..discoveryLink = './$path';
+          ..discoveryLink = '.$path';
     });
     return new DirectoryList()
         ..kind = 'discovery#directoryList'
         ..discoveryVersion = _API_VERSION
         ..items = apiDirectory;
   }
-
-  DiscoveryResource(this._server, this._baseUrl);
 }
