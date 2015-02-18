@@ -41,6 +41,9 @@ class ApiConfig extends ApiConfigResource {
   discovery.RestDescription generateDiscoveryDocument(String baseUrl,
                                                       String apiPrefix) {
     String servicePath;
+    if (!baseUrl.endsWith('/')) {
+      baseUrl = '$baseUrl/';
+    }
     if (apiPrefix != null && apiPrefix.isNotEmpty) {
       if (apiPrefix.startsWith('/')) {
         apiPrefix = apiPrefix.substring(1);
