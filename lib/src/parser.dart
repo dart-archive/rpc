@@ -454,11 +454,21 @@ class ApiParser {
   // Parses a class as a schema and returns the corresponding ApiConfigSchema.
   // Adds the schema to the API's set of valid schemas.
   ApiConfigSchema parseSchema(ClassMirror schemaClass) {
-    var name = _camelCaseName(MirrorSystem.getName(schemaClass.qualifiedName));
+    // TODO: Add support for ApiSchema annotation for overriding default name.
+    var name = MirrorSystem.getName(schemaClass.simpleName);
     _pushId(name);
 
     ApiConfigSchema schemaConfig = _apiSchemas[name];
     if (schemaConfig != null) {
+      if (schemaConfig.schemaClass.originalDeclaration !=
+          schemaClass.originalDeclaration) {
+        var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
+        var existingSchemaName =
+            MirrorSystem.getName(schemaConfig.schemaClass.qualifiedName);
+        addError('Schema \'$newSchemaName\' has a name conflict with '
+                 '\'$existingSchemaName\'.');
+        return null;
+      }
       if (!schemaConfig.propertiesInitialized) {
         // This schema is in the process of parsing its properties. Just return
         // its reference.
@@ -473,7 +483,7 @@ class ApiParser {
         (mm) => mm is MethodMirror && mm.isConstructor);
     if (!methods.isEmpty && methods.where(
         (mm) => mm.simpleName == schemaClass.simpleName).isEmpty) {
-      addError('Schema: $name must have an unnamed constructor.');
+      addError('Schema \'$name\' must have an unnamed constructor.');
     }
     schemaConfig = new ApiConfigSchema(name, schemaClass);
 

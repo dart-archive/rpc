@@ -7,6 +7,7 @@ library test_api;
 import 'dart:async';
 
 import 'package:rpc/rpc.dart';
+import 'test_api/messages2.dart' as messages2;
 
 part 'test_api/messages.dart';
 

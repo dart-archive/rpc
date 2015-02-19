@@ -86,3 +86,21 @@ class TestMessage5 {
 class WrongSchema1 {
   WrongSchema1.myConstructor();
 }
+
+// WrongSchema2 refers to two different classes with the same name, but residing
+// in different libraries. This is not allowed.
+class WrongSchema2 {
+  TestMessage2 firstTestMessage2;
+  messages2.TestMessage2 secondTestMessage2;
+}
+
+// WrongSchema3 refers indirectly (nesting) to two different classes with the
+// same name, but residing in different libraries. This is not allowed.
+class WrongSchema3 {
+  TestMessage2 firstTestMessage2;
+  NestedSchema nestedSchemaWithOtherTestMessage2;
+}
+
+class NestedSchema {
+  messages2.TestMessage2 otherTestMessage2;
+}

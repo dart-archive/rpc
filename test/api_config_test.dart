@@ -93,13 +93,13 @@ main () {
       ApiConfig apiConfig = parser.parse(new CorrectSimple());
       expect(parser.isValid, isTrue);
       Map expectedSchemas = {
-        'test_api.TestMessage2': {
-          'id': 'test_api.TestMessage2',
+        'TestMessage2': {
+          'id': 'TestMessage2',
           'type': 'object',
           'properties': {'count': {'type': 'integer', 'format': 'int32'}}
         },
-        'test_api.TestMessage1': {
-          'id': 'test_api.TestMessage1',
+        'TestMessage1': {
+          'id': 'TestMessage1',
           'type': 'object',
           'properties': {
             'count': {'type': 'integer', 'format': 'int32'},
@@ -108,9 +108,9 @@ main () {
             'check': {'type': 'boolean'},
             'date': {'type': 'string', 'format': 'date-time'},
             'messages': {'type': 'array', 'items': {'type': 'string'}},
-            'submessage': {'\$ref': 'test_api.TestMessage2'},
+            'submessage': {'\$ref': 'TestMessage2'},
             'submessages': {'type': 'array',
-                            'items': {'\$ref': 'test_api.TestMessage2'}
+                            'items': {'\$ref': 'TestMessage2'}
                            },
             'enumValue': {
               'type': 'string',
@@ -152,8 +152,8 @@ main () {
           'httpMethod': 'POST',
           'parameters': {},
           'parameterOrder': [],
-          'request': {'\$ref': 'test_api.TestMessage1'},
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'},
+          'response': {'\$ref': 'TestMessage1'}
         }
       };
       var discoveryDoc =
@@ -184,7 +184,7 @@ main () {
           'httpMethod': 'GET',
           'parameters': {},
           'parameterOrder': [],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test3': {
           'id': 'CorrectMethods.method3',
@@ -199,7 +199,7 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test4': {
           'id': 'CorrectMethods.method4',
@@ -220,7 +220,7 @@ main () {
             }
           },
           'parameterOrder': ['count', 'more'],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test5': {
           'id': 'CorrectMethods.method5',
@@ -241,7 +241,7 @@ main () {
             }
           },
           'parameterOrder': ['count', 'more'],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test6': {
           'id': 'CorrectMethods.method6',
@@ -249,7 +249,7 @@ main () {
           'httpMethod': 'POST',
           'parameters': {},
           'parameterOrder': [],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test7': {
           'id': 'CorrectMethods.method7',
@@ -257,7 +257,7 @@ main () {
           'httpMethod': 'POST',
           'parameters': {},
           'parameterOrder': [],
-          'request': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'}
         },
         'test8': {
           'id': 'CorrectMethods.method8',
@@ -265,8 +265,8 @@ main () {
           'httpMethod': 'POST',
           'parameters': {},
           'parameterOrder': [],
-          'request': {'\$ref': 'test_api.TestMessage1'},
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'},
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test9': {
           'id': 'CorrectMethods.method9',
@@ -281,7 +281,7 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test10': {
           'id': 'CorrectMethods.method10',
@@ -296,8 +296,8 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'request': {'\$ref': 'test_api.TestMessage1'},
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'},
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test11': {
           'id': 'CorrectMethods.method11',
@@ -312,7 +312,7 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'request': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'}
         },
         'test12': {
           'id': 'CorrectMethods.method12',
@@ -320,7 +320,7 @@ main () {
           'httpMethod': 'POST',
           'parameters': {},
           'parameterOrder': [],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test13': {
           'id': 'CorrectMethods.method13',
@@ -342,7 +342,7 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'request': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'}
         },
         'test15': {
           'id': 'CorrectMethods.method15',
@@ -357,7 +357,7 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test16': {
           'id': 'CorrectMethods.method16',
@@ -372,8 +372,8 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'request': {'\$ref': 'test_api.TestMessage1'},
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'},
+          'response': {'\$ref': 'TestMessage1'}
         },
         'test17': {
           'id': 'CorrectMethods.method17',
@@ -388,8 +388,8 @@ main () {
             }
           },
           'parameterOrder': ['count'],
-          'request': {'\$ref': 'test_api.TestMessage1'},
-          'response': {'\$ref': 'test_api.TestMessage1'}
+          'request': {'\$ref': 'TestMessage1'},
+          'response': {'\$ref': 'TestMessage1'}
         }
       };
       expect(json['methods'], expectedJsonMethods);
@@ -611,8 +611,24 @@ main () {
       test('wrong_schema', () {
         var parser = new ApiParser();
         parser.parseSchema(reflectClass(WrongSchema1));
-        var errors = [new ApiConfigError('test_api.WrongSchema1: Schema: '
-            'test_api.WrongSchema1 must have an unnamed constructor.')];
+        var errors = [new ApiConfigError('WrongSchema1: Schema '
+            '\'WrongSchema1\' must have an unnamed constructor.')];
+        expect(parser.errors.toString(), errors.toString());
+      });
+      test('schema_with_conflicting_classes', () {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(WrongSchema2));
+        var errors = [new ApiConfigError('TestMessage2: Schema '
+            '\'messages2.TestMessage2\' has a name conflict with '
+            '\'test_api.TestMessage2\'.')];
+        expect(parser.errors.toString(), errors.toString());
+      });
+      test('schema_with_nested_conflicting_classes', () {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(WrongSchema3));
+        var errors = [new ApiConfigError('TestMessage2: Schema '
+            '\'messages2.TestMessage2\' has a name conflict with '
+            '\'test_api.TestMessage2\'.')];
         expect(parser.errors.toString(), errors.toString());
       });
     });
