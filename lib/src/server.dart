@@ -43,6 +43,7 @@ class ApiServer {
                                '${apiConfig.apiKey}:\n' +
                                 parser.errors.join('\n') + '\n');
     }
+    rpcLogger.info('Adding ${apiConfig.apiKey} to set of valid APIs.');
     _apis[apiConfig.apiKey] = apiConfig;
     return apiConfig.apiKey;
   }
@@ -78,8 +79,10 @@ class ApiServer {
             new NotFoundError('No API with key: ${parsedRequest.apiKey}.'));
       }
       drain = false;
+      rpcLogger.info('Invoking API: ${parsedRequest.apiKey} with HTTP method: '
+                     '${request.httpMethod} on path: ${request.path}.');
       response = await api.handleHttpRequest(parsedRequest);
-    } catch (e) {
+    } catch (e, stack) {
       // This can happen if the request is invalid and cannot be parsed into a
       // ParsedHttpApiRequest or in the case of a bug in the handleHttpRequest
       // code, e.g. a null pointer exception or similar. We don't drain the
@@ -89,7 +92,8 @@ class ApiServer {
       if (exception is Error) {
         exception = new Exception(e.toString());
       }
-      response = httpErrorResponse(request, exception, drainRequest: drain);
+      response = httpErrorResponse(
+          request, exception, stack: stack, drainRequest: drain);
     }
     return response;
   }
@@ -98,9 +102,11 @@ class ApiServer {
     _baseUrl = baseUrl;
     _apiPrefix = apiPrefix;
     _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl, apiPrefix));
+    rpcLogger.info('Enabling Discovery API Service for server: $_baseUrl');
   }
 
   void disableDiscoveryApi() {
+    rpcLogger.info('Diabling Discovery API Service for server: $_baseUrl');
     _apis.remove(_discoveryApiKey);
     _baseUrl = null;
     _apiPrefix = null;

@@ -8,6 +8,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:logging/logging.dart';
+
+import 'utils.dart';
+
 /// Class used when invoking Http API requests.
 ///
 /// It holds the information necessary to route the request and all
@@ -55,14 +59,18 @@ class HttpApiResponse {
   /// and/or return back more information about the failure to the client.
   final Exception exception;
 
+  /// Holds a stacktrace if passed via constructor.
+  final StackTrace stack;
+
   HttpApiResponse(this.status, this.body,
-                  {Map<String, dynamic> headers, this.exception})
+                  {Map<String, dynamic> headers, this.exception, this.stack})
       : this.headers = headers == null ? {} : headers;
 
   factory HttpApiResponse.error(int status,
                                 String message,
                                 Map<String, dynamic> headers,
-                                Exception exception) {
+                                Exception exception,
+                                StackTrace stack) {
     // Currently we don't support other encodings than json so just set it.
     // We cannot fail at this point anyway.
     headers[HttpHeaders.CONTENT_TYPE] = ContentType.JSON.toString();
@@ -70,6 +78,6 @@ class HttpApiResponse {
     Stream<List<int>> s =
         new Stream.fromIterable([_jsonToBytes.convert(json)]);
     return new HttpApiResponse(status, s, headers: headers,
-                               exception: exception);
+                               exception: exception, stack: stack);
   }
 }

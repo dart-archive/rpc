@@ -76,6 +76,7 @@ class ApiParser {
 
   void addError(String errorMessage) {
     // TODO: Make it configurable whether to throw or collect the errors.
+    rpcLogger.severe('$_contextId: $errorMessage');
     errors.add(new ApiConfigError('$_contextId: $errorMessage'));
   }
 

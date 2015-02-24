@@ -77,7 +77,7 @@ class ApiConfigMethod {
 
   Future<HttpApiResponse> invokeHttpRequest(
       ParsedHttpApiRequest request) async {
-    var positionalParams = [];
+    List<dynamic> positionalParams = [];
     // Add path parameters to params in the correct order.
     assert(_pathParams != null);
     assert(request.pathParameters != null);
@@ -91,18 +91,18 @@ class ApiConfigMethod {
       if (param.isInt) {
         try {
           positionalParams.add(int.parse(value));
-        } on FormatException catch (error) {
+        } on FormatException catch (error, stack) {
           return httpErrorResponse(request.originalRequest,
               new BadRequestError('Invalid integer value: $value for '
                                   'path parameter: ${param.name}. '
-                                  '${error.toString()}'));
+                                  '${error.toString()}'), stack: stack);
         }
       } else {
         positionalParams.add(value);
       }
     }
     // Build named parameter map for query parameters.
-    var namedParams = {};
+    Map<Symbol, dynamic> namedParams = {};
     if (_queryParams != null && request.queryParameters != null) {
       for (int i = 0; i < _queryParams.length; ++i) {
         var param = _queryParams[i];
@@ -112,11 +112,11 @@ class ApiConfigMethod {
           if (param.isInt) {
             try {
               namedParams[param.symbol] = int.parse(value);
-            } on FormatException catch (error) {
+            } on FormatException catch (error, stack) {
               return httpErrorResponse(request.originalRequest,
                   new BadRequestError('Invalid integer value: $value for '
                                       'query parameter: ${param.name}. '
-                                      '${error.toString()}'));
+                                      '${error.toString()}'), stack: stack);
             }
           } else {
             namedParams[param.symbol] = value;
@@ -129,65 +129,81 @@ class ApiConfigMethod {
     var apiResult;
     try {
       if (bodyLessMethods.contains(httpMethod)) {
-        apiResult = await invokeNoBody(request.body,
-                                       positionalParams, namedParams);
+        apiResult = await invokeNoBody(request, positionalParams, namedParams);
       } else {
         apiResult =
-            await invokeWithBody(request.body, positionalParams, namedParams);
+            await invokeWithBody(request, positionalParams, namedParams);
       }
-    } on RpcError catch (error) {
+    } on RpcError catch (error, stack) {
       // Catch RpcError explicitly and wrap them in the http error response.
-      return httpErrorResponse(request.originalRequest, error,
+      return httpErrorResponse(request.originalRequest, error, stack: stack,
                                drainRequest: false);
-    } catch (error) {
+    } catch (error, stack) {
       // All other exceptions thrown are caught and wrapped as ApplicationError
       // with status code 500. Otherwise these exceptions would be shown as
       // Unknown API Error since we cannot distinguish them from e.g. an
       // internal null pointer exception.
       return httpErrorResponse(request.originalRequest,
-          new ApplicationError(error), drainRequest: false);
+          new ApplicationError(error), stack: stack, drainRequest: false);
     }
-    var result;
+    rpcLogger.finer('Method returned result: $apiResult');
+    var resultAsJson = {};
+    var resultBody;
     if (_responseSchema != null && apiResult != null &&
         _responseSchema.containsData) {
       // TODO: Support other encodings.
-      var jsonResult = _responseSchema.toResponse(apiResult);
-      var encodedResultIterable = [request.jsonToBytes.convert(jsonResult)];
-      result = new Stream.fromIterable(encodedResultIterable);
+      resultAsJson = _responseSchema.toResponse(apiResult);
+      rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
+      var resultAsBytes = request.jsonToBytes.convert(resultAsJson);
+      rpcLogger.finest('Successfully encoded json as bytes:\n  $resultAsBytes');
+      resultBody = new Stream.fromIterable([resultAsBytes]);
     } else {
       // Return an empty stream.
-      result = new Stream.fromIterable([]);
+      resultBody = new Stream.fromIterable([]);
     }
     var headers = {
-      HttpHeaders.CONTENT_TYPE: request.contentType,
+      // We always return json in the response.
+      HttpHeaders.CONTENT_TYPE: ContentType.JSON.toString(),
       HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
       HttpHeaders.PRAGMA: 'no-cache',
       HttpHeaders.EXPIRES: '0'
     };
-    return new HttpApiResponse(HttpStatus.OK, result, headers: headers);
+    var response =
+        new HttpApiResponse(HttpStatus.OK, resultBody, headers: headers);
+    logResponse(response, resultAsJson);
+    return response;
   }
 
-  Future<dynamic> invokeNoBody(Stream<List<int>> requestBody,
+  Future<dynamic> invokeNoBody(ParsedHttpApiRequest request,
                                List positionalParams,
                                Map namedParams) async {
     // Drain the request body just in case.
-    await requestBody.drain();
+    await request.body.drain();
+    logRequest(request, null);
+    logMethodInvocation(symbol, positionalParams, namedParams);
     return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
   }
 
-  Future<dynamic> invokeWithBody(Stream<List<int>> requestBody,
-                                 List positionalParams,
-                                 Map namedParams) async {
+  Future<dynamic> invokeWithBody(ParsedHttpApiRequest request,
+                                 List<dynamic> positionalParams,
+                                 Map<Symbol, dynamic> namedParams) async {
     assert(_requestSchema != null);
     // Decode request body parameters to json.
     // TODO: support other encodings
     var decodedRequest = {};
-    if (_requestSchema.containsData) {
-      decodedRequest = await requestBody.transform(_bytesToJson).first;
+    try {
+      if (_requestSchema.containsData) {
+        decodedRequest = await request.body.transform(_bytesToJson).first;
+        logRequest(request, decodedRequest);
+      }
+      // The request schema is the last positional parameter, so just adding
+      // it to the list of position parameters.
+      positionalParams.add(_requestSchema.fromRequest(decodedRequest));
+    } catch (error) {
+      // Failed to decode the request body.
+      throw new BadRequestError('Failed to decode request body.');
     }
-    // The request schema is the last positional parameter, so just adding
-    // it to the list of position parameters.
-    positionalParams.add(_requestSchema.fromRequest(decodedRequest));
+    logMethodInvocation(symbol, positionalParams, namedParams);
     return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
   }
 }

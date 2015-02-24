@@ -5,10 +5,15 @@
 library shelf_rpc_sample;
 
 import 'dart:async';
+import 'dart:io';
+
+import 'package:logging/logging.dart';
+import 'package:logging_handlers/server_logging_handlers.dart';
+import 'package:rpc/rpc.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_route/shelf_route.dart' as shelf_route;
-import 'package:rpc/rpc.dart';
+
 import 'toyapi.dart';
 
 const _API_PREFIX = '/api';
@@ -16,6 +21,13 @@ const _API_PREFIX = '/api';
 final ApiServer _apiServer = new ApiServer(prettyPrint: true);
 
 Future main() async {
+  // Add a simple log handler to log information to a server side file.
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen(new SyncFileLoggingHandler('myLogFile.txt'));
+  if (stdout.hasTerminal) {
+    Logger.root.onRecord.listen(new LogPrintHandler());
+  }
+
   _apiServer.addApi(new ToyApi());
   var apiRouter = shelf_route.router();
   apiRouter.add(_API_PREFIX, ['GET', 'POST'], _apiHandler, exactMatch: false);
