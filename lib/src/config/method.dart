@@ -64,11 +64,11 @@ class ApiConfigMethod {
         method.parameters[param.name] = schema;
       });
     }
-    if (_requestSchema != null && _requestSchema.hasProperties) {
+    if (_requestSchema != null && _requestSchema.containsData) {
       method.request =
           new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
     }
-    if (_responseSchema != null && _responseSchema.hasProperties) {
+    if (_responseSchema != null && _responseSchema.containsData) {
       method.response = new discovery.RestMethodResponse()
                             ..P_ref = _responseSchema.schemaName;
     }
@@ -149,7 +149,7 @@ class ApiConfigMethod {
     }
     var result;
     if (_responseSchema != null && apiResult != null &&
-        _responseSchema.hasProperties) {
+        _responseSchema.containsData) {
       // TODO: Support other encodings.
       var jsonResult = _responseSchema.toResponse(apiResult);
       var encodedResultIterable = [request.jsonToBytes.convert(jsonResult)];
@@ -178,14 +178,16 @@ class ApiConfigMethod {
   Future<dynamic> invokeWithBody(Stream<List<int>> requestBody,
                                  List positionalParams,
                                  Map namedParams) async {
+    assert(_requestSchema != null);
     // Decode request body parameters to json.
     // TODO: support other encodings
-    var decodedRequest = await requestBody.transform(_bytesToJson).first;
-    if (_requestSchema != null && _requestSchema.hasProperties) {
-      // The request schema is the last positional parameter, so just adding
-      // it to the list of position parameters.
-      positionalParams.add(_requestSchema.fromRequest(decodedRequest));
+    var decodedRequest = {};
+    if (_requestSchema.containsData) {
+      decodedRequest = await requestBody.transform(_bytesToJson).first;
     }
+    // The request schema is the last positional parameter, so just adding
+    // it to the list of position parameters.
+    positionalParams.add(_requestSchema.fromRequest(decodedRequest));
     return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
   }
 }

@@ -353,6 +353,14 @@ class ApiParser {
       addError('Request parameter cannot be optional or named.');
     }
     var requestType = requestParam.type;
+
+    // Check if the request type is a List or Map and handle that explicitly.
+    if (requestType.originalDeclaration == reflectClass(List)) {
+      return parseListSchema(requestType);
+    }
+    if (requestType.originalDeclaration == reflectClass(Map)) {
+      return parseMapSchema(requestType);
+    }
     if (requestType is! ClassMirror ||
         requestType.simpleName == #dynamic ||
         requestType.isAbstract) {
@@ -389,6 +397,13 @@ class ApiParser {
       addError('Return type: ${MirrorSystem.getName(returnType.simpleName)} '
                'is not a valid return type.');
       return null;
+    }
+    // Check if the return type is a List or Map and handle that explicitly.
+    if (returnType.originalDeclaration == reflectClass(List)) {
+      return parseListSchema(returnType);
+    }
+    if (returnType.originalDeclaration == reflectClass(Map)) {
+      return parseMapSchema(returnType);
     }
     if (returnType is! ClassMirror ||
         returnType.simpleName == #dynamic ||
@@ -467,12 +482,13 @@ class ApiParser {
             MirrorSystem.getName(schemaConfig.schemaClass.qualifiedName);
         addError('Schema \'$newSchemaName\' has a name conflict with '
                  '\'$existingSchemaName\'.');
+        _popId();
         return null;
       }
       if (!schemaConfig.propertiesInitialized) {
         // This schema is in the process of parsing its properties. Just return
         // its reference.
-        assert(!schemaConfig.hasProperties);
+        assert(!schemaConfig.containsData);
       }
       _popId();
       return schemaConfig;
@@ -491,6 +507,91 @@ class ApiParser {
     _apiSchemas[name] = schemaConfig;
     var properties = _parseProperties(schemaClass);
     schemaConfig.initProperties(properties);
+    _popId();
+
+    return schemaConfig;
+  }
+
+  // Computes a unique canonical name for Lists and Maps.
+  String canonicalName(TypeMirror type) {
+    if (type.originalDeclaration == reflectClass(List)) {
+      return 'ListOf' + canonicalName(type.typeArguments[0]);
+    } else if (type.originalDeclaration == reflectClass(Map)) {
+      return 'MapOf' + canonicalName(type.typeArguments[1]);
+    }
+    return MirrorSystem.getName(type.simpleName);
+  }
+
+  // Parses a list class as a schema and returns the corresponding ListSchema.
+  // Adds the schema to the API's set of valid schemas.
+  NamedListSchema parseListSchema(ClassMirror schemaClass) {
+    assert(schemaClass.originalDeclaration == reflectClass(List));
+    assert(schemaClass.typeArguments.length == 1);
+    var itemsType = schemaClass.typeArguments[0];
+    var name = canonicalName(schemaClass);
+    _pushId(name);
+
+    ApiConfigSchema existingSchemaConfig = _apiSchemas[name];
+    if (existingSchemaConfig != null) {
+      // We explicitly want the two to be the same bound class or we will fail.
+      if (existingSchemaConfig.schemaClass != schemaClass) {
+        var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
+        var existingSchemaName = MirrorSystem.getName(
+            existingSchemaConfig.schemaClass.qualifiedName);
+        addError('Schema \'$newSchemaName\' has a name conflict with '
+                 '\'$existingSchemaName\'.');
+        existingSchemaConfig = null;
+      }
+      _popId();
+      return existingSchemaConfig;
+    }
+
+    var schemaConfig = new NamedListSchema(name, schemaClass);
+    // We put in the schema before parsing properties to detect cycles.
+    _apiSchemas[name] = schemaConfig;
+    var itemsProperty =
+        parseProperty(itemsType, '${name}Property', new ApiProperty());
+    schemaConfig.initItemsProperty(itemsProperty);
+    _popId();
+
+    return schemaConfig;
+  }
+
+  // Parses a map class as a schema and returns the corresponding MapSchema.
+  // Adds the schema to the API's set of valid schemas.
+  NamedMapSchema parseMapSchema(ClassMirror schemaClass) {
+    assert(schemaClass.originalDeclaration == reflectClass(Map));
+    assert(schemaClass.typeArguments.length == 2);
+    var additionalType = schemaClass.typeArguments[1];
+    var name = canonicalName(schemaClass);
+    _pushId(name);
+    if (schemaClass.typeArguments[0].reflectedType != String) {
+      addError('Maps must have keys of type \'String\'.');
+      _popId();
+      return null;
+    }
+
+    ApiConfigSchema existingSchemaConfig = _apiSchemas[name];
+    if (existingSchemaConfig != null) {
+      // We explicitly want the two to be the same bound class or we will fail.
+      if (existingSchemaConfig.schemaClass != schemaClass) {
+        var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
+        var existingSchemaName = MirrorSystem.getName(
+            existingSchemaConfig.schemaClass.qualifiedName);
+        addError('Schema \'$newSchemaName\' has a name conflict with '
+                 '\'$existingSchemaName\'.');
+        existingSchemaConfig = null;
+      }
+      _popId();
+      return existingSchemaConfig;
+    }
+
+    var schemaConfig = new NamedMapSchema(name, schemaClass);
+    // We put in the schema before parsing properties to detect cycles.
+    _apiSchemas[name] = schemaConfig;
+    var additionalProperty =
+        parseProperty(additionalType, '${name}Property', new ApiProperty());
+    schemaConfig.initAdditionalProperty(additionalProperty);
     _popId();
 
     return schemaConfig;

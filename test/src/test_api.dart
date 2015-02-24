@@ -468,3 +468,107 @@ class WrongQueryParameterTester {
     return null;
   }
 }
+
+@ApiClass(version: 'v1test')
+class CorrectListMapTester {
+  @ApiMethod(path: 'returnsList')
+  List<String> test1() {
+    return ['foo', 'bar'];
+  }
+
+  @ApiMethod(path: 'takesList', method: 'POST')
+  VoidMessage test2(List<String> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'returnsMap')
+  Map<String, int> test3() {
+    return {'foo': 4, 'bar': 2};
+  }
+
+  @ApiMethod(path: 'takesMap', method: 'POST')
+  VoidMessage test4(Map<String, int> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'takesMapOfList', method: 'POST')
+  List<Map<String, bool>> test5(Map<String, List<int>> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'takeListOfList', method: 'POST')
+  List<List<bool>> test6(List<List<int>> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'takeMapOfMap', method: 'POST')
+  Map<String, Map<String, bool>> test7(Map<String, Map<String, int>> request) {
+    return null;
+  }
+}
+
+@ApiClass(version: 'v1test')
+class WrongListTester {
+  @ApiMethod(path: 'returnsUnboundList')
+  List test1() {
+    return ['foo', 'bar'];
+  }
+
+  @ApiMethod(path: 'takesUnboundList', method: 'POST')
+  VoidMessage test2(List request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'returnsDynamicList')
+  List<dynamic> test3() {
+    return ['foo', 'bar'];
+  }
+
+  @ApiMethod(path: 'takesDynamicList', method: 'POST')
+  VoidMessage test4(List<dynamic> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'takesListOfList', method: 'POST')
+  VoidMessage test5(List<List> request) {
+    return null;
+  }
+}
+
+@ApiClass(version: 'v1test')
+class WrongMapTester {
+  @ApiMethod(path: 'returnsUnboundMap')
+  Map test1() {
+    return {'foo': 4, 'bar': 2};
+  }
+
+  @ApiMethod(path: 'takesUnboundMap', method: 'POST')
+  VoidMessage test2(Map request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'returnsDynamicMap')
+  Map<String, dynamic> test3() {
+    return {'foo': 4, 'bar': 2};
+  }
+
+  @ApiMethod(path: 'takesDynamicMap', method: 'POST')
+  VoidMessage test4(Map<String, dynamic> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'returnsInvalidKeyMap')
+  Map<int, String> test5() {
+    return {3: 'foo', 2: 'bar'};
+  }
+
+  @ApiMethod(path: 'takesInvalidKeyMap', method: 'POST')
+  VoidMessage test6(Map<int, String> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'takesMapOfMap', method: 'POST')
+  VoidMessage test7(Map<int, Map> request) {
+    return null;
+  }
+}

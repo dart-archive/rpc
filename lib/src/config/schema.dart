@@ -23,11 +23,10 @@ class ApiConfigSchema {
     propertiesInitialized = true;
   }
 
-  bool get hasProperties => !_properties.isEmpty;
+  bool get containsData => !_properties.isEmpty;
 
   discovery.JsonSchema get asDiscovery {
     var schema = new discovery.JsonSchema();
-    // TODO: Check up on schema name, currently it is qualified symbol name.
     schema..id = schemaName
           ..type = 'object'
           ..properties = new Map<String, discovery.JsonSchema>();
@@ -51,7 +50,7 @@ class ApiConfigSchema {
     return schema.reflectee;
   }
 
-  Map toResponse(result) {
+  toResponse(result) {
     var response = {};
     InstanceMirror mirror = reflect(result);
     _properties.forEach((sym, prop) {
@@ -61,5 +60,92 @@ class ApiConfigSchema {
       }
     });
     return response;
+  }
+}
+
+// Schema for explicitly handling List<'some value'> as either return
+// or argument type. For the arguments it is only supported for POST requests.
+class NamedListSchema extends ApiConfigSchema {
+  ApiConfigSchemaProperty _itemsProperty;
+
+  NamedListSchema(String schemaName, ClassMirror schemaClass)
+      : super(schemaName, schemaClass);
+
+  void initItemsProperty(ApiConfigSchemaProperty itemsProperty) {
+    assert(_itemsProperty == null);
+    _itemsProperty = itemsProperty;
+  }
+
+  bool get containsData => _itemsProperty != null;
+
+  discovery.JsonSchema get asDiscovery {
+    var schema = new discovery.JsonSchema();
+    schema..id = schemaName
+          ..type = 'array'
+          ..items = _itemsProperty.asDiscovery;
+    return schema;
+  }
+
+  fromRequest(request) {
+    if (request is! List) {
+      throw new BadRequestError(
+          'Invalid parameter, should be of type \'List\'.');
+    }
+    // TODO: Performance optimization, we don't need to decode a list of
+    // primitive-type since it is already the correct list.
+    return request.map(_itemsProperty.fromRequest).toList();
+  }
+
+  // TODO: Performance optimization, we don't need to encode a list of
+  // primitive-type since it is already the correct list.
+  toResponse(result) => result.map(_itemsProperty.toResponse).toList();
+}
+
+// Schema for explicitly handling Map<String, 'some value'> as either return
+// or argument type. For the arguments it is only supported for POST requests.
+class NamedMapSchema extends ApiConfigSchema {
+  ApiConfigSchemaProperty _additionalProperty;
+
+  NamedMapSchema(String schemaName, ClassMirror schemaClass)
+      : super(schemaName, schemaClass);
+
+  void initAdditionalProperty(ApiConfigSchemaProperty additionalProperty) {
+    assert(_additionalProperty == null);
+    _additionalProperty = additionalProperty;
+  }
+
+  bool get containsData => _additionalProperty != null;
+
+  discovery.JsonSchema get asDiscovery {
+    var schema = new discovery.JsonSchema();
+    schema..id = schemaName
+          ..type = 'object'
+          ..additionalProperties = _additionalProperty.asDiscovery;
+    return schema;
+  }
+
+  fromRequest(request) {
+    if (request is! Map) {
+      throw new BadRequestError(
+          'Invalid parameter, should be of type \'Map\'.');
+    }
+    // Map from String to the type of the additional property.
+    var decodedRequest = {};
+    // TODO: Performance optimization, we don't need to decode a map from
+    // <String, primitive-type> since it is already the correct map.
+    request.forEach((String key, value) {
+      decodedRequest[key] = _additionalProperty.fromRequest(value);
+    });
+    return decodedRequest;
+  }
+
+  toResponse(result) {
+    var encodedResult = {};
+    // TODO: Performance optimization, we don't need to encode a map from
+    // <String, primitive-type> since it is already the correct map.
+    (result as Map).forEach((String key, value) {
+      encodedResult[key] = _additionalProperty.toResponse(value);
+    });
+    return encodedResult;
   }
 }

@@ -71,13 +71,18 @@ class ToyApi {
     return new ToyResponse('Hello ${request.name} of age ${request.age}!');
   }
 
+  @ApiMethod(path: 'helloVoid', method: 'POST')
+  ToyResponse helloVoid(VoidMessage request) {
+    return new ToyResponse('Hello Mr. Void!');
+  }
+
   @ApiMethod(path: 'helloPost/{name}', method: 'POST')
   ToyResponse helloNamePostAge(String name, ToyAgeRequest request) {
     return new ToyResponse('Hello ${name} of age ${request.age}!');
   }
 
-  @ApiMethod(path: 'helloMap')
-  ToyMapResponse helloMap() {
+  @ApiMethod(path: 'helloNestedMap')
+  ToyMapResponse helloNestedMap() {
     var map = {
       'bar': new NestedResponse('somethingNested'),
       'var': new NestedResponse('someotherNested')
@@ -89,6 +94,56 @@ class ToyApi {
   ToyResponse helloNameQueryAgeFoo(String name, {String foo, int age}) {
     return new ToyResponse('Hello $name of age $age with $foo!');
   }
+
+  @ApiMethod(path: 'reverseList', method: 'POST')
+  List<String> reverseList(List<String> request) {
+    return request.reversed.toList();
+  }
+
+  @ApiMethod(path: 'helloMap', method: 'POST')
+  Map<String, int> helloMap(Map<String, int> request) {
+    request['hello'] = 42;
+    return request;
+  }
+
+  @ApiMethod(path: 'helloNestedMapMap', method: 'POST')
+  Map<String, Map<String, bool>> helloNestedMapMap(
+      Map<String, Map<String, int>> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'helloNestedListList', method: 'POST')
+  List<List<String>> helloNestedListList(
+      List<List<int>> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'helloNestedMapListMap', method: 'POST')
+  Map<String, List<Map<String, bool>>> helloNestedMapListMap(
+      Map<String, List<Map<String, int>>> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'helloNestedListMapList', method: 'POST')
+  List<Map<String, List<String>>> helloNestedListMapList(
+      List<Map<String, List<int>>> request) {
+    return null;
+  }
+
+  @ApiMethod(path: 'helloListOfClass', method: 'POST')
+  Map<String, ToyResponse> helloListOfClass (
+      List<ToyRequest> request) {
+    var key, value;
+    if (request == null || request.isEmpty) {
+      key = 'John Doe';
+      value = 42;
+    } else {
+      key = request.first.name;
+      value = request.first.age;
+    }
+    return {key: new ToyResponse(value.toString())};
+  }
+
 }
 
 class ToyCompute {

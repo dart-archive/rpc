@@ -85,7 +85,7 @@ class ApiConfig extends ApiConfigResource {
   Map<String, discovery.JsonSchema> get _schemasAsDiscovery {
     var schemas = new Map<String, discovery.JsonSchema>();
     _schemaMap.forEach((String name, ApiConfigSchema schema) {
-      if (schema.hasProperties) {
+      if (schema.containsData) {
         schemas[name] = schema.asDiscovery;
       }
     });
