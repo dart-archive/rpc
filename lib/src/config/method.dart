@@ -161,15 +161,9 @@ class ApiConfigMethod {
       // Return an empty stream.
       resultBody = new Stream.fromIterable([]);
     }
-    var headers = {
-      // We always return json in the response.
-      HttpHeaders.CONTENT_TYPE: ContentType.JSON.toString(),
-      HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
-      HttpHeaders.PRAGMA: 'no-cache',
-      HttpHeaders.EXPIRES: '0'
-    };
     var response =
-        new HttpApiResponse(HttpStatus.OK, resultBody, headers: headers);
+        new HttpApiResponse(HttpStatus.OK, resultBody,
+                            headers: defaultResponseHeaders);
     logResponse(response, resultAsJson);
     return response;
   }

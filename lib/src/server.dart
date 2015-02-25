@@ -6,6 +6,7 @@ library rpc.server;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' as io;
 
 import 'config.dart';
 import 'errors.dart';
@@ -15,21 +16,50 @@ import 'utils.dart';
 import 'discovery/api.dart';
 import 'discovery/config.dart';
 
+typedef Future HttpRequestHandler(HttpRequest);
+
 /// The main class for handling all API requests.
 class ApiServer {
+  final String _apiPrefix;
   String _baseUrl;
-  String _apiPrefix;
   String _discoveryApiKey;
 
   Converter<Object, dynamic> _jsonToBytes;
 
   final Map<String, ApiConfig> _apis = {};
 
-  ApiServer({bool prettyPrint: false}) {
+  ApiServer(String apiPrefix, {bool prettyPrint: false})
+      : _apiPrefix = apiPrefix != null ? apiPrefix : ''  {
     _jsonToBytes = prettyPrint ?
         new JsonEncoder.withIndent(' ').fuse(UTF8.encoder) :
         JSON.encoder.fuse(UTF8.encoder);
   }
+
+  /// Getter for a simple dart:io HttpRequest handler.
+  HttpRequestHandler get httpRequestHandler =>
+    (io.HttpRequest request) async {
+      var apiResponse;
+      try {
+        if (!request.uri.path.startsWith(_apiPrefix)) {
+          await request.drain();
+          apiResponse = new HttpApiResponse.error(io.HttpStatus.NOT_IMPLEMENTED,
+              'Invalid request for path: ${request.uri.path}', null, null);
+        } else {
+          var apiRequest =
+              new HttpApiRequest.fromHttpRequest(request, _apiPrefix);
+          apiResponse = await handleHttpApiRequest(apiRequest);
+        }
+      } catch (error, stack) {
+        var exception = error;
+        if (exception is Error) {
+          exception = new Exception(exception.toString());
+        }
+        apiResponse =
+            new HttpApiResponse.error(io.HttpStatus.INTERNAL_SERVER_ERROR,
+                exception.toString(), exception, stack);
+      }
+      return sendApiResponse(apiResponse, request.response);
+    };
 
   /// Add a new api to the API server.
   String addApi(api) {
@@ -64,7 +94,7 @@ class ApiServer {
   ///         message: <message describing the failure>
   ///       }
   ///     }
-  Future<HttpApiResponse> handleHttpRequest(HttpApiRequest request) async {
+  Future<HttpApiResponse> handleHttpApiRequest(HttpApiRequest request) async {
     var drain = true;
     var response;
     try {
@@ -98,10 +128,9 @@ class ApiServer {
     return response;
   }
 
-  void enableDiscoveryApi(String baseUrl, String apiPrefix) {
+  void enableDiscoveryApi(String baseUrl) {
     _baseUrl = baseUrl;
-    _apiPrefix = apiPrefix;
-    _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl, apiPrefix));
+    _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl, _apiPrefix));
     rpcLogger.info('Enabling Discovery API Service for server: $_baseUrl');
   }
 
@@ -109,7 +138,6 @@ class ApiServer {
     rpcLogger.info('Diabling Discovery API Service for server: $_baseUrl');
     _apis.remove(_discoveryApiKey);
     _baseUrl = null;
-    _apiPrefix = null;
     _discoveryApiKey = null;
   }
 
@@ -137,4 +165,12 @@ class ApiServer {
     }
     return api.generateDiscoveryDocument(_baseUrl, _apiPrefix);
   }
+}
+
+/// Helper for converting an HttpApiResponse to a HttpResponse and sending it.
+Future sendApiResponse(HttpApiResponse apiResponse, io.HttpResponse response) {
+  response.statusCode = apiResponse.status;
+  apiResponse.headers.forEach(
+    (name, value) => response.headers.add(name, value));
+  return apiResponse.body.pipe(response);
 }

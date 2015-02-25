@@ -16,6 +16,13 @@ import 'message.dart';
 
 // Global constants
 const List<String> bodyLessMethods = const ['GET', 'DELETE'];
+const Map<String, dynamic > defaultResponseHeaders = const {
+  // We always return json in the response.
+  HttpHeaders.CONTENT_TYPE: 'application/json; charset=utf-8',
+  HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
+  HttpHeaders.PRAGMA: 'no-cache',
+  HttpHeaders.EXPIRES: '0'
+};
 
 final Logger rpcLogger = new Logger('rpc');
 
@@ -26,20 +33,14 @@ Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
                                           {StackTrace stack,
                                            bool drainRequest: true}) async {
   // TODO support more encodings.
-  var headers = {
-    HttpHeaders.CONTENT_TYPE: ContentType.JSON.toString(),
-    HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
-    HttpHeaders.PRAGMA: 'no-cache',
-    HttpHeaders.EXPIRES: '0'
-  };
   var response;
   if (error is RpcError) {
     response =
-        new HttpApiResponse.error(error.code, error.msg, headers, error, stack);
+        new HttpApiResponse.error(error.code, error.msg, error, stack);
   } else {
     response =
         new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
-                                  'Unknown API Error.', headers, error, stack);
+                                  'Unknown API Error.', error, stack);
   }
   if (drainRequest) {
     // Drain the request before responding.
@@ -69,9 +70,8 @@ void logRequest(ParsedHttpApiRequest request, dynamic jsonBody,
   var msg = new StringBuffer();
   msg..writeln('\nRequest for API ${request.apiKey}:')
      ..writeln('  Method: ${request.httpMethod}')
-     ..writeln('  Path: ${request.path}')
-     // TODO: Change to print all headers once added to request class.
-     ..writeln('  Content-Type: ${request.contentType}');
+     ..writeln('  Path: ${request.path}');
+  _logHeaders(msg, request.headers);
   if (jsonBody != null) {
     msg.writeln('  Body:\n    $jsonBody');
   }

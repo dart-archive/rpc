@@ -18,7 +18,8 @@ import 'toyapi.dart';
 
 const _API_PREFIX = '/api';
 
-final ApiServer _apiServer = new ApiServer(prettyPrint: true);
+final ApiServer _apiServer =
+   new ApiServer(_API_PREFIX, prettyPrint: true);
 
 Future main() async {
   // Add a simple log handler to log information to a server side file.
@@ -40,18 +41,20 @@ Future main() async {
   // E.g. set it on the first request. '${server.address.host}:${server.port}'
   // return 0.0.0.0:9090 which is not useful.
   var url = 'http://localhost:9090/';
-  _apiServer.enableDiscoveryApi(url, _API_PREFIX);
+  _apiServer.enableDiscoveryApi(url);
   print('Listening at port ${server.port}.');
 }
 
-/// A shelf handler for '/api' API requests .
+/// A shelf handler for '/api' API requests.
+/// The shelf_rpc package provides a default RPC handler which can be used
+/// instead.
 Future<shelf.Response> _apiHandler(shelf.Request request) async {
   try {
     var apiRequest =
         new HttpApiRequest(request.method, request.url.path,
                            request.url.queryParameters,
-                           request.headers['content-type'], request.read());
-    var apiResponse = await _apiServer.handleHttpRequest(apiRequest);
+                           request.headers, request.read());
+    var apiResponse = await _apiServer.handleHttpApiRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,
                               headers: apiResponse.headers);
   } catch (e) {

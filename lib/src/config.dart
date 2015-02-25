@@ -84,7 +84,7 @@ class ParsedHttpApiRequest {
 
   Map<String, String> get queryParameters => originalRequest.queryParameters;
 
-  String get contentType => originalRequest.contentType;
+  Map<String, dynamic> get headers => originalRequest.headers;
 
   Stream<List<int>> get body => originalRequest.body;
 }

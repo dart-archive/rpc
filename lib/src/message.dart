@@ -25,16 +25,46 @@ class HttpApiRequest {
   final String path;
 
   /// Query string parsed as a key/value map.
-  final Map<String, String> queryParameters;
+  /// The query parameters values must be either String or List<String>.
+  final Map<String, dynamic> queryParameters;
 
-  /// Content type for the request's body.
-  final String contentType;
+  /// HTTP request headers.
+  /// The headers values must be either String for single value headers
+  /// or List<String> for multi value headers.
+  final Map<String, dynamic> headers;
 
   /// Request body containing parameters for a POST request.
   final Stream<List<int>> body;
 
-  HttpApiRequest(this.httpMethod, this.path, this.queryParameters,
-                 this.contentType, this.body);
+  factory HttpApiRequest(String httpMethod, String path,
+                         Map<String, dynamic> queryParameters,
+                         Map<String, dynamic> headers,
+                         Stream<List<int>> body) {
+    var headersLowerCase = new Map<String, dynamic>();
+    headers.forEach((String key, dynamic value) =>
+        headersLowerCase[key.toLowerCase()] = value);
+    return new HttpApiRequest._(
+        httpMethod, path, queryParameters, headersLowerCase, body);
+  }
+
+  factory HttpApiRequest.fromHttpRequest(HttpRequest request,
+                                         String apiPrefix) {
+    if (apiPrefix == null) apiPrefix = '';
+
+    // Convert HttpHeaders to a Map<String, dynamic>. We don't need to
+    // lowercase the keys as they are already lowercased in the HttpRequest.
+    var headers = new Map<String, dynamic>();
+    request.headers.forEach(
+        (String key, dynamic value) => headers[key] = value);
+
+    return new HttpApiRequest._(request.method,
+        request.uri.path.substring(apiPrefix.length),
+        request.uri.queryParameters,
+        headers, request);
+  }
+
+  HttpApiRequest._(this.httpMethod, this.path, this.queryParameters,
+                   this.headers, this.body);
 }
 
 /// Class for holding an HTTP API response.
@@ -68,16 +98,12 @@ class HttpApiResponse {
 
   factory HttpApiResponse.error(int status,
                                 String message,
-                                Map<String, dynamic> headers,
                                 Exception exception,
                                 StackTrace stack) {
-    // Currently we don't support other encodings than json so just set it.
-    // We cannot fail at this point anyway.
-    headers[HttpHeaders.CONTENT_TYPE] = ContentType.JSON.toString();
     Map json = { 'error': { 'code': status, 'message': message } };
     Stream<List<int>> s =
         new Stream.fromIterable([_jsonToBytes.convert(json)]);
-    return new HttpApiResponse(status, s, headers: headers,
+    return new HttpApiResponse(status, s, headers: defaultResponseHeaders,
                                exception: exception, stack: stack);
   }
 }
