@@ -62,7 +62,7 @@ void _logHeaders(StringBuffer msg, Map<String, dynamic> headers) {
 }
 
 void logRequest(ParsedHttpApiRequest request, dynamic jsonBody,
-                [Level level = Level.FINE]) {
+                [Level level = Level.FINER]) {
   if (!rpcLogger.isLoggable(level)) {
     return;
   }
@@ -79,7 +79,7 @@ void logRequest(ParsedHttpApiRequest request, dynamic jsonBody,
 }
 
 void logResponse(HttpApiResponse response, dynamic jsonBody,
-                 [Level level = Level.FINE]) {
+                 [Level level = Level.FINER]) {
   if (!rpcLogger.isLoggable(level)) {
     return;
   }
@@ -102,7 +102,7 @@ void logResponse(HttpApiResponse response, dynamic jsonBody,
 void logMethodInvocation(Symbol symbol,
                          List<dynamic> positionalParams,
                          Map<Symbol, dynamic> namedParams) {
-  if (!rpcLogger.isLoggable(Level.FINER)) {
+  if (!rpcLogger.isLoggable(Level.FINE)) {
     return;
   }
   assert(positionalParams != null);
@@ -114,5 +114,5 @@ void logMethodInvocation(Symbol symbol,
   msg.writeln('  Named Parameters:');
   namedParams.forEach((symbol, value) =>
       msg.writeln('    ${MirrorSystem.getName(symbol)}: $value'));
-  rpcLogger.finer(msg.toString());
+  rpcLogger.fine(msg.toString());
 }

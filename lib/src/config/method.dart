@@ -146,7 +146,7 @@ class ApiConfigMethod {
       return httpErrorResponse(request.originalRequest,
           new ApplicationError(error), stack: stack, drainRequest: false);
     }
-    rpcLogger.finer('Method returned result: $apiResult');
+    rpcLogger.fine('Method returned result: $apiResult');
     var resultAsJson = {};
     var resultBody;
     if (_responseSchema != null && apiResult != null &&
@@ -175,8 +175,8 @@ class ApiConfigMethod {
   }
 
   Future<dynamic> invokeNoBody(ParsedHttpApiRequest request,
-                               List positionalParams,
-                               Map namedParams) async {
+                               List<dynamic> positionalParams,
+                               Map<Symbol, dynamic> namedParams) async {
     // Drain the request body just in case.
     await request.body.drain();
     logRequest(request, null);
