@@ -7,9 +7,9 @@ part of rpc.config;
 class ApiConfig extends ApiConfigResource {
 
   final String apiKey;
-  final String _version;
-  final String _title;
-  final String _description;
+  final String version;
+  final String title;
+  final String description;
 
   final Map<String, ApiConfigSchema> _schemaMap;
 
@@ -18,8 +18,8 @@ class ApiConfig extends ApiConfigResource {
   // avoid the list.
   final Map<String, List<ApiConfigMethod>> _methodMap;
 
-  ApiConfig(this.apiKey, String name, this._version, this._title,
-            this._description, Map<String, ApiConfigResource> resources,
+  ApiConfig(this.apiKey, String name, this.version, this.title,
+            this.description, Map<String, ApiConfigResource> resources,
             List<ApiConfigMethod> methods, this._schemaMap, this._methodMap)
       : super(name, resources, methods);
 
@@ -55,9 +55,9 @@ class ApiConfig extends ApiConfigResource {
     var doc = new discovery.RestDescription();
     doc..kind = 'discovery#restDescription'
        ..discoveryVersion = 'v1'
-       ..id = '$name:$_version'
+       ..id = '$name:$version'
        ..name = '$name'
-       ..version = _version
+       ..version = version
        ..revision = '0'
        ..protocol = 'rest'
        ..baseUrl = '$baseUrl$servicePath'
@@ -68,11 +68,11 @@ class ApiConfig extends ApiConfigResource {
        ..schemas = _schemasAsDiscovery
        ..methods = _methodsAsDiscovery
        ..resources = _resourcesAsDiscovery;
-    if (_title != null) {
-      doc.title = _title;
+    if (title != null) {
+      doc.title = title;
     }
-    if (_description != null) {
-      doc.description = _description;
+    if (description != null) {
+      doc.description = description;
     }
 
     // Compute the etag.
@@ -98,15 +98,15 @@ class ApiConfig extends ApiConfigResource {
     // TODO: Support preferred, icons, and documentation link as part
     // of metadata.
     item..kind = 'discovery#directoryItem'
-        ..id = '$name:$_version'
+        ..id = '$name:$version'
         ..name = name
-        ..version = _version
+        ..version = version
         ..preferred = true;
-    if (_title != null) {
-      item.title = _title;
+    if (title != null) {
+      item.title = title;
     }
-    if (_description != null) {
-      item.description = _description;
+    if (description != null) {
+      item.description = description;
     }
     return item;
   }

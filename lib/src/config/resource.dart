@@ -6,22 +6,22 @@ part of rpc.config;
 
 class ApiConfigResource {
   final String name;
-  final Map<String, ApiConfigResource> _resources;
-  final List<ApiConfigMethod> _methods;
+  final Map<String, ApiConfigResource> resources;
+  final List<ApiConfigMethod> methods;
 
-  ApiConfigResource(this.name, this._resources, this._methods);
+  ApiConfigResource(this.name, this.resources, this.methods);
 
   Map<String, discovery.RestMethod> get _methodsAsDiscovery {
-    var methods = new Map<String, discovery.RestMethod>();
-    _methods.forEach((method) => methods[method.name] = method.asDiscovery);
-    return methods;
+    var methodMap = new Map<String, discovery.RestMethod>();
+    methods.forEach((method) => methodMap[method.name] = method.asDiscovery);
+    return methodMap;
   }
 
   Map<String, discovery.RestResource> get _resourcesAsDiscovery {
-    var resources = new Map<String, discovery.RestResource>();
-    _resources.values.forEach(
-        (resource) => resources[resource.name] = resource.asDiscovery);
-    return resources;
+    var resourceMap = new Map<String, discovery.RestResource>();
+    resources.values.forEach(
+        (resource) => resourceMap[resource.name] = resource.asDiscovery);
+    return resourceMap;
   }
 
   discovery.RestResource get asDiscovery {

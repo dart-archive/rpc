@@ -2,21 +2,20 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+library api_config_test;
+
 import 'dart:async';
 import 'dart:mirrors';
 
 import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
-import 'package:rpc/src/discovery/config.dart';
+import 'package:rpc/src/utils.dart';
 import 'package:unittest/unittest.dart';
 
 import 'src/test_api.dart';
 
-final ApiConfigSchema discoveryDocSchema =
-    new ApiParser().parseSchema(reflectType(RestDescription));
-
-main () {
+void main() {
   group('api_config_misconfig', () {
 
     test('no_apiclass_annotation', () {
@@ -37,23 +36,6 @@ main () {
       var expected = [new ApiConfigError(
           'NoVersion: @ApiClass.version field is required.')];
       expect(parser.errors.toString(), expected.toString());
-    });
-
-    List ambiguousPaths = [new AmbiguousMethodPaths1(),
-                           new AmbiguousMethodPaths2(),
-                           new AmbiguousMethodPaths3(),
-                           new AmbiguousMethodPaths4(),
-                           new AmbiguousMethodPaths5(),
-                           new AmbiguousMethodPaths6(),
-                           new AmbiguousMethodPaths7()];
-    ambiguousPaths.forEach((ambiguous) {
-      test(ambiguous.toString(), () {
-        var parser = new ApiParser();
-        ApiConfig apiConfig = parser.parse(ambiguous);
-        expect(parser.isValid, isFalse);
-        var config = apiConfig.generateDiscoveryDocument('baseUrl', '');
-        expect(config.version, 'test');
-      });
     });
   });
 
@@ -602,161 +584,6 @@ main () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new CorrectMethods());
       expect(parser.isValid, isTrue);
-    });
-
-    test('correct_schema_list_map', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new CorrectListMapTester());
-      expect(parser.isValid, isTrue);
-      var expectedSchemas = {
-        'ListOfString': {
-          'id': 'ListOfString', 'type': 'array', 'items': {'type': 'string'}
-        },
-        'MapOfint': {
-          'id': 'MapOfint',
-          'type': 'object',
-          'additionalProperties': {'type': 'integer', 'format': 'int32'}
-        },
-        'MapOfListOfint': {
-          'id': 'MapOfListOfint',
-          'type': 'object',
-          'additionalProperties':
-            {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}}
-        },
-        'ListOfMapOfbool': {
-          'id': 'ListOfMapOfbool',
-          'type': 'array',
-          'items':
-            {'type': 'object', 'additionalProperties': {'type': 'boolean'}}
-        },
-        'ListOfListOfint': {
-          'id': 'ListOfListOfint',
-          'type': 'array',
-          'items':
-            {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}}
-        },
-        'ListOfListOfbool': {
-          'id': 'ListOfListOfbool',
-          'type': 'array',
-          'items': {'type': 'array', 'items': {'type': 'boolean'}}
-        },
-        'MapOfMapOfint': {
-          'id': 'MapOfMapOfint',
-          'type': 'object',
-          'additionalProperties': {
-            'type': 'object',
-            'additionalProperties': {'type': 'integer', 'format': 'int32'}
-          }
-        },
-        'MapOfMapOfbool': {
-          'id': 'MapOfMapOfbool',
-          'type': 'object',
-          'additionalProperties':
-            {'type': 'object', 'additionalProperties': {'type': 'boolean'}}
-        }
-      };
-      var expectedMethods = {
-        'test1': {
-          'id': 'CorrectListMapTester.test1',
-          'path': 'returnsList',
-          'httpMethod': 'GET',
-          'parameters': {},
-          'parameterOrder': [],
-          'response': {'\$ref': 'ListOfString'}
-        },
-        'test2': {
-          'id': 'CorrectListMapTester.test2',
-          'path': 'takesList',
-          'httpMethod': 'POST',
-          'parameters': {},
-          'parameterOrder': [],
-          'request': {'\$ref': 'ListOfString'}
-        },
-        'test3': {
-          'id': 'CorrectListMapTester.test3',
-          'path': 'returnsMap',
-          'httpMethod': 'GET',
-          'parameters': {},
-          'parameterOrder': [],
-          'response': {'\$ref': 'MapOfint'}
-        },
-        'test4': {
-          'id': 'CorrectListMapTester.test4',
-          'path': 'takesMap',
-          'httpMethod': 'POST',
-          'parameters': {},
-          'parameterOrder': [],
-          'request': {'\$ref': 'MapOfint'}
-        },
-        'test5': {
-          'id': 'CorrectListMapTester.test5',
-          'path': 'takesMapOfList',
-          'httpMethod': 'POST',
-          'parameters': {},
-          'parameterOrder': [],
-          'request': {'\$ref': 'MapOfListOfint'},
-          'response': {'\$ref': 'ListOfMapOfbool'}
-        },
-        'test6': {
-          'id': 'CorrectListMapTester.test6',
-          'path': 'takeListOfList',
-          'httpMethod': 'POST',
-          'parameters': {},
-          'parameterOrder': [],
-          'request': {'\$ref': 'ListOfListOfint'},
-          'response': {'\$ref': 'ListOfListOfbool'}
-        },
-        'test7': {
-          'id': 'CorrectListMapTester.test7',
-          'path': 'takeMapOfMap',
-          'httpMethod': 'POST',
-          'parameters': {},
-          'parameterOrder': [],
-          'request': {'\$ref': 'MapOfMapOfint'},
-          'response': {'\$ref': 'MapOfMapOfbool'}
-        }
-      };
-      var discoveryDoc =
-          apiConfig.generateDiscoveryDocument('http://localhost:8080/', '');
-      // Encode the discovery document for the Tester API as json.
-      var json = discoveryDocSchema.toResponse(discoveryDoc);
-      expect(json['schemas'], expectedSchemas);
-      expect(json['methods'], expectedMethods);
-    });
-
-    test('wrong_schema_list', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new WrongListTester());
-      expect(parser.isValid, isFalse);
-      var errors = [
-        new ApiConfigError(
-            'ListOfdynamic: ListOfdynamicProperty: Properties cannot be of '
-            'type: \'dynamic\'.'),
-        new ApiConfigError('ListOfListOfdynamic: ListOfListOfdynamicProperty: '
-            'Properties cannot be of type: \'dynamic\'.')];
-      expect(parser.errors.toString(), errors.toString());
-    });
-
-    test('wrong_schema_map', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new WrongMapTester());
-      expect(parser.isValid, isFalse);
-      var errors = [
-        new ApiConfigError(
-            'MapOfdynamic: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
-            'MapOfdynamic: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
-            'MapOfdynamic: MapOfdynamicProperty: Properties cannot be of type: '
-            '\'dynamic\'.'),
-        new ApiConfigError(
-            'MapOfString: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
-            'MapOfString: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
-            'MapOfMapOfdynamic: Maps must have keys of type \'String\'.')
-        ];
-      expect(parser.errors.toString(), errors.toString());
     });
   });
 

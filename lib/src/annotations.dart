@@ -42,10 +42,7 @@ class ApiResource {
   /// Defaults to the camel-case version of the class name if not specified.
   final String name;
 
-  /// Description of the resource API.
-  final String description;
-
-  const ApiResource({this.name, this.description});
+  const ApiResource({this.name});
 }
 
 /// Use as annotation for your API methods inside of the API class.

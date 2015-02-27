@@ -4,6 +4,14 @@
 
 library messages2;
 
+// Simple message class used with the GET method api tests.
+// More elaborate schema testing is done in the api_schema_test.dart file.
+class SimpleMessage {
+  String aString;
+  int anInt;
+  bool aBool;
+}
+
 // This is used to detect a name conflict between two different class in
 // different libraries.
 class TestMessage2 {
