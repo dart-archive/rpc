@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:mirrors';
 import 'package:crypto/crypto.dart';
-import 'package:logging/logging.dart';
 import 'package:uri/uri.dart';
 
 import 'errors.dart';

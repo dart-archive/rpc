@@ -65,7 +65,7 @@ main () {
       expect(parser.isValid, isTrue);
       Map expectedJson = {
         'kind': 'discovery#restDescription',
-        'etag': 'f0c37e3991119bf8abfe2c1625b5779a389c2bd5',
+        'etag': '8ce09ed6f8ebe8682b517e05d21c2d4a27b83d09',
         'discoveryVersion': 'v1',
         'id': 'Tester:v1test',
         'name': 'Tester',

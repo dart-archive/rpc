@@ -74,10 +74,11 @@ class ApiConfig extends ApiConfigResource {
     if (_description != null) {
       doc.description = _description;
     }
-    // TODO: Figure out the best way to compute the sha1. E.g. update toString
-    // to change as needed when (nested) fields change.
+
+    // Compute the etag.
     var sha1 = new SHA1();
-    sha1.add(UTF8.encode(doc.toString()));
+    var jsonDoc = discoveryDocSchema.toResponse(doc);
+    sha1.add(UTF8.encode(JSON.encode(jsonDoc)));
     doc.etag = CryptoUtils.bytesToHex(sha1.close());
     return doc;
   }

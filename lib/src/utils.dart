@@ -13,6 +13,8 @@ import 'package:logging/logging.dart';
 import 'config.dart';
 import 'errors.dart';
 import 'message.dart';
+import 'parser.dart';
+import 'discovery/config.dart' as discovery;
 
 // Global constants
 const List<String> bodyLessMethods = const ['GET', 'DELETE'];
@@ -25,6 +27,10 @@ const Map<String, dynamic > defaultResponseHeaders = const {
 };
 
 final Logger rpcLogger = new Logger('rpc');
+
+// Used to generate the etag.
+final ApiConfigSchema discoveryDocSchema =
+    new ApiParser().parseSchema(reflectType(discovery.RestDescription));
 
 // Utility method for creating an HTTP error response given an expcetion.
 // Optionally drains the request body.
