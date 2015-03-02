@@ -149,9 +149,19 @@ class ApiConfigMethod {
     rpcLogger.fine('Method returned result: $apiResult');
     var resultAsJson = {};
     var resultBody;
-    if (_responseSchema != null && apiResult != null &&
-        _responseSchema.containsData) {
-      // TODO: Support other encodings.
+    if (_responseSchema != null && _responseSchema.containsData) {
+      if (apiResult == null) {
+        // We don't allow for method to return null if they have specified a
+        // responce schema. Log the error and return internal server error to
+        // client.
+        rpcLogger.warning(
+            'Method $name returned null instead of valid return value');
+        return httpErrorResponse(
+            request.originalRequest,
+            new InternalServerError(
+                'Method with non-void return type returned \'null\''),
+            drainRequest: false);
+      }
       resultAsJson = _responseSchema.toResponse(apiResult);
       rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
       var resultAsBytes = request.jsonToBytes.convert(resultAsJson);

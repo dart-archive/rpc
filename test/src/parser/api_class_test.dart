@@ -7,6 +7,7 @@ library api_class_tests;
 import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
+import 'package:rpc/src/utils.dart';
 import 'package:unittest/unittest.dart';
 
 @ApiClass(version: 'v1')
@@ -33,10 +34,35 @@ void main() {
     test('full', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new CorrectFull());
+      expect(parser.isValid, isTrue);
       expect(apiCfg.name, 'testApi');
       expect(apiCfg.version, 'v1');
       expect(apiCfg.title, 'The Test API');
       expect(apiCfg.description, 'An API used to test the implementation');
+      var discoveryDoc =
+          apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
+      var expectedJson = {
+        'kind': 'discovery#restDescription',
+        'etag': '59760a6caa0688e9d6ecc50c3a90d923f03a8c3a',
+        'discoveryVersion': 'v1',
+        'id': 'testApi:v1',
+        'name': 'testApi',
+        'version': 'v1',
+        'revision': '0',
+        'title': 'The Test API',
+        'description': 'An API used to test the implementation',
+        'protocol': 'rest',
+        'baseUrl': 'http://localhost:8080/testApi/v1/',
+        'basePath': '/testApi/v1/',
+        'rootUrl': 'http://localhost:8080/',
+        'servicePath': 'testApi/v1/',
+        'parameters': {},
+        'schemas': {},
+        'methods': {},
+        'resources': {}
+      };
+      expect(json, expectedJson);
     });
 
     test('minimum', (){

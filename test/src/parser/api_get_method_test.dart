@@ -155,7 +155,7 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedMethods = {
         'minumumGet': {
           'id': 'CorrectGetApi.minumumGet',
           'path': 'minimumGet',
@@ -179,7 +179,8 @@ void main() {
           'parameterOrder': []
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], {});
+      expect(json['methods'], expectedMethods);
     });
 
     test('correct-get-api-with-path', () {
@@ -190,7 +191,7 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedMethods = {
         'getWithString': {
           'id': 'CorrectGetApiWithPath.getWithString',
           'path': 'getWithString/{aString}',
@@ -340,7 +341,8 @@ void main() {
           'parameterOrder': ['aString1', 'aString2']
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], {});
+      expect(json['methods'], expectedMethods);
     });
 
     test('correct-get-api-with-query', () {
@@ -351,7 +353,7 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedMethods = {
         'query1': {
           'id': 'CorrectGetApiWithQuery.query1',
           'path': 'query1',
@@ -541,7 +543,8 @@ void main() {
           'parameterOrder': ['pathParam']
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], {});
+      expect(json['methods'], expectedMethods);
     });
   });
 

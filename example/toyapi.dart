@@ -4,6 +4,8 @@
 
 library toyapi;
 
+import 'dart:io';
+
 import 'package:rpc/rpc.dart';
 
 class ToyResponse {
@@ -56,10 +58,16 @@ class ToyApi {
   VoidMessage noop() { return null; }
 
   @ApiMethod(path: 'failing')
-  VoidMessage failing() { throw new Exception('I like to fail!'); }
+  VoidMessage failing() {
+    throw new RpcError(HttpStatus.NOT_IMPLEMENTED, 'Not Implemented',
+                       'I like to fail!');
+  }
 
   @ApiMethod(path: 'hello')
   ToyResponse hello() { return new ToyResponse('Hello there!'); }
+
+  @ApiMethod(path: 'helloReturnNull')
+  ToyResponse helloReturnNull() { return null; }
 
   @ApiMethod(path: 'hello/{name}/age/{age}')
   ToyResponse helloNameAge(String name, int age) {

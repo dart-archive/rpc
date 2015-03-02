@@ -7,6 +7,7 @@ library api_resource_tests;
 import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
+import 'package:rpc/src/utils.dart';
 import 'package:unittest/unittest.dart';
 
 @ApiClass(version: 'v1')
@@ -68,6 +69,12 @@ void main() {
       ApiConfigResource resource = apiCfg.resources['aResource'];
       expect(resource, isNotNull);
       expect(resource.name, 'aResource');
+      Map expectedResources =
+        {'aResource': {'methods': {}, 'resources': {}}};
+      var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
+      // Encode the discovery document for the Tester API as json.
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
+      expect(json['resources'], expectedResources);
     });
 
     test('correct-resource-api-2', () {
@@ -79,6 +86,12 @@ void main() {
       expect(resource.name, 'anotherResource');
       // Make sure the default name is not used for the resource.
       expect(apiCfg.resources['aResource'], isNull);
+      Map expectedResources =
+        {'anotherResource': {'methods': {}, 'resources': {}}};
+      var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
+      // Encode the discovery document for the Tester API as json.
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
+      expect(json['resources'], expectedResources);
     });
 
     test('correct-resource-api-3', () {
@@ -90,6 +103,12 @@ void main() {
       expect(resource.name, 'aResource');
       // Make sure the field with no annotation is not part of the api.
       expect(apiCfg.resources['notExposedResource'], isNull);
+      Map expectedResources =
+        {'aResource': {'methods': {}, 'resources': {}}};
+      var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
+      // Encode the discovery document for the Tester API as json.
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
+      expect(json['resources'], expectedResources);
     });
 
     test('correct-resource-api-4', () {
@@ -102,6 +121,14 @@ void main() {
       resource = apiCfg.resources['anotherResource'];
       expect(resource, isNotNull);
       expect(resource.name, 'anotherResource');
+      Map expectedResources = {
+         'aResource': {'methods': {}, 'resources': {}},
+         'anotherResource': {'methods': {}, 'resources': {}}
+      };
+      var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
+      // Encode the discovery document for the Tester API as json.
+      var json = discoveryDocSchema.toResponse(discoveryDoc);
+      expect(json['resources'], expectedResources);
     });
   });
 

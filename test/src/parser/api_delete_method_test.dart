@@ -161,7 +161,7 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedMethods = {
         'minumumDelete': {
           'id': 'CorrectDeleteApi.minumumDelete',
           'path': 'minimumDelete',
@@ -185,7 +185,8 @@ void main() {
           'parameterOrder': []
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], {});
+      expect(json['methods'], expectedMethods);
     });
 
     test('correct-delete-api-with-path', () {
@@ -196,7 +197,7 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedMethods = {
         'deleteWithString': {
           'id': 'CorrectDeleteApiWithPath.deleteWithString',
           'path': 'deleteWithString/{aString}',
@@ -346,7 +347,8 @@ void main() {
           'parameterOrder': ['aString1', 'aString2']
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], {});
+      expect(json['methods'], expectedMethods);
     });
 
     test('correct-delete-api-with-query', () {
@@ -357,7 +359,7 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedMethods = {
         'query1': {
           'id': 'CorrectDeleteApiWithQuery.query1',
           'path': 'query1',
@@ -547,7 +549,8 @@ void main() {
           'parameterOrder': ['pathParam']
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], {});
+      expect(json['methods'], expectedMethods);
     });
   });
 

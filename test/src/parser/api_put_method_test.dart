@@ -147,7 +147,18 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedSchemas = {
+        'SimpleMessage': {
+          'id': 'SimpleMessage',
+          'type': 'object',
+          'properties': {
+            'aString': {'type': 'string'},
+            'anInt': {'type': 'integer', 'format': 'int32'},
+            'aBool': {'type': 'boolean'}
+          }
+        }
+      };
+      var expectedMethods = {
         'minumumPut': {
           'id': 'CorrectPutApi.minumumPut',
           'path': 'minimumPut',
@@ -183,7 +194,8 @@ void main() {
           'request': {r'$ref': 'SimpleMessage'}
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], expectedSchemas);
+      expect(json['methods'], expectedMethods);
     });
 
     test('correct-put-api-with-path', () {
@@ -194,7 +206,18 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedSchemas = {
+        'SimpleMessage': {
+          'id': 'SimpleMessage',
+          'type': 'object',
+          'properties': {
+            'aString': {'type': 'string'},
+            'anInt': {'type': 'integer', 'format': 'int32'},
+            'aBool': {'type': 'boolean'}
+          }
+        }
+      };
+      var expectedMethods = {
         'putWithString': {
           'id': 'CorrectPutApiWithPath.putWithString',
           'path': 'putWithString/{aString}',
@@ -352,7 +375,8 @@ void main() {
           'request': {r'$ref': 'SimpleMessage'}
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], expectedSchemas);
+      expect(json['methods'], expectedMethods);
     });
   });
 

@@ -53,6 +53,44 @@ class CorrectMethodApiWithReturnValue {
   }
 }
 
+@ApiClass(version: 'v1')
+class CorrectMethodApiWithFutureReturnValue {
+
+  @ApiMethod(path: 'returnsMessage')
+  Future<SimpleMessage> returnsMessage() {
+   return new Future.value(new SimpleMessage());
+  }
+
+  @ApiMethod(path: 'returnsListOfString')
+  Future<List<String>> returnsListOfString() {
+   return new Future.value(['foo']);
+  }
+
+  @ApiMethod(path: 'returnsListOfInt')
+  Future<List<int>> returnsListOfInt() {
+   return new Future.value([42]);
+  }
+
+  @ApiMethod(path: 'returnsListOfMessage')
+  Future<List<SimpleMessage>> returnsListOfMessage() {
+   return new Future.value([new SimpleMessage()]);
+  }
+
+  @ApiMethod(path: 'returnsMapOfString')
+  Future<Map<String, String>> returnsMapOfString() {
+   return new Future.value({'foo': 'bar'});
+  }
+
+  @ApiMethod(path: 'returnsMapOfInt')
+  Future<Map<String, int>> returnsMapOfInt() {
+   return new Future.value({'foo': 42});
+  }
+
+  @ApiMethod(path: 'returnsMapOfMessage')
+  Future<Map<String, SimpleMessage>> returnsMapOfMessage() {
+   return new Future.value({'foo': new SimpleMessage()});
+  }
+}
 
 @ApiClass(version: 'v1')
 class CorrectMethodApiListMap {
@@ -348,7 +386,44 @@ void main() {
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
-      var expectedJsonMethods = {
+      var expectedSchemas = {
+        'SimpleMessage': {
+          'id': 'SimpleMessage',
+          'type': 'object',
+          'properties': {
+            'aString': {'type': 'string'},
+            'anInt': {'type': 'integer', 'format': 'int32'},
+            'aBool': {'type': 'boolean'}
+          }
+        },
+        'ListOfString': {'id': 'ListOfString', 'type': 'array', 'items': {'type': 'string'}},
+        'ListOfint': {
+          'id': 'ListOfint',
+          'type': 'array',
+          'items': {'type': 'integer', 'format': 'int32'}
+        },
+        'ListOfSimpleMessage': {
+          'id': 'ListOfSimpleMessage',
+          'type': 'array',
+          'items': {r'$ref': 'SimpleMessage'}
+        },
+        'MapOfString': {
+          'id': 'MapOfString',
+          'type': 'object',
+          'additionalProperties': {'type': 'string'}
+        },
+        'MapOfint': {
+          'id': 'MapOfint',
+          'type': 'object',
+          'additionalProperties': {'type': 'integer', 'format': 'int32'}
+        },
+        'MapOfSimpleMessage': {
+          'id': 'MapOfSimpleMessage',
+          'type': 'object',
+          'additionalProperties': {r'$ref': 'SimpleMessage'}
+        }
+      };
+      var expectedMethods = {
         'returnsMessage': {
           'id': 'CorrectMethodApiWithReturnValue.returnsMessage',
           'path': 'returnsMessage',
@@ -406,7 +481,18 @@ void main() {
           'response': {r'$ref': 'MapOfSimpleMessage'}
         }
       };
-      expect(json['methods'], expectedJsonMethods);
+      expect(json['schemas'], expectedSchemas);
+      expect(json['methods'], expectedMethods);
+
+      // Perform the same test but this time with the return values being
+      // wrapped in futures. We create a new parser since the old one still
+      // contains the methods and schemas for the first api.
+      parser = new ApiParser();
+      apiCfg = parser.parse(new CorrectMethodApiWithFutureReturnValue());
+      expect(parser.isValid, isTrue);
+      expect(apiCfg.methods.length, 7);
+      expect(json['schemas'], expectedSchemas);
+      expect(json['methods'], expectedMethods);
     });
 
     test('correct-method-list-map', () {
