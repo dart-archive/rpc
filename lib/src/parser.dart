@@ -19,9 +19,9 @@ class ApiParser {
 
   final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
 
-  final Map<String, List<ApiConfigMethod>> _apiMethods = {};
+  final Map<String, List<ApiConfigMethod>> apiMethods = {};
 
-  final Map<String, ApiConfigSchema> _apiSchemas = {};
+  final Map<String, ApiConfigSchema> apiSchemas = {};
 
   // Stack of contextual IDs.
   // The id itself is composed of a List<String> to allow for easy adding
@@ -116,7 +116,7 @@ class ApiParser {
 
     var apiConfig = new ApiConfig(apiKey, name, version, metaData.title,
                                   metaData.description, resources, methods,
-                                  _apiSchemas, _apiMethods);
+                                  apiSchemas, apiMethods);
     _removeIdSegment();
     assert(_contextId.isEmpty);
     return apiConfig;
@@ -439,7 +439,7 @@ class ApiParser {
     // ambiguous is if they have at least one non-parameter path segment in the
     // same location that does not match each other. That check is done by the
     // conflictingPaths method call.
-    var existingMethods = _apiMethods.putIfAbsent(methodKey, () => []);
+    var existingMethods = apiMethods.putIfAbsent(methodKey, () => []);
     for (ApiConfigMethod existingMethod in existingMethods) {
       List<String> existingMethodPathSegments = existingMethod.path.split('/');
       if (_conflictingPaths(methodPathSegments, existingMethodPathSegments)) {
@@ -474,7 +474,7 @@ class ApiParser {
     var name = MirrorSystem.getName(schemaClass.simpleName);
     _pushId(name);
 
-    ApiConfigSchema schemaConfig = _apiSchemas[name];
+    ApiConfigSchema schemaConfig = apiSchemas[name];
     if (schemaConfig != null) {
       if (schemaConfig.schemaClass.originalDeclaration !=
           schemaClass.originalDeclaration) {
@@ -505,7 +505,7 @@ class ApiParser {
     schemaConfig = new ApiConfigSchema(name, schemaClass);
 
     // We put in the schema before parsing properties to detect cycles.
-    _apiSchemas[name] = schemaConfig;
+    apiSchemas[name] = schemaConfig;
     var properties = _parseProperties(schemaClass);
     schemaConfig.initProperties(properties);
     _popId();
@@ -532,7 +532,7 @@ class ApiParser {
     var name = canonicalName(schemaClass);
     _pushId(name);
 
-    ApiConfigSchema existingSchemaConfig = _apiSchemas[name];
+    ApiConfigSchema existingSchemaConfig = apiSchemas[name];
     if (existingSchemaConfig != null) {
       // We explicitly want the two to be the same bound class or we will fail.
       if (existingSchemaConfig.schemaClass != schemaClass) {
@@ -549,7 +549,7 @@ class ApiParser {
 
     var schemaConfig = new NamedListSchema(name, schemaClass);
     // We put in the schema before parsing properties to detect cycles.
-    _apiSchemas[name] = schemaConfig;
+    apiSchemas[name] = schemaConfig;
     var itemsProperty =
         parseProperty(itemsType, '${name}Property', new ApiProperty());
     schemaConfig.initItemsProperty(itemsProperty);
@@ -572,7 +572,7 @@ class ApiParser {
       return null;
     }
 
-    ApiConfigSchema existingSchemaConfig = _apiSchemas[name];
+    ApiConfigSchema existingSchemaConfig = apiSchemas[name];
     if (existingSchemaConfig != null) {
       // We explicitly want the two to be the same bound class or we will fail.
       if (existingSchemaConfig.schemaClass != schemaClass) {
@@ -589,7 +589,7 @@ class ApiParser {
 
     var schemaConfig = new NamedMapSchema(name, schemaClass);
     // We put in the schema before parsing properties to detect cycles.
-    _apiSchemas[name] = schemaConfig;
+    apiSchemas[name] = schemaConfig;
     var additionalProperty =
         parseProperty(additionalType, '${name}Property', new ApiProperty());
     schemaConfig.initAdditionalProperty(additionalProperty);
