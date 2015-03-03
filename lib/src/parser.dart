@@ -796,12 +796,26 @@ class ApiParser {
   DateTimeProperty parseDateTimeProperty(String propertyName,
                                          ApiProperty metadata) {
     assert(metadata != null);
-    if (metadata.defaultValue != null && metadata.defaultValue is! DateTime) {
-      addError('$propertyName: Default value ${metadata.defaultValue} must be '
-               'of type \'DateTime\'.');
+    const List<Symbol> extraFields = const [#defaultValue];
+    _checkValidFields(propertyName, 'DateTime', metadata, extraFields);
+    DateTime defaultValue;
+    if (metadata.defaultValue != null) {
+      if (metadata.defaultValue is! String) {
+        addError('$propertyName: Default value ${metadata.defaultValue} for a '
+                 'DateTime property must be of type \'String\'.');
+      } else {
+        // Parse the default string value as a DateTime.
+        try {
+          defaultValue = DateTime.parse(metadata.defaultValue);
+        } on FormatException catch (error) {
+          addError('$propertyName: Invalid datetime value '
+                   '\'${metadata.defaultValue}\'. See documentation for '
+                   'DateTime.parse for format definition.');
+        }
+      }
     }
     return new DateTimeProperty(propertyName, metadata.description,
-                                metadata.required, metadata.defaultValue);
+                                metadata.required, defaultValue);
   }
 
   // Parses a nested class schema property.
