@@ -735,7 +735,8 @@ class ApiParser {
       apiFormat = 'double';
     }
     if (apiFormat != 'double' && apiFormat != 'float') {
-      addError('$propertyName: Invalid double variant.');
+      addError('$propertyName: Invalid double variant: \'$apiFormat\'. Must be '
+          'either \'double\' or \'float\'.');
     }
     if (metadata.defaultValue != null && metadata.defaultValue is! double) {
       addError('$propertyName: DefaultValue must be of type \'double\'.');
@@ -763,6 +764,8 @@ class ApiParser {
   EnumProperty parseEnumProperty(String propertyName,
                                  ApiProperty metadata) {
     assert(metadata != null);
+    const List<Symbol> extraFields = const [#defaultValue, #values];
+    _checkValidFields(propertyName, 'Enum', metadata, extraFields);
     var defaultValue = metadata.defaultValue;
     if (defaultValue != null &&
         (defaultValue is! String ||
@@ -779,6 +782,8 @@ class ApiParser {
   StringProperty parseStringProperty(String propertyName,
                                      ApiProperty metadata) {
     assert(metadata != null);
+    const List<Symbol> extraFields = const [#defaultValue];
+    _checkValidFields(propertyName, 'String', metadata, extraFields);
     if (metadata.defaultValue != null && metadata.defaultValue is! String) {
       addError('$propertyName: Default value: ${metadata.defaultValue} must be '
                'of type \'String\'.');

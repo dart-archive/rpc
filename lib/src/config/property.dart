@@ -178,7 +178,7 @@ class BooleanProperty extends ApiConfigSchemaProperty {
         return false;
       }
     }
-    throw new BadRequestError('Invalid boolean value');
+    throw new BadRequestError('Invalid boolean value: $value');
   }
 }
 
