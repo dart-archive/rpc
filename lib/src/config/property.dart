@@ -29,7 +29,7 @@ class ApiConfigSchemaProperty {
   discovery.JsonSchema get asDiscovery {
     var property = typeAsDiscovery;
     if (required) {
-      property.required = required;
+      property.required = true;
     }
     if (description != null) {
       property.description = description;
@@ -74,14 +74,15 @@ class IntegerProperty extends ApiConfigSchemaProperty {
               apiType, apiFormat, apiFormat);
 
   _singleResponseValue(value) {
-    if (value != null && _apiType == 'string') {
+    assert(value != null);
+    if (_apiType == 'string') {
       return value.toString();
     }
     return value;
   }
 
   _singleRequestValue(value) {
-    if (value == null) return value;
+    assert(value != null);
     if (value is! int) {
       try {
         value = int.parse(value);
@@ -119,7 +120,8 @@ class DoubleProperty extends ApiConfigSchemaProperty {
               'number', apiFormat, apiFormat);
 
   _singleRequestValue(value) {
-    if (value == null || value is num) { return value; }
+    assert(value != null);
+    if (value is num) { return value; }
     try {
       return double.parse(value);
     } on FormatException catch (e) {
@@ -152,7 +154,8 @@ class EnumProperty extends ApiConfigSchemaProperty {
   }
 
   _singleRequestValue(value) {
-    if (value == null || _values.containsKey(value)) { return value; }
+    assert(value != null);
+    if (_values.containsKey(value)) { return value; }
     throw new BadRequestError('Value is not a valid enum value');
   }
 }
@@ -166,7 +169,15 @@ class BooleanProperty extends ApiConfigSchemaProperty {
               'boolean', null, 'boolean');
 
   _singleRequestValue(value) {
-    if (value == null || value is bool) { return value; }
+    assert(value != null);
+    if (value is bool) { return value; }
+    if (value is String) {
+      if (value.toLowerCase() == 'true') {
+        return true;
+      } else if (value.toLowerCase() == 'false') {
+        return false;
+      }
+    }
     throw new BadRequestError('Invalid boolean value');
   }
 }
@@ -180,12 +191,12 @@ class DateTimeProperty extends ApiConfigSchemaProperty {
           'string', 'date-time', 'string');
 
   _singleResponseValue(value) {
-    if (value == null) { return null; }
+    assert(value != null);
     return (value as DateTime).toUtc().toIso8601String();
   }
 
   _singleRequestValue(value) {
-    if (value == null) { return null; }
+    assert(value != null);
     try {
       return DateTime.parse(value);
     } on FormatException catch (e) {
@@ -202,12 +213,12 @@ class SchemaProperty extends ApiConfigSchemaProperty {
       : super(name, description, required, null, null, null, null);
 
   _singleResponseValue(value) {
-    if (value == null) { return null; }
+    assert(value != null);
     return _ref.toResponse(value);
   }
 
   _singleRequestValue(value) {
-    if (value == null) { return null; }
+    assert(value != null);
     if (value is! Map) {
       throw new BadRequestError('Invalid request message');
     }

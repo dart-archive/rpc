@@ -749,6 +749,8 @@ class ApiParser {
   BooleanProperty parseBooleanProperty(String propertyName,
                                        ApiProperty metadata) {
     assert(metadata != null);
+    const List<Symbol> extraFields = const [#defaultValue];
+    _checkValidFields(propertyName, 'bool', metadata, extraFields);
     if (metadata.defaultValue != null && metadata.defaultValue is! bool) {
       addError('$propertyName: Default value: ${metadata.defaultValue} must be '
                'boolean \'true\' or \'false\'.');
@@ -837,5 +839,27 @@ class ApiParser {
         parseProperty(mapTypeArguments[1], propertyName, new ApiProperty());
     return new MapProperty(propertyName, metadata.description,
                            metadata.required, additionalProperty);
+  }
+
+  // Helper method to check that a field annotated with an ApiProperty is using
+  // only the supported ApiProperty fields.
+  void _checkValidFields(String propertyName,
+                         String propertyTypeName,
+                         ApiProperty metadata,
+                         List<Symbol> extraFields) {
+    const List<Symbol> commonFields = const [#name, #description, #required];
+    InstanceMirror im = reflect(metadata);
+    im.type.declarations.forEach((Symbol field, DeclarationMirror fieldMirror) {
+      if (fieldMirror is !VariableMirror || commonFields.contains(field)) {
+        return;
+      }
+      String fieldName = MirrorSystem.getName(field);
+      if (im.getField(field).reflectee != null &&
+          !extraFields.contains(field)) {
+        addError('$propertyName: Invalid property annotation. Property of type '
+                 '$propertyTypeName does not support the ApiProperty field: '
+                 '$fieldName');
+      }
+    });
   }
 }
