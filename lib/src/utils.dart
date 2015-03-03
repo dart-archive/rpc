@@ -25,6 +25,8 @@ const Map<String, dynamic > defaultResponseHeaders = const {
   HttpHeaders.PRAGMA: 'no-cache',
   HttpHeaders.EXPIRES: '0'
 };
+const double SMALLEST_FLOAT = -3.4e38;
+const double LARGEST_FLOAT = 3.4e38;
 
 final Logger rpcLogger = new Logger('rpc');
 

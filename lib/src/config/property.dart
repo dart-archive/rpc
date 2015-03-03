@@ -125,8 +125,18 @@ class DoubleProperty extends ApiConfigSchemaProperty {
     try {
       return double.parse(value);
     } on FormatException catch (e) {
-      throw new BadRequestError('Invalid integer format: $e');
+      throw new BadRequestError('Invalid double format: $e');
     }
+  }
+
+  _singleResponseValue(value) {
+    if (_apiFormat == 'float' &&
+        (value < SMALLEST_FLOAT || value > LARGEST_FLOAT)) {
+      throw new InternalServerError(
+          'Result \'$value\' not in single precision \'float\' range: '
+          '[$SMALLEST_FLOAT, $LARGEST_FLOAT].');
+    }
+    return value;
   }
 }
 

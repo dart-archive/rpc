@@ -730,6 +730,8 @@ class ApiParser {
   DoubleProperty parseDoubleProperty(String propertyName,
                                      ApiProperty metadata) {
     assert(metadata != null);
+    const List<Symbol> extraFields = const [#defaultValue, #format];
+    _checkValidFields(propertyName, 'double', metadata, extraFields);
     String apiFormat = metadata.format;
     if (apiFormat == null || apiFormat == '') {
       apiFormat = 'double';
@@ -738,8 +740,24 @@ class ApiParser {
       addError('$propertyName: Invalid double variant: \'$apiFormat\'. Must be '
           'either \'double\' or \'float\'.');
     }
-    if (metadata.defaultValue != null && metadata.defaultValue is! double) {
-      addError('$propertyName: DefaultValue must be of type \'double\'.');
+    if (metadata.defaultValue != null) {
+      if (metadata.defaultValue is! double) {
+        addError('$propertyName: DefaultValue must be of type \'double\'.');
+      } else {
+        if (apiFormat == 'float' &&
+            (metadata.defaultValue < SMALLEST_FLOAT ||
+             metadata.defaultValue > LARGEST_FLOAT)) {
+          addError('$propertyName: Default value of: ${metadata.defaultValue} '
+                   'with format: \'float\', must be in the range: '
+                   '[$SMALLEST_FLOAT, $LARGEST_FLOAT]');
+        } else if (apiFormat == 'double' &&
+                   (metadata.defaultValue < -double.MAX_FINITE ||
+                    metadata.defaultValue > double.MAX_FINITE)) {
+          addError('$propertyName: Default value of: ${metadata.defaultValue} '
+                   'with format: \'double\', must be in the range: '
+                   '[${-double.MAX_FINITE}, ${double.MAX_FINITE}]');
+        }
+      }
     }
     return new DoubleProperty(propertyName, metadata.description,
                               metadata.required, metadata.defaultValue,
