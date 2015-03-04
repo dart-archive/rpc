@@ -102,10 +102,10 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   discovery.JsonSchema get asDiscovery {
       var property = super.asDiscovery;
       if (minValue != null) {
-        property.minimum = minValue;
+        property.minimum = minValue.toString();
       }
       if (maxValue != null) {
-        property.maximum = maxValue;
+        property.maximum = maxValue.toString();
       }
       return property;
   }

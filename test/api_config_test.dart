@@ -107,8 +107,8 @@ void main() {
             'limit': {
               'type': 'integer',
               'format': 'int32',
-              'minimum': 10,
-              'maximum': 100
+              'minimum': '10',
+              'maximum': '100'
             }
           }
         }

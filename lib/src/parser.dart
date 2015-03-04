@@ -666,6 +666,9 @@ class ApiParser {
   IntegerProperty parseIntegerProperty(String propertyName,
                                        ApiProperty metadata) {
     assert(metadata != null);
+    const List<Symbol> extraFields =
+        const [#defaultValue, #format, #minValue, #maxValue];
+    _checkValidFields(propertyName, 'double', metadata, extraFields);
     String apiFormat = metadata.format;
     if (apiFormat == null || apiFormat.isEmpty) {
       apiFormat = 'int32';
@@ -681,6 +684,13 @@ class ApiParser {
     }
     if (_parseInt(metadata.minValue, apiFormat, propertyName, 'Min') &&
         _parseInt(metadata.maxValue, apiFormat, propertyName, 'Max')) {
+      // Check that min is less than max.
+      var min = metadata.minValue;
+      var max = metadata.maxValue;
+      if (min > max) {
+        addError('$propertyName: Invalid min/max range: [$min, $max]. Min must '
+                 'be less than max.');
+      }
       // We only parse the default if min/max are valid since we need them to
       // do the range checking.
       _parseIntDefault(metadata, apiFormat, propertyName);
@@ -706,7 +716,8 @@ class ApiParser {
                format == 'int64' && value != value.toSigned(64) ||
                format == 'uint64' && value != value.toUnsigned(64)) {
       addError(
-          '$name: $messagePrefix value must be in the range of an \'$format\'');
+          '$name: $messagePrefix value: \'$value\' not in the range of an '
+          '\'$format\'');
       return false;
     }
     return true;

@@ -158,10 +158,10 @@ class JsonSchema {
   String pattern;
 
   /** The minimum value of this parameter. */
-  int minimum;
+  String minimum;
 
   /** The maximum value of this parameter. */
-  int maximum;
+  String maximum;
 
   /** Values this parameter may take (if it is an enum). */
   @ApiProperty(name: 'enum')
