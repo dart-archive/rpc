@@ -108,6 +108,10 @@ class WrongContainers {
   Queue<double> aDoubleQueue;
   Queue<DateTime> aDateQueue;
   Queue<Nested> aNestedQueue;
+
+  Map<int, String> aMapWithIntKey;
+  Map<dynamic, String> aMapWithDynamicKey;
+  Map<Nested, String> aMapWithNestedKey;
 }
 
 // Schema which conflicts with similar named schema class from another library.
@@ -362,7 +366,16 @@ void main() {
             'Queue<DateTime>'),
         new ApiConfigError(
             'WrongContainers: aNestedQueue: Unsupported property type: '
-            'Queue<Nested>')
+            'Queue<Nested>'),
+        new ApiConfigError(
+            'WrongContainers: aMapWithIntKey: Maps must have keys of type '
+            '\'String\'.'),
+        new ApiConfigError(
+            'WrongContainers: aMapWithDynamicKey: Maps must have keys of type '
+            '\'String\'.'),
+        new ApiConfigError(
+            'WrongContainers: aMapWithNestedKey: Maps must have keys of type '
+            '\'String\'.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });

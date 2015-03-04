@@ -853,10 +853,8 @@ class ApiParser {
                                      ClassMirror schemaTypeMirror) {
     assert(metadata != null);
     assert(schemaTypeMirror is ClassMirror && !schemaTypeMirror.isAbstract);
-    if (metadata.defaultValue != null) {
-      addError('$propertyName: Default value not supported for non-primitive '
-               'types.');
-    }
+    var propertyTypeName = MirrorSystem.getName(schemaTypeMirror.simpleName);
+    _checkValidFields(propertyName, propertyTypeName, metadata, []);
     var schema = parseSchema(schemaTypeMirror);
     return new SchemaProperty(propertyName, metadata.description,
                               metadata.required, schema);
@@ -867,6 +865,10 @@ class ApiParser {
                                  ClassMirror listPropertyType) {
     var listTypeArguments = listPropertyType.typeArguments;
     assert(listTypeArguments.length == 1);
+    assert(metadata != null);
+    var listTypeName =
+        MirrorSystem.getName(listTypeArguments[0].simpleName);
+    _checkValidFields(propertyName, 'List<$listTypeName>', metadata, []);
     // TODO: Figure out what to do about metadata for the items property.
     var listItemsProperty =
         parseProperty(listTypeArguments[0], propertyName, new ApiProperty());
@@ -877,8 +879,13 @@ class ApiParser {
   MapProperty parseMapProperty(String propertyName,
                                ApiProperty metadata,
                                ClassMirror mapPropertyType) {
+    assert(metadata != null);
     var mapTypeArguments = mapPropertyType.typeArguments;
     assert(mapTypeArguments.length == 2);
+    var mapKeyTypeName = MirrorSystem.getName(mapTypeArguments[0].simpleName);
+    var mapValueTypeName = MirrorSystem.getName(mapTypeArguments[1].simpleName);
+    _checkValidFields(
+        propertyName, 'Map<$mapKeyTypeName, $mapValueTypeName>', metadata, []);
     if (mapTypeArguments[0].reflectedType != String) {
       addError('$propertyName: Maps must have keys of type \'String\'.');
     }
@@ -895,6 +902,7 @@ class ApiParser {
                          String propertyTypeName,
                          ApiProperty metadata,
                          List<Symbol> extraFields) {
+    assert(extraFields != null);
     const List<Symbol> commonFields = const [#name, #description, #required];
     InstanceMirror im = reflect(metadata);
     im.type.declarations.forEach((Symbol field, DeclarationMirror fieldMirror) {
