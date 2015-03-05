@@ -8,8 +8,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:logging/logging.dart';
-
 import 'utils.dart';
 
 /// Class used when invoking Http API requests.

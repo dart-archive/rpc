@@ -36,7 +36,12 @@ class ApiConfigSchema {
     return schema;
   }
 
-  fromRequest(Map request) {
+  fromRequest(request) {
+    if (request is! Map) {
+      throw new BadRequestError(
+          'Invalid parameter: \'$request\', should be an instance of type '
+          '\'$schemaName\'.');
+    }
     InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
     _properties.forEach((sym, prop) {
       if (request.containsKey(prop.name)) {
@@ -89,7 +94,8 @@ class NamedListSchema extends ApiConfigSchema {
   fromRequest(request) {
     if (request is! List) {
       throw new BadRequestError(
-          'Invalid parameter, should be of type \'List\'.');
+          'Invalid parameter: \'$request\', should be an instance of type '
+          '\'$schemaName\'.');
     }
     // TODO: Performance optimization, we don't need to decode a list of
     // primitive-type since it is already the correct list.
@@ -127,7 +133,8 @@ class NamedMapSchema extends ApiConfigSchema {
   fromRequest(request) {
     if (request is! Map) {
       throw new BadRequestError(
-          'Invalid parameter, should be of type \'Map\'.');
+          'Invalid parameter: \'$request\', must be an instance of type '
+          '\'$schemaName\'.');
     }
     // Map from String to the type of the additional property.
     var decodedRequest = {};

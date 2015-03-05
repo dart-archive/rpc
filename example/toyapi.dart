@@ -66,6 +66,9 @@ class ToyApi {
   @ApiMethod(path: 'hello')
   ToyResponse hello() { return new ToyResponse('Hello there!'); }
 
+  // Clients calling this method will all receive an Internal Server Error
+  // as it is not allowed for a method to return null when its declared return
+  // type is not VoidMessage.
   @ApiMethod(path: 'helloReturnNull')
   ToyResponse helloReturnNull() { return null; }
 

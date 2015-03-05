@@ -75,10 +75,30 @@ class IntegerProperty extends ApiConfigSchemaProperty {
 
   _singleResponseValue(value) {
     assert(value != null);
-    if (_apiType == 'string') {
+    if (value is! int) {
+      throw new InternalServerError(
+          'Trying to return non-integer: \'$value\' in integer property');
+    }
+    if (minValue != null && value < minValue) {
+      throw new InternalServerError(
+          'Return value \'$value\' smaller than minimum value \'$minValue\'');
+    }
+    if (maxValue != null && value > maxValue) {
+      throw new InternalServerError(
+          'Return value \'$value\' larger than maximum value \'$maxValue\'');
+    }
+    if (_apiFormat == 'int32' && value == value.toSigned(32) ||
+        _apiFormat == 'uint32' && value == value.toUnsigned(32)) {
+      return value;
+    }
+    if (_apiFormat == 'int64' && value == value.toSigned(64) ||
+        _apiFormat == 'uint64' && value == value.toUnsigned(64)) {
+      assert(_apiType == 'string');
       return value.toString();
     }
-    return value;
+    throw new InternalServerError(
+        'Integer return value: \'$value\' not within the \'$_apiFormat\' '
+        'property range.');
   }
 
   _singleRequestValue(value) {

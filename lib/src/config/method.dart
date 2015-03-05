@@ -204,8 +204,21 @@ class ApiConfigMethod {
       // it to the list of position parameters.
       positionalParams.add(_requestSchema.fromRequest(decodedRequest));
     } catch (error) {
-      // Failed to decode the request body.
-      throw new BadRequestError('Failed to decode request body.');
+      rpcLogger.warning('Failed to decode request body: $error');
+      if (error is FormatException) {
+        if (error.message == 'Unexpected end of input') {
+          // The method expects a body and none was passed.
+          throw new BadRequestError(
+              'Method \'$name\' requires an instance of '
+              '${_requestSchema.schemaName}. Passing the empty request is not '
+              'supported.');
+        }
+      } else if (error is RpcError) {
+        throw error;
+      } else {
+        throw new BadRequestError(
+            'Failed to decode request with internal error: $error');
+      }
     }
     logMethodInvocation(symbol, positionalParams, namedParams);
     return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
