@@ -48,7 +48,7 @@ class UpdateRequest {
 ```
 
 Two complete examples using respectively `dart:io` and `shelf` can be found at
-[Examples](https://github.com/dart-lang/rpc/tree/master/examples).
+[Examples](https://github.com/dart-lang/rpc/tree/master/example).
 
 ### Usage
 
