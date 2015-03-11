@@ -426,11 +426,11 @@ your API from e.g Python or Java.
 
 There are currently two ways to generate a client library. First you get the
 Discovery Document from the server.
-
+```bash
 URL='https://your_app_server/api/myApi/v1/rest'
 mkdir input
 curl -o input/myapi.json $URL
-
+```
 Then you can either checkout the generator locally or add it as a dependency in
 your pubspec.yaml.
 
