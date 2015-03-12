@@ -22,14 +22,14 @@ of how to build the API and setup an API server.
 ```dart
 @ApiClass(version: 'v1', description: 'My Dart server side API' /* optional */)
 class Cloud {
-  @ApiMethod(method: 'GET', path: 'find/{name}')
-  ResourceMessage getResource(String resourceName) {
+  @ApiMethod(method: 'GET', path: 'resource/{name}')
+  ResourceMessage getResource(String name) {
     ... find resource of name {resourceName} ...
     return new ResourceMessage(resource);
   }
 
-  @ApiMethod(method: 'POST', path: 'update')
-  VoidMessage updateResource(UpdateMessage request) {
+  @ApiMethod(method: 'POST', path: 'resource/{name}/update')
+  VoidMessage updateResource(String name, UpdateMessage request) {
     ... process request, throw on error ...
   }
 }
@@ -41,7 +41,6 @@ class ResourceMessage {
 }
 
 class UpdateMessage {
-  String name;
   int newCapacity;
 }
 ```
