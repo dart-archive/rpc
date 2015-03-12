@@ -3,52 +3,51 @@
 ### Description
 
 Light-weight RPC package for creating RESTful server-side Dart APIs. The package
-supports the Google [Discovery Document](https://developers.google.com/discovery/v1/reference/apis)
+supports the Google
+ [Discovery Document](https://developers.google.com/discovery/v1/reference/apis)
 format for message encoding and HTTP REST for routing of requests.
 
-The discovery documents for the API will be automatically generated and are
-compatible with existing Discovery Document client stub generators.
-This way it is easy to create a server side API that can be called by any client
-language which has a Discovery Document client stub generator.
+The discovery documents for the API are automatically generated and are
+compatible with existing Discovery Document client stub generators (see the
+"Calling the API" section below for more details).
+This makes it easy to create a server side API that can be called by any client
+language for which there is a Discovery Document client stub generator.
 
 ### Simple Example
 
-Below follows a simple example to give an quick overview of how to create an
-API. In the following sections a more elaborate description follows of how to
-build the API and setup an API server.
+Getting started is simple! The example below gives a quick overview of how to
+create an API and in the following sections a more elaborate description follows
+of how to build the API and setup an API server.
 
 ```dart
-@ApiClass(
-  name: 'myApi',
-  version: 'v1',
-  description: 'My Awesome Dart server side API' // optional
-)
-class MyApi {
+@ApiClass(version: 'v1', description: 'My Dart server side API' /* optional */)
+class Cloud {
   @ApiMethod(method: 'GET', path: 'find/{name}')
-  AgeResponse findAge(String name) {
-    ... find age for person of name {name} ...
-    return new AgeResponse(age);
+  ResourceMessage getResource(String resourceName) {
+    ... find resource of name {resourceName} ...
+    return new ResourceMessage(resource);
   }
 
   @ApiMethod(method: 'POST', path: 'update')
-  VoidMessage updateName(UpdateRequest request) {
-    ... process request, returns error if not found ...
-    return null;
+  VoidMessage updateResource(UpdateMessage request) {
+    ... process request, throw on error ...
   }
 }
 
-class AgeResponse {
-  int age;
+class ResourceMessage {
+  int id;
+  String name;
+  int capacity;
 }
 
-class UpdateRequest {
+class UpdateMessage {
   String name;
-  int age;
+  int newCapacity;
 }
 ```
 
 Two complete examples using respectively `dart:io` and `shelf` can be found at
-[Examples](https://github.com/dart-lang/rpc/tree/master/examples).
+[Example](https://github.com/dart-lang/rpc/tree/master/examples).
 
 ### Usage
 
@@ -59,11 +58,11 @@ We use the following concepts below when describing how to build your API.
 - Top-level class - This is the API entry-point. It describes the API name and
 version. The top-level class is defined via the `ApiClass` annotation.
 - Resource - Resources are used to group methods together for a cleaner API
-structure. Class members annotated with `@ApiResource` are exposed as resources. 
-- Method - Methods are what is invoked!! They specify how to route requests and
+structure. Class fields annotated with `@ApiResource` are exposed as resources. 
+- Method - Methods are what's invoked!! They specify how to route requests and
 the valid parameters and the response. Only methods annotated with the
 `ApiMethod` annotation are exposed. 
-- Schema - Schemas are used to describe response and the request parameters
+- Schema - Schemas are used to describe response and the request messages
 passed in the body of the HTTP request.
 - Properties - A schema contains properties. Each property can optionally be
 further restricted by the `ApiProperty` annotation.
@@ -77,18 +76,18 @@ if omitted.
 
 ```dart
 @ApiClass(
-  name: 'myApi',  // Optional (default is the same since class name is MyApi).
+  name: 'cloud',  // Optional (default is 'cloud' since class name is Cloud).
   version: 'v1',
-  description: 'My Awesome Dart server side API' // optional
+  description: 'My Dart server side API' // optional
 )
-class MyApi {
+class Cloud  {
   (...)
 }
 ```
 
-The above API would be available at the path `/myApi/v1`. E.g. if the server
+The above API would be available at the path `/cloud/v1`. E.g. if the server
 was serving on `http://localhost:8080` the API base url would be
-`http://localhost:8080/myApi/v1`.
+`http://localhost:8080/cloud/v1`.
  
 ##### Methods
 
@@ -106,7 +105,7 @@ method defaults to `GET`.
 A description of the method can also be specified using the `description`
 field. If omitted it defaults to the empty string.
 
-###### Response (return value)
+###### Response message (return value)
 
 A method must always return a response. The response can be either an instance 
 of a class or a future of the instance.
@@ -181,10 +180,10 @@ The curly brackets specify path parameters and must appear as positional
 parameters in the same order as on the method signature. The request body
 parameter is always specified as the last parameter.
 
-Assuming the above method was part of the MyApi class defined above the url to
+Assuming the above method was part of the Cloud class defined above the url to
 the method would be:
 
-`http://localhost:8080/myApi/v1/resource/foo/type/storage`
+`http://localhost:8080/cloud/v1/resource/foo/type/storage`
 
 where the first parameter `name` would get the value `foo` and the `type`
 parameter would get the value `storage`.
@@ -218,7 +217,7 @@ MyResponse myMethod(String name, String type, {String filter}) {
 
 in which case the caller can pass the filter as part of the query string. E.g.
 
-`http://localhost:8080/myApi/v1/resource/foo/type/storage?filter=fast`
+`http://localhost:8080/cloud/v1/resource/foo/type/storage?filter=fast`
 
 ##### More about Request/Response Messages
 
@@ -231,7 +230,7 @@ according to the generated Discovery Document schemas.
 
 Only the public fields of the classes are encoded/decoded. Currently supported
 types for the public fields are `int`, `double`, `bool`, `String`,
-`DateTime`, and another message class.
+`DateTime`, List<SomeType>, Map<String, SomeType>, and another message class.
 
 A field can be further annotated using the `@ApiProperty` annotation to
 specify default values, format of an `int` or `double` specifying how to
@@ -283,7 +282,7 @@ Example resource API:
 ```dart
 
 @ApiClass(version: 'v1')
-class MyApi {
+class Cloud {
 
   @ApiResource(name: 'myResource')
   MyResource aResource = new MyResource();
@@ -302,109 +301,71 @@ Notice the @ApiResource annotation is on the field rather than the resource
 class. This allows for a resource class to be used in multiple places (e.g.
 different versions) of the API.
 
-Also notice the path of the `MyResource::myResourceMethod` is independent 
-from the resource. E.g. in the above case the method would be exposed at the url 
-`http://<ip>:<port>/someMethod`.
+Also notice the path of the `MyResource.myResourceMethod` method is
+independent from the resource. E.g. if MyResource was used in the previous
+mentioned Cloud API the method would be exposed at the url 
+`http://<server ip>:<port>/cloud/v1/someMethod`.
 
 ##### API Server
 
-To create a RPC API server you would first create an instance of the
-`ApiServer` class and add an instance of the class annotated with the
-`@ApiClass` annotation.
+When having annotated your classes, resources, and methods you must create an 
+`ApiServer` to route the HTTP requests to your methods.
+Creating a RPC API server is done by first creating an instance of the
+`ApiServer` class and calling the addApi method with an instance of the class
+annotated with the `@ApiClass` annotation.
 
 You can choose to use any web server framework you prefer for serving HTTP
-request. The RPC package includes examples for both the standard dart:io
-HttpServer as well as an example using the shelf middleware.
+requests. The RPC package includes examples for both the standard `dart:io`
+`HttpServer` as well as an example using the shelf middleware.
 
-E.g. to use shelf you would do something like:
+E.g. to use `dart:io` you would do something like:
 
 ```dart
 
-final ApiServer _apiServer = new ApiServer();
+final ApiServer _apiServer = new ApiServer('' /* empty api prefix */);
 
-void main() {
-  _apiServer.addApi(new MyApi());
-  var apiRouter = shelf_route.router();
-  apiRouter.add('/api', ['GET', 'POST'], _apiHandler, exactMatch: false);
-  shelf_io.serve(apiRouter.handler, '0.0.0.0', 9090);
+main() async {
+  _apiServer.addApi(new Cloud());
+  HttpServer server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 9090);
+  server.listen(_apiServer.httpRequestHandler);
 }
 
-/// A shelf handler for '/api' API requests.
-/// If the request path ends with '/rest' the Discovery Document for
-/// the API is returned. E.g. to get the Discovery Document for `myApi` with
-/// version `v1` and with the application API prefix of `/api` the path would
-/// be `<server ip:port>/api/myApi/v1/rest`.
-Future<shelf.Response> _apiHandler(shelf.Request request) async {
-  if (request.url.path.endsWith('/rest')) {
-    // Return the discovery doc for the given API.
-    return _discoveryDocumentHandler(request);
-  }
-  try {
-    var apiRequest =
-        new HttpApiRequest(request.method, request.url.path,
-                           request.headers['content-type'], request.read());
-    HttpApiResponse apiResponse =
-        await _apiServer.handleHttpRequest(apiRequest);
-    return new shelf.Response(apiResponse.status, body: apiResponse.body,
-                              headers: apiResponse.headers);
-  } catch (e) {
-    // Just a precaution. It should never happen since the 
-    // _apiServer.handleHttpRequest method always returns an HttpApiResponse.
-    return new shelf.Response.internalServerError(body: e.toString());
-  }
-}
-
-/// The Discovery Document handler returns the Discovery Document for the
-/// given API. The '/api' prefix is stripped away by the apiRouter in main.
-/// This method will strip away the '/rest' suffix to get the apiKey and
-/// lookup the api.
-Future<shelf.Response> _discoveryDocumentHandler(shelf.Request request) {
-  var requestPath = request.url.path;
-  var apiKey = requestPath.substring(0, requestPath.length - '/rest'.length);
-  var uri = request.requestedUri;
-  var baseUrl = '${uri.scheme}://${uri.host}:${uri.port}/';
-  // We pass in the 'api' prefix and the baseUrl to generate a valid Discovery
-  // Document for this server.
-  var doc = _apiServer.getDiscoveryDocument(apiKey, 'api', baseUrl);
-  if (doc == null) {
-    return new Future.value(
-        new shelf.Response.notFound('API \'${apiKey} not found.'));
-  }
-  return new Future.value(new shelf.Response.ok(doc));
-}
 ```
 
-Notice that the `ApiServer` supports its own `HttpApiRequest` and
-`HttpApiResponse` format that is agnostic to whether the enclosing web server
-is using `dart:io`, `shelf`, or any other web server framework. In the above
-case the `shelf.Request` is used to create an `HttpApiRequest` containing
-the information needed to invoke the correct API method using the
-`ApiServer`'s handleHttpRequest method.
-The result of the invocation is returned as an `HttpApiResponse` which
-contains a stream with the encoded response or in the case of an error it
-contains the encoded JSON error as well as the exception thrown internally.
+The above example uses the default provided `ApiServer` HTTP request handler
+which converts the `HttpRequest` to a `HttpApiRequest` and forwards it
+along. A custom HTTP request handler doing the conversion to the
+`HttpApiRequest` class and calling the `ApiServer.handleHttpApiRequest`
+method itself can also be used if more flexibility is needed.
+
+Notice that the `ApiServer` is agnostic of the HTTP server framework being 
+used by the application. The RPC package does provide a request handler for the
+standard `dart:io` `HttpRequest` class. There is also a `shelf_rpc` package
+which provides the equivalent for shelf (see the example for how this is done).
+However as the RPC `ApiServer` is using its own `HttpApiRequest` class any
+framework can be used as long as it converts the HTTP request to a corresponding
+`HttpApiRequest` and calls the `ApiServer.handleHttpApiRequest` method.
+
+The result of calling the `handleHttpApiRequest` method is returned as an
+`HttpApiResponse` which contains a stream with the encoded response or in the
+case of an error it contains the encoded JSON error as well as the exception
+thrown internally.
 
 ##### Errors
 
-As mentioned above invoking a method is done using the
-`ApiServer::handleHttpRequest` method which in turn returns an
-`HttpApiResponse` containing either the result of a successful invocation or
-an error. In the case of success the `HttpApiResponse`'s status code will be
-`200`. If it is not `200` the response contains an error. The following
-predefined errors are currently supported.
+There are a couple of predefined error classes that can be used to return an
+error from the server to the client. They are:
 
-- 400 `BadRequestError('You sent some data we don't understand.');`
-- 404 `NotFoundError('We didn't find the api or method you are looking for.');`
-- 500 `ApplicationError('The invoked method failed with an exception.');`
+- any `RpcError(HTTP status code, `Error name`, `Any message`)`
+- 400 `BadRequestError('You sent some data we don't understand.')`
+- 404 `NotFoundError('We didn't find the api or method you are looking for.')`
+- 500 `ApplicationError('The invoked method failed with an exception.')`
 - 500 `Some internal exception occurred and it was not due to a method invocation.`
 
-The `HttpApiResponse` also contains the internal exception thrown at failure
-time. This can be retrieved via the `HttpApiResponse::exception` getter and
-e.g. be used to return a more elaborate error to the client or to distinguish
-between an `ApplicationError` and another internal error happening.
-
-Any errors thrown by your API method will be returned as an
-`ApplicationError`.
+If one of the above exceptions are thrown by the server API implementation it
+will be sent back as a serialized json response as described below. Any other
+exception thrown will be wrapped in the `ApplicationError` exception
+containing the `toString()` version of the internal exception as the method.
 
 The JSON format for errors is:
 
@@ -417,9 +378,10 @@ The JSON format for errors is:
 }      
 ```
 
-##### Using your API
+##### Calling the API
 
-Once your API is deployed you can use the [Discovery API Client Generator](https://github.com/dart-lang/discovery_api_dart_client_generator)
+Once your API is deployed you can use the
+[Discovery API Client Generator](https://github.com/dart-lang/discoveryapis_generator)
 for Dart to generate client side libraries to access your API. Discovery
 Document generators for other languages can also be used to call
 your API from e.g Python or Java.
@@ -427,34 +389,37 @@ your API from e.g Python or Java.
 There are currently two ways to generate a client library. First you get the
 Discovery Document from the server.
 
-URL='https://your_app_server/api/myApi/v1/rest'
+URL='https://your_app_server/discovery/v1/apis/cloud/v1/rest'
 mkdir input
-curl -o input/myapi.json $URL
+curl -o input/cloud.json $URL
 
 Then you can either checkout the generator locally or add it as a dependency in
-your pubspec.yaml.
+your `pubspec.yaml`.
 
 ###### Checking out the GitHub generator repository
 
 ```
-$ git clone https://github.com/dart-lang/discovery_api_dart_client_generator.git
-$ cd discovery_api_dart_client_generator
+$ git clone https://github.com/dart-lang/discoveryapis_generator.git
+$ cd discoveryapis_generator
 $ pub get
-$ dart bin/generate.dart generate --input-dir=input --output-dir=output --package-name=myapi
+$ dart bin/generate.dart generate --input-dir=input --output-dir=output --package-name=cloud
 ```
 
-You can then include the generated library in your own client project.
+You can then include the generated library in your own client project, or
+simply copy the generated dart file into your package and add the dependencies
+from the generated `pubspec.yaml` file to your client package's
+`pubspec.yaml`.
 
 ###### Using a `pubspec.yaml` dependency to your project
 
 Edit your project's `pubspec.yaml` file to contain a dependency to the client
-generator. It should be sufficient to make it a dev_dependency.
+generator. It should be sufficient to make it a `dev_dependency`.
 
 ```
 dev_dependencies:
   discovery_api_client_generator:
     git:
-      url: https://github.com/dart-lang/discovery_api_dart_client_generator.git
+      url: https://github.com/dart-lang/discoveryapis_generator.git
 ```
 Run the below commands within your project.
 
