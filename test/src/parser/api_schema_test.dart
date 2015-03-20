@@ -314,7 +314,7 @@ void main() {
       var expectedErrors = [
         new ApiConfigError(
             'WrongSimple: Schema \'WrongSimple\' must have an unnamed '
-            'constructor.'),
+            'constructor taking no arguments.'),
         new ApiConfigError(
             'WrongSimple: aDynamic: Properties cannot be of type: '
             '\'dynamic\'.'),

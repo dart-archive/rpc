@@ -594,7 +594,8 @@ void main() {
         var parser = new ApiParser();
         parser.parseSchema(reflectClass(WrongSchema1));
         var errors = [new ApiConfigError('WrongSchema1: Schema '
-            '\'WrongSchema1\' must have an unnamed constructor.')];
+            '\'WrongSchema1\' must have an unnamed constructor taking no '
+            'arguments.')];
         expect(parser.errors.toString(), errors.toString());
       });
       test('schema_with_conflicting_classes', () {

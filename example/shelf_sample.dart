@@ -17,9 +17,8 @@ import 'package:shelf_route/shelf_route.dart' as shelf_route;
 import 'toyapi.dart';
 
 const _API_PREFIX = '/api';
-
 final ApiServer _apiServer =
-   new ApiServer(_API_PREFIX, prettyPrint: true);
+    new ApiServer(apiPrefix: _API_PREFIX, prettyPrint: true);
 
 Future main() async {
   // Add a simple log handler to log information to a server side file.

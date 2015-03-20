@@ -14,7 +14,7 @@ import 'toyapi.dart';
 
 const String _API_PREFIX = '/api';
 final ApiServer _apiServer =
-  new ApiServer(_API_PREFIX, prettyPrint: true);
+    new ApiServer(apiPrefix: _API_PREFIX, prettyPrint: true);
 
 main() async {
   // Add a simple log handler to log information to a server side file.

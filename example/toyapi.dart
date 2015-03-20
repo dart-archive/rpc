@@ -10,24 +10,24 @@ import 'package:rpc/rpc.dart';
 
 class ToyResponse {
   String result;
-  ToyResponse(this.result);
+  ToyResponse();
 }
 
 class ToyResourceResponse {
   String result;
-  ToyResourceResponse(this.result);
+  ToyResourceResponse();
 }
 
 class NestedResponse {
   String nestedResult;
-  NestedResponse(this.nestedResult);
+  NestedResponse();
 }
 
 class ToyMapResponse {
   String result;
   Map<String, NestedResponse> mapResult;
 
-  ToyMapResponse(this.result, this.mapResult);
+  ToyMapResponse();
 }
 
 class ToyRequest {
@@ -64,7 +64,7 @@ class ToyApi {
   }
 
   @ApiMethod(path: 'hello')
-  ToyResponse hello() { return new ToyResponse('Hello there!'); }
+  ToyResponse hello() { return new ToyResponse()..result = 'Hello there!'; }
 
   // Clients calling this method will all receive an Internal Server Error
   // as it is not allowed for a method to return null when its declared return
@@ -74,36 +74,39 @@ class ToyApi {
 
   @ApiMethod(path: 'hello/{name}/age/{age}')
   ToyResponse helloNameAge(String name, int age) {
-    return new ToyResponse('Hello ${name} of age ${age}!');
+    return new ToyResponse()..result = 'Hello ${name} of age ${age}!';
   }
 
   @ApiMethod(path: 'helloPost', method: 'POST')
   ToyResponse helloPost(ToyRequest request) {
-    return new ToyResponse('Hello ${request.name} of age ${request.age}!');
+    return new ToyResponse()
+        ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloVoid', method: 'POST')
   ToyResponse helloVoid(VoidMessage request) {
-    return new ToyResponse('Hello Mr. Void!');
+    return new ToyResponse()..result = 'Hello Mr. Void!';
   }
 
   @ApiMethod(path: 'helloPost/{name}', method: 'POST')
   ToyResponse helloNamePostAge(String name, ToyAgeRequest request) {
-    return new ToyResponse('Hello ${name} of age ${request.age}!');
+    return new ToyResponse()..result = 'Hello ${name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloNestedMap')
   ToyMapResponse helloNestedMap() {
     var map = {
-      'bar': new NestedResponse('somethingNested'),
-      'var': new NestedResponse('someotherNested')
+      'bar': new NestedResponse()..nestedResult = 'somethingNested',
+      'var': new NestedResponse()..nestedResult = 'someotherNested'
     };
-    return new ToyMapResponse('foo', map);
+    return new ToyMapResponse()
+        ..result ='foo'
+        ..mapResult = map;
   }
 
   @ApiMethod(path: 'helloQuery/{name}')
   ToyResponse helloNameQueryAgeFoo(String name, {String foo, int age}) {
-    return new ToyResponse('Hello $name of age $age with $foo!');
+    return new ToyResponse()..result = 'Hello $name of age $age with $foo!';
   }
 
   @ApiMethod(path: 'reverseList', method: 'POST')
@@ -152,17 +155,31 @@ class ToyApi {
       key = request.first.name;
       value = request.first.age;
     }
-    return {key: new ToyResponse(value.toString())};
+    return {key: new ToyResponse()..result = value.toString()};
   }
 
+  @ApiMethod(path: 'helloListOfListOfClass', method: 'POST')
+  Map<String, ToyResponse> helloListOfListOfClass (
+      List<List<ToyRequest>> request) {
+    var key, value;
+    if (request == null || request.isEmpty ||
+        request.first == null || request.first.isEmpty) {
+      key = 'John Doe';
+      value = 42;
+    } else {
+      key = request.first.first.name;
+      value = request.first.first.age;
+    }
+    return {key: new ToyResponse()..result = value.toString()};
+  }
 }
 
 class ToyCompute {
 
   @ApiMethod(path: 'toyresource/{resource}/compute/{compute}')
   ToyResourceResponse get(String resource, String compute) {
-    return new ToyResourceResponse('I am the compute: $compute of resource: '
-                                   + resource);
+    return new ToyResourceResponse()
+        ..result = 'I am the compute: $compute of resource: $resource';
   }
 }
 
@@ -170,8 +187,8 @@ class ToyStorage {
 
   @ApiMethod(path: 'toyresource/{resource}/storage/{storage}')
   ToyResourceResponse get(String resource, String storage) {
-    return new ToyResourceResponse('I am the storage: $storage of resource: '
-                                   + resource);
+    return new ToyResourceResponse()
+        ..result = 'I am the storage: $storage of resource: $resource';
   }
 }
 

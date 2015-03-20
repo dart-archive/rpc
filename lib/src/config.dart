@@ -41,6 +41,9 @@ class ParsedHttpApiRequest {
   // The method path is the remaining path segments.
   final String apiKey;
 
+  // Whether this request is an OPTIONS request.
+  final bool isOptions;
+
   // Key for looking up the method group targetted by the request.
   // The key is the HTTP method followed by the number of method path segments.
   final String methodKey;
@@ -68,13 +71,14 @@ class ParsedHttpApiRequest {
     }
     var apiKey = '/${pathSegments[0]}/${pathSegments[1]}';
     var methodPathSegments = pathSegments.skip(2);
+    var isOptions = request.httpMethod.toUpperCase() == 'OPTIONS';
     var methodKey = '${request.httpMethod}${methodPathSegments.length}';
     var methodUri = Uri.parse(methodPathSegments.join('/'));
-    return new ParsedHttpApiRequest._(request, apiKey, methodKey, methodUri,
-                                      jsonToBytes);
+    return new ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
+                                      methodUri, jsonToBytes);
   }
 
-  ParsedHttpApiRequest._(this.originalRequest, this.apiKey,
+  ParsedHttpApiRequest._(this.originalRequest, this.apiKey, this.isOptions,
                          this.methodKey, this.methodUri, this.jsonToBytes);
 
   String get httpMethod => originalRequest.httpMethod;

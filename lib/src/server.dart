@@ -28,7 +28,7 @@ class ApiServer {
 
   final Map<String, ApiConfig> _apis = {};
 
-  ApiServer(String apiPrefix, {bool prettyPrint: false})
+  ApiServer({String apiPrefix, bool prettyPrint: false})
       : _apiPrefix = apiPrefix != null ? apiPrefix : ''  {
     _jsonToBytes = prettyPrint ?
         new JsonEncoder.withIndent(' ').fuse(UTF8.encoder) :
@@ -78,6 +78,8 @@ class ApiServer {
     return apiConfig.apiKey;
   }
 
+  List<String> get apis => _apis.keys.toList();
+
   /// Handles the api call.
   ///
   /// It looks up the corresponding api and call the api instance to
@@ -111,7 +113,11 @@ class ApiServer {
       drain = false;
       rpcLogger.info('Invoking API: ${parsedRequest.apiKey} with HTTP method: '
                      '${request.httpMethod} on path: ${request.path}.');
-      response = await api.handleHttpRequest(parsedRequest);
+      if  (parsedRequest.isOptions) {
+        response = await api.handleHttpOptionsRequest(parsedRequest);
+      } else {
+        response = await api.handleHttpRequest(parsedRequest);
+      }
     } catch (e, stack) {
       // This can happen if the request is invalid and cannot be parsed into a
       // ParsedHttpApiRequest or in the case of a bug in the handleHttpRequest
@@ -172,5 +178,9 @@ Future sendApiResponse(HttpApiResponse apiResponse, io.HttpResponse response) {
   response.statusCode = apiResponse.status;
   apiResponse.headers.forEach(
     (name, value) => response.headers.add(name, value));
-  return apiResponse.body.pipe(response);
+  if (apiResponse.body != null) {
+    return apiResponse.body.pipe(response);
+  } else {
+    return response.close();
+  }
 }

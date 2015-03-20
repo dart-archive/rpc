@@ -44,7 +44,7 @@ class TestMessage1 {
   @ApiProperty(minValue: 10, maxValue: 100)
   int limit;
 
-  TestMessage1({this.count});
+  TestMessage1();
 }
 
 class TestMessage2 {

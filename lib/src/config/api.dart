@@ -38,6 +38,38 @@ class ApiConfig extends ApiConfigResource {
         'and method url path: ${request.path}.'));
   }
 
+  Future<HttpApiResponse> handleHttpOptionsRequest(
+      ParsedHttpApiRequest request) async {
+    var requestedHttpMethods = request.headers['access-control-request-method'];
+    List<String> allowed = [];
+    assert('OPTIONS'.allMatches(request.methodKey).length == 1);
+    if (requestedHttpMethods != null) {
+      requestedHttpMethods.forEach((httpMethod) {
+        var methodKey =
+            request.methodKey.replaceFirst('OPTIONS', httpMethod);
+        final List<ApiConfigMethod> methods = _methodMap[methodKey];
+        if (methods != null) {
+          for (var method in methods) {
+            if (method.matches(request)) {
+              allowed.add(httpMethod);
+              break;
+           }
+          }
+        }
+      });
+    }
+
+    // Create OPTIONS response.
+    var headers = new Map.from(defaultResponseHeaders);
+    if (allowed.isNotEmpty) {
+      headers[HttpHeaders.ALLOW] = allowed;
+      headers['access-control-allow-methods'] = allowed;
+      headers['access-control-allow-headers'] =
+        'origin, x-requested-with, content-type, accept';
+    }
+    return new HttpApiResponse(HttpStatus.OK, null, headers: headers);
+  }
+
   discovery.RestDescription generateDiscoveryDocument(String baseUrl,
                                                       String apiPrefix) {
     String servicePath;

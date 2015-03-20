@@ -498,9 +498,11 @@ class ApiParser {
     // Check the schema class has an unnamed default constructor.
     var methods = schemaClass.declarations.values.where(
         (mm) => mm is MethodMirror && mm.isConstructor);
-    if (!methods.isEmpty && methods.where(
-        (mm) => mm.simpleName == schemaClass.simpleName).isEmpty) {
-      addError('Schema \'$name\' must have an unnamed constructor.');
+    if (!methods.isEmpty &&
+        methods.where((mm) => (mm.simpleName == schemaClass.simpleName &&
+                               mm.parameters.isEmpty)).isEmpty) {
+      addError('Schema \'$name\' must have an unnamed constructor taking no '
+               'arguments.');
     }
     schemaConfig = new ApiConfigSchema(name, schemaClass);
 

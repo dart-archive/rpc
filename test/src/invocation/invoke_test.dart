@@ -168,13 +168,15 @@ class PutAPI {
 }
 
 main() {
-  ApiServer _apiServer = new ApiServer('', prettyPrint: true);
+  ApiServer _apiServer = new ApiServer(apiPrefix: '', prettyPrint: true);
   _apiServer.enableDiscoveryApi('base-url');
   _apiServer.addApi(new TestAPI());
 
   Future<HttpApiResponse> _sendRequest(String method, String path,
-      {String api: 'testAPI/v1/', Map<String, String> query: const {}, body}) {
-    const headers = const {'content-type': 'application/json'};
+      {String api: 'testAPI/v1/', extraHeaders: const {},
+       Map<String, String> query: const {}, body}) {
+    var headers = {'content-type': 'application/json'};
+    headers.addAll(extraHeaders);
     var bodyStream;
     if ((method == 'POST' || method == 'PUT') && body != 'empty') {
       bodyStream = new Stream.fromIterable([UTF8.encode(JSON.encode(body))]);
@@ -187,6 +189,7 @@ main() {
   }
 
   Future<Map> _decodeBody(Stream<List<int>> body) async {
+    if (body == null) return null;
     List<List<int>> content = await body.toList();
     assert(content.length == 1);
     return JSON.decode(UTF8.decode(content.elementAt(0)));
@@ -696,6 +699,73 @@ main() {
         }
       };
       expect(result, expectedResult);
+    });
+  });
+
+  group('api-invoke-options', () {
+    Map extraHeaders(List<String> methods) => {
+      'access-control-request-method': methods,
+      'access-control-request-headers': 'content-type'
+    };
+
+    test('invalid', () async {
+      HttpApiResponse response = await _sendRequest(
+          'OPTIONS', 'get/invalid', extraHeaders: extraHeaders(['GET']));
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers['access-control-allow-origin'], '*');
+      expect(response.headers['access-control-allow-credentials'], 'true');
+      expect(response.headers['access-control-allow-headers'], isNull);
+      expect(response.headers['access-control-allow-methods'], isNull);
+      expect(response.headers[HttpHeaders.ALLOW], isNull);
+    });
+
+    test('all', () async {
+      HttpApiResponse response = await _sendRequest(
+          'OPTIONS', 'get/simple',
+          extraHeaders: extraHeaders(['GET', 'POST', 'DELETE', 'PUT']));
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers['access-control-allow-origin'], '*');
+      expect(response.headers['access-control-allow-credentials'], 'true');
+      expect(response.headers['access-control-allow-headers'],
+          'origin, x-requested-with, content-type, accept');
+      expect(response.headers['access-control-allow-methods'], ['GET']);
+      expect(response.headers[HttpHeaders.ALLOW], ['GET']);
+    });
+
+    test('get', () async {
+      HttpApiResponse response = await _sendRequest(
+          'OPTIONS', 'get/simple', extraHeaders: extraHeaders(['GET']));
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers['access-control-allow-methods'], ['GET']);
+      expect(response.headers[HttpHeaders.ALLOW], ['GET']);
+    });
+
+    group('api-invoke-delete', () {
+      test('simple', () async {
+        HttpApiResponse response = await _sendRequest(
+            'OPTIONS', 'delete/simple', extraHeaders: extraHeaders(['DELETE']));
+        expect(response.status, HttpStatus.OK);
+        expect(response.headers['access-control-allow-methods'], ['DELETE']);
+        expect(response.headers[HttpHeaders.ALLOW], ['DELETE']);
+      });
+    });
+
+    test('post', () async {
+      HttpApiResponse response = await _sendRequest(
+          'OPTIONS', 'post/identity', body: {},
+          extraHeaders: extraHeaders(['POST']));
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers['access-control-allow-methods'], ['POST']);
+      expect(response.headers[HttpHeaders.ALLOW], ['POST']);
+    });
+
+    test('put', () async {
+      HttpApiResponse response = await _sendRequest(
+          'OPTIONS', 'put/identity', body: {},
+          extraHeaders: extraHeaders(['PUT']));
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers['access-control-allow-methods'], ['PUT']);
+      expect(response.headers[HttpHeaders.ALLOW], ['PUT']);
     });
   });
 }

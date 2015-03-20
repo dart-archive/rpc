@@ -23,7 +23,9 @@ const Map<String, dynamic > defaultResponseHeaders = const {
   HttpHeaders.CONTENT_TYPE: 'application/json; charset=utf-8',
   HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
   HttpHeaders.PRAGMA: 'no-cache',
-  HttpHeaders.EXPIRES: '0'
+  HttpHeaders.EXPIRES: '0',
+  'access-control-allow-credentials': 'true',
+  'access-control-allow-origin': '*',
 };
 const double SMALLEST_FLOAT = -3.4e38;
 const double LARGEST_FLOAT = 3.4e38;
