@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 
+
+- Adding support for generating Discovery Documents without running the server
+- Adding support for generating Dart client stub code from the annotated server
+  code
+
 ## 0.2.0
 
 - Disallow null to be returned from method declaring a non VoidMessage return type
