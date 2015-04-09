@@ -4,7 +4,7 @@
 
 library rpc;
 
-export 'src/annotations.dart';
+export 'annotations.dart';
 export 'src/errors.dart';
 export 'src/message.dart';
 export 'src/server.dart';

@@ -9,7 +9,7 @@ import 'dart:mirrors';
 
 import 'package:uri/uri.dart';
 
-import 'annotations.dart';
+import '../annotations.dart';
 import 'config.dart';
 import 'utils.dart';
 
