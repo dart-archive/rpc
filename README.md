@@ -49,7 +49,7 @@ class UpdateMessage {
 ```
 
 Two complete examples using respectively `dart:io` and `shelf` can be found at
-[Example](https://github.com/dart-lang/rpc/tree/master/examples).
+[Example](https://github.com/dart-lang/rpc/tree/master/example).
 
 ### Usage
 
