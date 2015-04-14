@@ -10,11 +10,11 @@ class RpcError implements Exception {
 
   final int code;
   final String name;
-  final String msg;
+  final String message;
 
-  RpcError(this.code, this.name, this.msg);
+  RpcError(this.code, this.name, this.message);
 
-  String toString() => 'RPC Error with status: $code and message: $msg';
+  String toString() => 'RPC Error with status: $code and message: $message';
 }
 
 class NotFoundError extends RpcError {
