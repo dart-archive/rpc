@@ -8,13 +8,13 @@ import 'dart:io';
 
 class RpcError implements Exception {
 
-  final int code;
+  final int statusCode;
   final String name;
   final String message;
 
-  RpcError(this.code, this.name, this.message);
+  RpcError(this.statusCode, this.name, this.message);
 
-  String toString() => 'RPC Error with status: $code and message: $message';
+  String toString() => 'RPC Error with status: $statusCode and message: $message';
 }
 
 class NotFoundError extends RpcError {
