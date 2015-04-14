@@ -18,18 +18,18 @@ class RpcError implements Exception {
 }
 
 class NotFoundError extends RpcError {
-  NotFoundError([String msg = "Not found."])
-      : super(HttpStatus.NOT_FOUND, 'Not Found', msg);
+  NotFoundError([String message = "Not found."])
+      : super(HttpStatus.NOT_FOUND, 'Not Found', message);
 }
 
 class BadRequestError extends RpcError {
-  BadRequestError([String msg = "Bad request."])
-      : super(HttpStatus.BAD_REQUEST, 'Bad Request', msg);
+  BadRequestError([String message = "Bad request."])
+      : super(HttpStatus.BAD_REQUEST, 'Bad Request', message);
 }
 
 class InternalServerError extends RpcError {
-  InternalServerError([String msg = "Internal Server Error."])
-      : super(HttpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error', msg);
+  InternalServerError([String message = "Internal Server Error."])
+      : super(HttpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error', message);
 }
 
 class ApplicationError extends RpcError {
