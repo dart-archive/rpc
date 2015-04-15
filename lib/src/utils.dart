@@ -46,7 +46,7 @@ Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
   var response;
   if (error is RpcError) {
     response =
-        new HttpApiResponse.error(error.code, error.msg, error, stack);
+        new HttpApiResponse.error(error.statusCode, error.message, error, stack);
   } else {
     response =
         new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
