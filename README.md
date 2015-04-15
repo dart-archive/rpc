@@ -60,10 +60,10 @@ We use the following concepts below when describing how to build your API.
 - Top-level class - This is the API entry-point. It describes the API name and
 version. The top-level class is defined via the `ApiClass` annotation.
 - Resource - Resources are used to group methods together for a cleaner API
-structure. Class fields annotated with `@ApiResource` are exposed as resources. 
+structure. Class fields annotated with `@ApiResource` are exposed as resources.
 - Method - Methods are what's invoked!! They specify how to route requests and
 the valid parameters and the response. Only methods annotated with the
-`ApiMethod` annotation are exposed. 
+`ApiMethod` annotation are exposed.
 - Schema - Schemas are used to describe response and the request messages
 passed in the body of the HTTP request.
 - Properties - A schema contains properties. Each property can optionally be
@@ -90,7 +90,7 @@ class Cloud  {
 The above API would be available at the path `/cloud/v1`. E.g. if the server
 was serving on `http://localhost:8080` the API base url would be
 `http://localhost:8080/cloud/v1`.
- 
+
 ##### Methods
 
 Inside of your API class you can define public methods that will
@@ -109,7 +109,7 @@ field. If omitted it defaults to the empty string.
 
 ###### Response message (return value)
 
-A method must always return a response. The response can be either an instance 
+A method must always return a response. The response can be either an instance
 of a class or a future of the instance.
 In the case where a method has no response the predefined VoidMessage class
 should be returned.
@@ -144,13 +144,13 @@ Example method returning a future:
 @ApiMethod(path: 'futureMethod')
 Future<MyResponse> myFutureMethod() {
   ...
-    completer.complete(new MyResponse();
+    completer.complete(new MyResponse());
   ...
   return completer.future;
 }
 ```
 
-The `MyResponse` class must be a non-abstract class with an unnamed 
+The `MyResponse` class must be a non-abstract class with an unnamed
 constructor taking no required parameters. The RPC backend will automatically
 serialize all public fields of the the `MyResponse` instance into JSON
 corresponding to the generated Discovery Document schema.
@@ -161,7 +161,7 @@ Method parameters can be passed in three different ways.
 
 - As a path parameter in the method path (supported on all HTTP methods)
 - As a query string parameter (supported for GET)
-- As the request body (supported for POST or PUT)  
+- As the request body (supported for POST or PUT)
 
 Path parameters and the request body parameter are required. The query
 string parameters are optional named parameters.
@@ -191,7 +191,7 @@ where the first parameter `name` would get the value `foo` and the `type`
 parameter would get the value `storage`.
 
 The `MyRequest` class must be a non-abstract class with an unnamed constructor
-taking no arguments. The RPC backend will automatically create an instance of 
+taking no arguments. The RPC backend will automatically create an instance of
 the `MyRequest` class, decode the JSON request body, and set the class
 instance's fields to the values found in the decoded request body.
 
@@ -203,7 +203,7 @@ instead become.
 @ApiMethod(path: '/resource/{name}/type/{type}')
 MyResponse myMethod(String name, String type) {
    ...
-   return new MyResponse(); 
+   return new MyResponse();
 }
 ```
 
@@ -213,7 +213,7 @@ When using GET it is possible to use optional named parameters as below.
 @ApiMethod(path: '/resource/{name}/type/{type}')
 MyResponse myMethod(String name, String type, {String filter}) {
    ...
-   return new MyResponse(); 
+   return new MyResponse();
 }
 ```
 
@@ -273,7 +273,7 @@ class MyRequest {
 Resources can be used to provide structure to your API by grouping certain API
 methods together under a resource. To create an API resource you will add a
 field to the class annotated with the `@ApiClass` annotation. The field must
-point to another class (the resource) containing the methods that should be 
+point to another class (the resource) containing the methods that should be
 exposed together for this resource. The field must be annotated with the
 `@ApiResource` annotation. By default the name of the resource will be the
 field name in camel-case. If another name is desired the `name` field can be
@@ -288,29 +288,29 @@ class Cloud {
 
   @ApiResource(name: 'myResource')
   MyResource aResource = new MyResource();
-  
+
   ...
 }
 
 class MyResource {
-  
+
   @ApiMethod(path: 'someMethod')
   MyResponse myResourceMethod() { return new MyResponse(); }
 }
 ```
 
-Notice the @ApiResource annotation is on the field rather than the resource 
+Notice the @ApiResource annotation is on the field rather than the resource
 class. This allows for a resource class to be used in multiple places (e.g.
 different versions) of the API.
 
 Also notice the path of the `MyResource.myResourceMethod` method is
 independent from the resource. E.g. if MyResource was used in the previous
-mentioned Cloud API the method would be exposed at the url 
+mentioned Cloud API the method would be exposed at the url
 `http://<server ip>:<port>/cloud/v1/someMethod`.
 
 ##### API Server
 
-When having annotated your classes, resources, and methods you must create an 
+When having annotated your classes, resources, and methods you must create an
 `ApiServer` to route the HTTP requests to your methods.
 Creating a RPC API server is done by first creating an instance of the
 `ApiServer` class and calling the addApi method with an instance of the class
@@ -340,7 +340,7 @@ along. A custom HTTP request handler doing the conversion to the
 `HttpApiRequest` class and calling the `ApiServer.handleHttpApiRequest`
 method itself can also be used if more flexibility is needed.
 
-Notice that the `ApiServer` is agnostic of the HTTP server framework being 
+Notice that the `ApiServer` is agnostic of the HTTP server framework being
 used by the application. The RPC package does provide a request handler for the
 standard `dart:io` `HttpRequest` class. There is also a `shelf_rpc` package
 which provides the equivalent for shelf (see the example for how this is done).
@@ -377,7 +377,7 @@ The JSON format for errors is:
     code: <http status code>
     message: <error message>
   }
-}      
+}
 ```
 
 ##### Calling the API
