@@ -16,7 +16,7 @@ ArgParser discoveryCommandArgParser() {
         abbr: 'i', help: 'Dart file containing the top-level API class.')
     ..addOption('port',
         abbr: 'p', help: 'Port by the ApiServer serving this API.',
-        defaultsTo: '9090')
+        defaultsTo: '8080')
     ..addOption('api-prefix',
         abbr: 'a', help: 'URL prefix used by the ApiServer serving this API.');
 }
@@ -29,7 +29,7 @@ ArgParser clientCommandArgParser() {
         abbr: 'o', help: 'Directory in which the client stubs are generated.')
     ..addOption('port',
         abbr: 'p', help: 'Port by the ApiServer serving this API.',
-        defaultsTo: '9090')
+        defaultsTo: '8080')
     ..addOption('api-prefix',
         abbr: 'a', help: 'URL prefix used by the ApiServer serving this API.')
     ..addFlag('update-pubspec',
@@ -173,8 +173,8 @@ class ClientApiGenerator {
     var packageDir = new Directory(join(_packageDirectoryPath, 'packages'));
     if (!packageDir.existsSync()) {
       throw new GeneratorException(
-          'Please run \'pub get\' in your API package before generating the '
-          'discovery document.');
+          'Please run \'pub get\' in your API package before running the '
+          'generator.');
     }
   }
 
@@ -274,11 +274,16 @@ class ClientApiGenerator {
       String cmd = args[1];
       int apiPort = args[2];
       String apiPrefix = args[3];
-      if (cmd == 'discoveryWithImports') {
-        result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
-      } else {
-        assert(cmd == 'discovery');
-        result = await generateDiscovery(lm, apiPort, apiPrefix);
+      try {
+        if (cmd == 'discoveryWithImports') {
+          result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
+        } else {
+          assert(cmd == 'discovery');
+          result = await generateDiscovery(lm, apiPort, apiPrefix);
+        }
+      } catch (error) {
+        print('Failed executing command \\'\$cmd\\' with error:\\n\\n\$error');
+        exit(1);
       }
       sendPort.send(result);
     }

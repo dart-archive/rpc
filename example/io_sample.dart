@@ -25,11 +25,11 @@ main() async {
   }
 
   _apiServer.addApi(new ToyApi());
-  HttpServer server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 9090);
+  HttpServer server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 8080);
   server.listen(_apiServer.httpRequestHandler);
   // TODO: Figure out a better way to determine the server ip.
   // E.g. set it on the first request. '${server.address.host}:${server.port}'
-  // return 0.0.0.0:9090 which is not useful.
-  var url = 'http://localhost:9090/';
+  // return 0.0.0.0:8080 which is not useful.
+  var url = 'http://localhost:8080/';
   _apiServer.enableDiscoveryApi(url);
 }

@@ -35,11 +35,11 @@ Future main() async {
       .addMiddleware(shelf.logRequests())
       .addHandler(apiRouter.handler);
 
-  var server = await shelf_io.serve(handler, '0.0.0.0', 9090);
+  var server = await shelf_io.serve(handler, '0.0.0.0', 8080);
   // TODO: Figure out a better way to determine the server ip.
   // E.g. set it on the first request. '${server.address.host}:${server.port}'
-  // return 0.0.0.0:9090 which is not useful.
-  var url = 'http://localhost:9090/';
+  // return 0.0.0.0:8080 which is not useful.
+  var url = 'http://localhost:8080/';
   _apiServer.enableDiscoveryApi(url);
   print('Listening at port ${server.port}.');
 }
