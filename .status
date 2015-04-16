@@ -11,3 +11,7 @@
 
 [ $compiler == dart2js ]
 *: Skip
+
+[ $compiler == dart2analyzer ]
+# We are depending on quiver that has a warning in the analyzer.
+*: Skip
