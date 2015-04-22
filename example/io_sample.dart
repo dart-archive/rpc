@@ -25,7 +25,8 @@ main() async {
   }
 
   _apiServer.addApi(new ToyApi());
+  _apiServer.enableDiscoveryApi();
+
   HttpServer server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 8080);
   server.listen(_apiServer.httpRequestHandler);
-  _apiServer.enableDiscoveryApi();
 }

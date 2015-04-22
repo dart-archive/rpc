@@ -6,7 +6,7 @@ library toyapi;
 
 import 'dart:io';
 
-import 'package:rpc/rpc.dart';
+import 'package:rpc/api.dart';
 
 class ToyResponse {
   String result;
