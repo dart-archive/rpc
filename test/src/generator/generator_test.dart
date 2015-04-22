@@ -32,7 +32,7 @@ main() {
   unittestConfiguration = config;
   var rpcRootPath = findPackageRoot('.');
   // Common path to the necessary test data.
-  var dataPath = join(rpcRootPath, 'test/src/generator/data');
+  var dataPath = join(rpcRootPath, 'test', 'src', 'generator', 'data');
 
   void copyFiles(String srcPath, String dstPath, List<String> files) {
     assert(srcPath != null && srcPath.isNotEmpty);
@@ -45,24 +45,23 @@ main() {
   // Creates a package directory with a lib directory and an optional pubspec
   // file.
   String setupPackage({bool addPubSpec: true}) {
-    var packageDir = config.tmpDir.createTempSync();
-    var libDir = new Directory(join(packageDir.absolute.path, 'lib'))
-      ..createSync();
+    var packagePath = absolute(config.tmpDir.createTempSync().path);
+    new Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
       new File(join(dataPath, 'pubspec.yamll'))
-          .copySync(join(packageDir.absolute.path, 'pubspec.yaml'));
+          .copySync(join(absolute(packagePath), 'pubspec.yaml'));
     }
-    return packageDir.absolute.path;
+    return packagePath;
   }
 
   ProcessResult runPub(String workingDir, List<String> arguments) {
     // We assume pub is placed next to the dart executable.
     var pubDir = new File(Platform.executable).parent;
-    var pub = join(pubDir.absolute.path, 'pub');
+    var pub = join(absolute(pubDir.path), 'pub');
     var pubFile = new File(pub);
-    if (!pubFile.existsSync()) {
+    if (!pubFile.existsSync() && !Platform.isWindows) {
       pubDir = new File(Platform.environment['_']).parent;
-      pub = join(pubDir.absolute.path, 'pub');
+      pub = join(absolute(pubDir.path), 'pub');
       pubFile = new File(pub);
     }
     if (pubFile.existsSync()) {
@@ -73,7 +72,7 @@ main() {
 
   ProcessResult runGenerator(String workingDir,
                               List<String> arguments) {
-    var args = [join(rpcRootPath, 'bin/generate.dart')]..addAll(arguments);
+    var args = [join(rpcRootPath, 'bin', 'generate.dart')]..addAll(arguments);
     return Process.runSync(
         Platform.executable, args, workingDirectory: workingDir);
   }
@@ -81,6 +80,7 @@ main() {
   bool identicalFiles(String libPath, String actual, String expected) {
     var actualCode = new File(join(libPath, 'client', actual));
     var expectedCode = new File(join(dataPath, expected));
+    expect(actualCode.readAsStringSync(), expectedCode.readAsStringSync());
     return actualCode.readAsStringSync() == expectedCode.readAsStringSync();
   }
 
@@ -99,7 +99,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['discovery', '-i', 'lib/multipleApis.dart']);
+          packagePath, ['discovery', '-i', join('lib', 'multipleApis.dart')]);
       var expectedDiscovery =
           new File(join(dataPath, 'expected_multiple_discovery.json'));
       expect(result.stdout, expectedDiscovery.readAsStringSync());
@@ -119,13 +119,15 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['client', '-i', 'lib/multipleApis.dart']);
+          packagePath, ['client', '-i', join('lib', 'multipleApis.dart')]);
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
       expect(
-          identicalFiles(libPath, 'apioneapi.dart', 'expected_apioneapi.dartt'),
+          identicalFiles(libPath, 'apioneapi.dart',
+                         'expected_apioneapi.dartt'),
           isTrue);
       expect(
-          identicalFiles(libPath, 'apitwoapi.dart', 'expected_apitwoapi.dartt'),
+          identicalFiles(libPath, 'apitwoapi.dart',
+                         'expected_apitwoapi.dartt'),
           isTrue);
     });
 
@@ -142,7 +144,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['discovery', '-i', 'lib/toyapi.dart']);
+          packagePath, ['discovery', '-i', join('lib', 'toyapi.dart')]);
       var expectedDiscovery =
           new File(join(dataPath, 'expected_toy_discovery.json'));
       expect(result.stdout, expectedDiscovery.readAsStringSync());
@@ -161,7 +163,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['client', '-i', 'lib/toyapi.dart']);
+          packagePath, ['client', '-i', join('lib', 'toyapi.dart')]);
       expect('[SUCCESS]'.allMatches(result.stdout).length, 1);
       expect(
           identicalFiles(libPath, 'toyapi.dart', 'expected_toyapi.dartt'),
@@ -172,9 +174,11 @@ main() {
   group('rpc-generator-failing', () {
     test('wrong-api-file', () {
       var packagePath = setupPackage();
+      var fileName =  join('lib', 'toyapi.dart');
       var result = runGenerator(
-          packagePath, ['discovery', '-i', 'lib/toyapi.dart']);
-      expect(result.stdout, 'Cannot find API file \'lib/toyapi.dart\'\n');
+          packagePath, ['discovery', '-i', fileName]);
+      expect(result.stdout.startsWith('Cannot find API file \'$fileName\''),
+          isTrue);
     });
 
     test('no-pub-spec', () {
@@ -183,8 +187,8 @@ main() {
       var rpcExamplePath = join(rpcRootPath, 'example');
       copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
       var result = runGenerator(
-          packagePath, ['client', '-i', 'lib/toyapi.dart']);
-      expect(result.stdout.contains('must be in a valid package.\n'), isTrue);
+          packagePath, ['client', '-i', join('lib', 'toyapi.dart')]);
+      expect(result.stdout.contains('must be in a valid package.'), isTrue);
     });
 
     test('no-pub-get', () {
@@ -193,10 +197,9 @@ main() {
       var rpcExamplePath = join(rpcRootPath, 'example');
       copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
       var result = runGenerator(
-          packagePath, ['client', '-i', 'lib/toyapi.dart']);
-      expect(result.stdout,
-             'Please run \'pub get\' in your API package before running the '
-             'generator.\n');
+          packagePath, ['client', '-i', join('lib', 'toyapi.dart')]);
+      expect(result.stdout.startsWith('Please run \'pub get\' in your API '
+          'package before running the generator.'), isTrue);
     });
 
     test('no-default-constructor', () {
@@ -211,11 +214,12 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['client', '-i', 'lib/noDefaultConstructorApi.dart']);
-      expect(result.stdout,
-          'Failed to create an instance of the API class '
-          '\'NoDefaultConstructorApi\'. For the generator to work the class '
-          'must have a working default constructor taking no arguments.\n');
+          packagePath,
+          ['client', '-i', join('lib', 'noDefaultConstructorApi.dart')]);
+      expect(result.stdout.startsWith('Failed to create an instance of the '
+          'API class \'NoDefaultConstructorApi\'. For the generator to work '
+          'the class must have a working default constructor taking no '
+          'arguments.'), isTrue);
     });
   });
 }

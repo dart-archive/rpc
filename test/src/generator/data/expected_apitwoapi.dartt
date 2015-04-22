@@ -85,7 +85,6 @@ class ApiTwoApi {
       throw new core.ArgumentError("Parameter age is required.");
     }
 
-
     _url = 'apitwo/' + commons.Escaper.ecapeVariable('$name') + '/age/' + commons.Escaper.ecapeVariable('$age');
 
     var _response = _requester.request(_url,
@@ -123,7 +122,6 @@ class ApiTwoApi {
       _body = convert.JSON.encode(ApiTwoRequestFactory.toJson(request));
     }
 
-
     _url = 'apitwo/put';
 
     var _response = _requester.request(_url,
@@ -154,7 +152,6 @@ class ApiTwoApi {
     var _uploadOptions = null;
     var _downloadOptions = commons.DownloadOptions.Metadata;
     var _body = null;
-
 
 
     _url = 'apitwo';
@@ -203,7 +200,6 @@ class AResourceResourceApi {
       throw new core.ArgumentError("Parameter name is required.");
     }
 
-
     _url = 'apitwo/resource/' + commons.Escaper.ecapeVariable('$name');
 
     var _response = _requester.request(_url,
@@ -244,7 +240,6 @@ class ApiTwoRequestFactory {
   }
 }
 
-
 class ApiTwoResponseFactory {
   static ApiTwoResponse fromJson(core.Map _json) {
     var message = new ApiTwoResponse();
@@ -262,5 +257,4 @@ class ApiTwoResponseFactory {
     return _json;
   }
 }
-
 

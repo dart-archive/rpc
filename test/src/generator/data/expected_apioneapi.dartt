@@ -51,7 +51,6 @@ class ApiOneApi {
       throw new core.ArgumentError("Parameter age is required.");
     }
 
-
     _url = 'apione/' + commons.Escaper.ecapeVariable('$name') + '/age/' + commons.Escaper.ecapeVariable('$age');
 
     var _response = _requester.request(_url,
@@ -89,7 +88,6 @@ class ApiOneApi {
       _body = convert.JSON.encode(ApiOneRequestFactory.toJson(request));
     }
 
-
     _url = 'apione/post';
 
     var _response = _requester.request(_url,
@@ -120,7 +118,6 @@ class ApiOneApi {
     var _uploadOptions = null;
     var _downloadOptions = commons.DownloadOptions.Metadata;
     var _body = null;
-
 
 
     _url = 'apione';
@@ -163,7 +160,6 @@ class ApiOneRequestFactory {
   }
 }
 
-
 class ApiOneResponseFactory {
   static ApiOneResponse fromJson(core.Map _json) {
     var message = new ApiOneResponse();
@@ -181,5 +177,4 @@ class ApiOneResponseFactory {
     return _json;
   }
 }
-
 

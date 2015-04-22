@@ -104,7 +104,7 @@ main(List<String> arguments) async {
       print('Cannot find API file \'$apiFilePath\'');
       exit(1);
     }
-    apiFilePath = apiFile.absolute.path;
+    apiFilePath = absolute(apiFile.path);
     var apiPort = int.parse(commandOptions['port']);
     var apiPrefix = commandOptions['api-prefix'];
     // Strip out leading and ending '/'.
@@ -146,13 +146,11 @@ String _clientDirectory(String apiFilePath, String clientDirectoryPath) {
     print('API file \'$apiFilePath\' must be within a package.');
     exit(1);
   }
-  return packagePath + '/lib/client';
+  return join(packagePath, 'lib', 'client');
 }
 
 /// Class used to both generate client stub code as well as Discovery Documents.
 class ClientApiGenerator {
-  static final String _slash = Platform.pathSeparator;
-
   final int _apiPort;
   final String _apiPrefix;
   String _apiFilePath;
@@ -163,7 +161,7 @@ class ClientApiGenerator {
     if (!apiFile.existsSync()) {
       throw new GeneratorException('Could not find file: $dartFilePath');
     }
-    _apiFilePath = 'file://${apiFile.absolute.path}';
+    _apiFilePath = toUri(absolute(apiFile.path)).toString();
 
     // Find the package directory from where to serve the packages used by the
     // toplevel API class.
@@ -263,7 +261,7 @@ class ClientApiGenerator {
       var sendPort = message;
       // Find the library for which to generate a client or Discovery Document.
       String apiFilePath = args[0];
-      var lm = currentMirrorSystem().libraries[Uri.parse('\$apiFilePath')];
+      var lm = currentMirrorSystem().libraries[Uri.parse(apiFilePath)];
       if (lm == null) {
         print('Could not find a Dart library for the given input file '
               '\\'\$apiFilePath\\'. The given file must be a Dart library');

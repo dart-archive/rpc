@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Fix windows path handling in the generate script.
+
 ## 0.4.0
 
 - API method context with the request uri and request headers
