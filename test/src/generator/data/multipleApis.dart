@@ -4,7 +4,7 @@
 
 library multipleapis;
 
-import 'package:rpc/annotations.dart';
+import 'package:rpc/src/annotations.dart';
 import 'multipleApisMessages.dart';
 import 'multipleApisResources.dart';
 

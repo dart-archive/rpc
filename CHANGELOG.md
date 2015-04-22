@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- API method context with the request uri and request headers
+- Change HttpApiRequest to take the requested URI instead of path and query
+  parameters.
+- Change RpcError's msg and code fields to message and statusCode
+- Added api.dart file for use in common code shared between server and client
+
 ## 0.3.0 
 
 - Adding support for generating Discovery Documents without running the server

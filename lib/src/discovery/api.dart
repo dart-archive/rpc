@@ -6,6 +6,7 @@ library discovery.api;
 
 import 'config.dart';
 
+import 'package:rpc/api.dart';
 import 'package:rpc/rpc.dart';
 
 const _API_NAME = 'discovery';
@@ -16,10 +17,7 @@ class DiscoveryApi {
   @ApiResource(name: 'apis')
   final DiscoveryResource apis;
 
-  factory DiscoveryApi(ApiServer server, String baseUrl, String apiPrefix) {
-    if (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-    }
+  factory DiscoveryApi(ApiServer server, String apiPrefix) {
     if (apiPrefix == null) {
       apiPrefix = '';
     }
@@ -29,7 +27,7 @@ class DiscoveryApi {
     if (apiPrefix.endsWith('/')) {
       apiPrefix = apiPrefix.substring(0, apiPrefix.length - 1);
     }
-    var apis = new DiscoveryResource(server, baseUrl, apiPrefix);
+    var apis = new DiscoveryResource(server, apiPrefix);
     return new DiscoveryApi._(apis);
   }
 
@@ -38,23 +36,22 @@ class DiscoveryApi {
 
 class DiscoveryResource {
   final ApiServer _server;
-  final String _baseUrl;
   final String _apiPrefix;
 
-  DiscoveryResource(this._server, this._baseUrl, this._apiPrefix);
+  DiscoveryResource(this._server, this._apiPrefix);
 
   @ApiMethod(path: 'apis/{api}/{version}/rest',
              description:
                'Retrieve the description of a particular version of an api.')
-  RestDescription getRest(String api, String version) =>
-      _server.getDiscoveryDocument('/$api/$version');
+  RestDescription getRest(String api, String version) {
+    return _server.getDiscoveryDocument(context.baseUrl, '/$api/$version');
+  }
 
   // TODO: support the query string parameters
   @ApiMethod(path: 'apis', //?name={name}&preferred={value}
              description:
                'Retrieve the list of APIs supported at this endpoint.')
   DirectoryList list() {
-    assert(!_baseUrl.endsWith('/'));
     assert(_apiPrefix.isEmpty || _apiPrefix.startsWith('/'));
     assert(!_apiPrefix.endsWith('/'));
     var apiDirectory = _server.getDiscoveryDirectory();
@@ -62,7 +59,7 @@ class DiscoveryResource {
       // Update each item with the discovery url and path.
       var path = '$_apiPrefix/$_API_NAME/$_API_VERSION/apis/${item.name}/'
                  '${item.version}/rest';
-      item..discoveryRestUrl = '$_baseUrl$path'
+      item..discoveryRestUrl = '${context.baseUrl}$path'
           ..discoveryLink = '.$path';
     });
     return new DirectoryList()

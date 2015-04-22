@@ -4,7 +4,7 @@
 
 library no_default_constructor_api;
 
-import 'package:rpc/annotations.dart';
+import 'package:rpc/src/annotations.dart';
 
 @ApiClass(version: '0.1')
 class NoDefaultConstructorApi {

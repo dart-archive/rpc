@@ -45,8 +45,7 @@ class ApiServer {
           apiResponse = new HttpApiResponse.error(io.HttpStatus.NOT_IMPLEMENTED,
               'Invalid request for path: ${request.uri.path}', null, null);
         } else {
-          var apiRequest =
-              new HttpApiRequest.fromHttpRequest(request, _apiPrefix);
+          var apiRequest = new HttpApiRequest.fromHttpRequest(request);
           apiResponse = await handleHttpApiRequest(apiRequest);
         }
       } catch (error, stack) {
@@ -102,7 +101,8 @@ class ApiServer {
     try {
       // Parse the request to compute some of the values needed to determine
       // which method to invoke.
-      var parsedRequest = new ParsedHttpApiRequest(request, _jsonToBytes);
+      var parsedRequest =
+          new ParsedHttpApiRequest(request, _apiPrefix, _jsonToBytes);
 
       // The api key is the first two path segments.
       ApiConfig api = _apis[parsedRequest.apiKey];
@@ -112,7 +112,7 @@ class ApiServer {
       }
       drain = false;
       rpcLogger.info('Invoking API: ${parsedRequest.apiKey} with HTTP method: '
-                     '${request.httpMethod} on path: ${request.path}.');
+                     '${request.httpMethod} on url: ${request.uri}.');
       if  (parsedRequest.isOptions) {
         response = await api.handleHttpOptionsRequest(parsedRequest);
       } else {
@@ -134,23 +134,23 @@ class ApiServer {
     return response;
   }
 
-  void enableDiscoveryApi(String baseUrl) {
-    _baseUrl = baseUrl;
-    _discoveryApiKey = addApi(new DiscoveryApi(this, baseUrl, _apiPrefix));
-    rpcLogger.info('Enabling Discovery API Service for server: $_baseUrl');
+  void enableDiscoveryApi() {
+    apis.forEach((api) =>
+        rpcLogger.info('Enabling Discovery API Service for api: $api'));
+    _discoveryApiKey = addApi(new DiscoveryApi(this, _apiPrefix));
   }
 
   void disableDiscoveryApi() {
-    rpcLogger.info('Diabling Discovery API Service for server: $_baseUrl');
     _apis.remove(_discoveryApiKey);
-    _baseUrl = null;
+    apis.forEach((api) =>
+        rpcLogger.info('Disabling Discovery API Service for api: $api'));
     _discoveryApiKey = null;
   }
 
   /// Returns a list containing all Discovery directory items listing
   /// information about the APIs available at this API server.
   List<DirectoryListItems> getDiscoveryDirectory() {
-    if (_baseUrl == null) {
+    if (_discoveryApiKey == null) {
       // The Discovery API has not been enabled for this ApiServer.
       throw new BadRequestError('Discovery API not enabled.');
     }
@@ -160,8 +160,8 @@ class ApiServer {
   }
 
   /// Returns the discovery document matching the given api key.
-  RestDescription getDiscoveryDocument(String apiKey) {
-    if (_baseUrl == null) {
+  RestDescription getDiscoveryDocument(String baseUrl, String apiKey) {
+    if (_discoveryApiKey == null) {
       // The Discovery API has not been enabled for this ApiServer.
       throw new BadRequestError('Discovery API not enabled.');
     }
@@ -169,7 +169,7 @@ class ApiServer {
     if (api == null) {
       throw new NotFoundError('Discovery API \'$apiKey\' not found.');
     }
-    return api.generateDiscoveryDocument(_baseUrl, _apiPrefix);
+    return api.generateDiscoveryDocument(baseUrl, _apiPrefix);
   }
 }
 

@@ -169,12 +169,12 @@ class PutAPI {
 
 main() {
   ApiServer _apiServer = new ApiServer(apiPrefix: '', prettyPrint: true);
-  _apiServer.enableDiscoveryApi('base-url');
+  _apiServer.enableDiscoveryApi();
   _apiServer.addApi(new TestAPI());
 
   Future<HttpApiResponse> _sendRequest(String method, String path,
       {String api: 'testAPI/v1/', extraHeaders: const {},
-       Map<String, String> query: const {}, body}) {
+       String query: '', body}) {
     var headers = {'content-type': 'application/json'};
     headers.addAll(extraHeaders);
     var bodyStream;
@@ -183,8 +183,10 @@ main() {
     } else {
       bodyStream = new Stream.fromIterable([]);
     }
+    assert(query.isEmpty || query.startsWith('?'));
+    Uri uri = Uri.parse('http://server/$api$path$query');
     path = '$api$path';
-    var request = new HttpApiRequest(method, path, query, headers, bodyStream);
+    var request = new HttpApiRequest(method, uri, headers, bodyStream);
     return _apiServer.handleHttpApiRequest(request);
   }
 
@@ -222,7 +224,7 @@ main() {
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello Ghost'});
       response =
-          await _sendRequest('GET', 'get/hello', query: {'name': 'John'});
+          await _sendRequest('GET', 'get/hello', query: '?name=John');
       expect(response.status, HttpStatus.OK);
       result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
@@ -408,7 +410,8 @@ main() {
             'id': 'discovery:v1',
             'name': 'discovery',
             'version': 'v1',
-            'discoveryRestUrl': 'base-url/discovery/v1/apis/discovery/v1/rest',
+            'discoveryRestUrl':
+              'http://server/discovery/v1/apis/discovery/v1/rest',
             'discoveryLink': './discovery/v1/apis/discovery/v1/rest',
             'preferred': true
           },
@@ -417,7 +420,8 @@ main() {
             'id': 'testAPI:v1',
             'name': 'testAPI',
             'version': 'v1',
-            'discoveryRestUrl': 'base-url/discovery/v1/apis/testAPI/v1/rest',
+            'discoveryRestUrl':
+              'http://server/discovery/v1/apis/testAPI/v1/rest',
             'discoveryLink': './discovery/v1/apis/testAPI/v1/rest',
             'preferred': true
           }
@@ -432,16 +436,16 @@ main() {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'f93526382047642f69394f46cd9015d91da3f5c2',
+        'etag': '41460d700e8e913af5f76e511e0b2373427103e2',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
         'version': 'v1',
         'revision': '0',
         'protocol': 'rest',
-        'baseUrl': 'base-url/testAPI/v1/',
+        'baseUrl': 'http://server/testAPI/v1/',
         'basePath': '/testAPI/v1/',
-        'rootUrl': 'base-url/',
+        'rootUrl': 'http://server/',
         'servicePath': 'testAPI/v1/',
         'parameters': {},
         'schemas': {

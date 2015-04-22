@@ -9,8 +9,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:mirrors';
 import 'package:crypto/crypto.dart';
+import 'package:gcloud/service_scope.dart' as ss;
 import 'package:uri/uri.dart';
 
+import 'context.dart';
 import 'errors.dart';
 import 'message.dart';
 import 'utils.dart';
@@ -54,20 +56,33 @@ class ParsedHttpApiRequest {
   // A map from path parameter name to path parameter value.
   Map<String, String> pathParameters;
 
-  factory ParsedHttpApiRequest(HttpApiRequest request,
+  factory ParsedHttpApiRequest(HttpApiRequest request, String apiPrefix,
                                Converter<Object, dynamic> jsonToBytes) {
-    var path = request.path;
-    if (path.startsWith('/')) {
-      path = path.substring(1);
+    var path = request.uri.path;
+    // Get rid of any double '//' in path.
+    while (path.contains('//')) path = path.replaceAll('//', '/');
+
+    if (!path.startsWith('/')) {
+      path = '/$path';
     }
+    if (!apiPrefix.startsWith('/')) {
+      apiPrefix = '/$apiPrefix';
+    }
+    if (!apiPrefix.endsWith('/')) {
+      apiPrefix = '$apiPrefix/';
+    }
+    // Remove the api prefix plus the following '/'.
+    assert(path.startsWith(apiPrefix));
+    path = path.substring(apiPrefix.length);
+
     var pathSegments = path.split('/');
     // All HTTP api request paths must be of the form:
     //   /<apiName>/<apiVersion>/<method|resourceName>[/...].
     // Hence the number of path segments must be at least three for a valid
-    // request.
+    // request (apiPrefix could be empty).
     if (pathSegments.length < 3) {
       throw new BadRequestError(
-          'Invalid request, missing API name and ' 'version: ${request.path}.');
+          'Invalid request, missing API name and/or version: ${request.uri}.');
     }
     var apiKey = '/${pathSegments[0]}/${pathSegments[1]}';
     var methodPathSegments = pathSegments.skip(2);
@@ -83,9 +98,10 @@ class ParsedHttpApiRequest {
 
   String get httpMethod => originalRequest.httpMethod;
 
-  String get path => originalRequest.path;
+  String get path => originalRequest.uri.path;
 
-  Map<String, String> get queryParameters => originalRequest.queryParameters;
+  Map<String, String> get queryParameters =>
+      originalRequest.uri.queryParameters;
 
   Map<String, dynamic> get headers => originalRequest.headers;
 

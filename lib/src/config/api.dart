@@ -35,7 +35,7 @@ class ApiConfig extends ApiConfigResource {
     }
     return httpErrorResponse(request.originalRequest, new NotFoundError(
         'No method found matching HTTP method: ${request.httpMethod} '
-        'and method url path: ${request.path}.'));
+        'and url: ${request.path}.'));
   }
 
   Future<HttpApiResponse> handleHttpOptionsRequest(

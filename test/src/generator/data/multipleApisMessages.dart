@@ -4,7 +4,7 @@
 
 library multipleapis_messages;
 
-import 'package:rpc/annotations.dart';
+import 'package:rpc/src/annotations.dart';
 
 class ApiOneResponse {
   String result;

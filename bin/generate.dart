@@ -107,6 +107,8 @@ main(List<String> arguments) async {
     apiFilePath = apiFile.absolute.path;
     var apiPort = int.parse(commandOptions['port']);
     var apiPrefix = commandOptions['api-prefix'];
+    // Strip out leading and ending '/'.
+    apiPrefix = apiPrefix == null ? '' : apiPrefix.replaceAll('/', '');
     var generator = new ClientApiGenerator(apiFilePath, apiPort, apiPrefix);
     var results;
     switch (commandOptions.name) {
@@ -273,7 +275,7 @@ class ClientApiGenerator {
       var result;
       String cmd = args[1];
       int apiPort = args[2];
-      String apiPrefix = args[3];
+      String apiPrefix = args[3] == null ? '' : args[3];
       try {
         if (cmd == 'discoveryWithImports') {
           result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
@@ -339,13 +341,14 @@ class ClientApiGenerator {
                                      String apiPrefix) async {
       // Create an ApiServer to use for generating the Discovery Document.
       var server = new ApiServer(apiPrefix: apiPrefix, prettyPrint: true)
-          ..enableDiscoveryApi('http://localhost:\$apiPort')
+          ..enableDiscoveryApi()
           ..addApi(apiInstance);
       List<String> apis = server.apis;
       assert(apis.length == 2);
+      var path = '\$apiPrefix/discovery/v1/apis\${apis[1]}/rest';
+      Uri uri = Uri.parse('http://localhost:\$apiPort/\$path');
       var request =
-          new HttpApiRequest('GET', 'discovery/v1/apis\${apis[1]}/rest',
-                             {}, {}, new Stream.fromIterable([]));
+          new HttpApiRequest('GET', uri, {}, new Stream.fromIterable([]));
       HttpApiResponse response = await server.handleHttpApiRequest(request);
       return response.body.transform(UTF8.decoder).join('');
     }

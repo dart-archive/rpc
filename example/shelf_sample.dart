@@ -36,11 +36,7 @@ Future main() async {
       .addHandler(apiRouter.handler);
 
   var server = await shelf_io.serve(handler, '0.0.0.0', 8080);
-  // TODO: Figure out a better way to determine the server ip.
-  // E.g. set it on the first request. '${server.address.host}:${server.port}'
-  // return 0.0.0.0:8080 which is not useful.
-  var url = 'http://localhost:8080/';
-  _apiServer.enableDiscoveryApi(url);
+  _apiServer.enableDiscoveryApi();
   print('Listening at port ${server.port}.');
 }
 
@@ -50,8 +46,7 @@ Future main() async {
 Future<shelf.Response> _apiHandler(shelf.Request request) async {
   try {
     var apiRequest =
-        new HttpApiRequest(request.method, request.url.path,
-                           request.url.queryParameters,
+        new HttpApiRequest(request.method, request.requestedUri,
                            request.headers, request.read());
     var apiResponse = await _apiServer.handleHttpApiRequest(apiRequest);
     return new shelf.Response(apiResponse.status, body: apiResponse.body,

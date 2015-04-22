@@ -185,7 +185,14 @@ class ApiConfigMethod {
     await request.body.drain();
     logRequest(request, null);
     logMethodInvocation(symbol, positionalParams, namedParams);
-    return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+    var result = await ss.fork(() async {
+      // Setting up the context accessible within the method being invoked.
+      ss.register(INVOCATION_CONTEXT,
+          new InvocationContext(request.headers, request.originalRequest.uri));
+
+      return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+    });
+    return result;
   }
 
   Future<dynamic> invokeWithBody(ParsedHttpApiRequest request,
@@ -221,6 +228,13 @@ class ApiConfigMethod {
       }
     }
     logMethodInvocation(symbol, positionalParams, namedParams);
-    return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+    var result = await ss.fork(() async {
+      // Setting up the context accessible within the method being invoked.
+      ss.register(INVOCATION_CONTEXT,
+          new InvocationContext(request.headers, request.originalRequest.uri));
+
+      return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
+    });
+    return result;
   }
 }
