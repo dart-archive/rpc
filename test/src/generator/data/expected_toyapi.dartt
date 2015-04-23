@@ -31,7 +31,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future failing() {
     var _url = null;
@@ -65,7 +65,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> hello() {
     var _url = null;
@@ -99,7 +99,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.Map<core.String, ToyResponse>> helloListOfClass(core.List<ToyRequest> request) {
     var _url = null;
@@ -136,7 +136,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.Map<core.String, ToyResponse>> helloListOfListOfClass(core.List<core.List<ToyRequest>> request) {
     var _url = null;
@@ -173,7 +173,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.Map<core.String, core.int>> helloMap(core.Map<core.String, core.int> request) {
     var _url = null;
@@ -212,7 +212,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> helloNameAge(core.String name, core.int age) {
     var _url = null;
@@ -254,7 +254,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> helloNamePostAge(ToyAgeRequest request, core.String name) {
     var _url = null;
@@ -298,7 +298,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> helloNameQueryAgeFoo(core.String name, {core.String foo, core.int age}) {
     var _url = null;
@@ -341,7 +341,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.List<core.List<core.String>>> helloNestedListList(core.List<core.List<core.int>> request) {
     var _url = null;
@@ -379,7 +379,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.List<core.Map<core.String, core.List<core.String>>>> helloNestedListMapList(core.List<core.Map<core.String, core.List<core.int>>> request) {
     var _url = null;
@@ -414,7 +414,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyMapResponse> helloNestedMap() {
     var _url = null;
@@ -449,7 +449,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.Map<core.String, core.List<core.Map<core.String, core.bool>>>> helloNestedMapListMap(core.Map<core.String, core.List<core.Map<core.String, core.int>>> request) {
     var _url = null;
@@ -486,7 +486,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.Map<core.String, core.Map<core.String, core.bool>>> helloNestedMapMap(core.Map<core.String, core.Map<core.String, core.int>> request) {
     var _url = null;
@@ -523,7 +523,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> helloPost(ToyRequest request) {
     var _url = null;
@@ -558,7 +558,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> helloReturnNull() {
     var _url = null;
@@ -590,7 +590,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResponse> helloVoid() {
     var _url = null;
@@ -620,7 +620,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future noop() {
     var _url = null;
@@ -656,7 +656,7 @@ class ToyApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<core.List<core.String>> reverseList(core.List<core.String> request) {
     var _url = null;
@@ -704,7 +704,7 @@ class ComputeResourceApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResourceResponse> get(core.String resource, core.String compute) {
     var _url = null;
@@ -755,7 +755,7 @@ class StorageResourceApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ToyResourceResponse> get(core.String resource, core.String storage) {
     var _url = null;

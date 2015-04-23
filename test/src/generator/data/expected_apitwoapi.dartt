@@ -30,7 +30,7 @@ class ApiTwoApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future apiTwoDelete() {
     var _url = null;
@@ -68,7 +68,7 @@ class ApiTwoApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiTwoResponse> apiTwoGetWithParams(core.String name, core.int age) {
     var _url = null;
@@ -108,7 +108,7 @@ class ApiTwoApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiTwoResponse> apiTwoPut(ApiTwoRequest request) {
     var _url = null;
@@ -143,7 +143,7 @@ class ApiTwoApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiTwoResponse> hello() {
     var _url = null;
@@ -186,7 +186,7 @@ class AResourceResourceApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiTwoResponse> apiTwoGetWithParams(core.String name) {
     var _url = null;

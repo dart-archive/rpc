@@ -34,7 +34,7 @@ class ApiOneApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiOneResponse> apiOneGetWithParams(core.String name, core.int age) {
     var _url = null;
@@ -74,7 +74,7 @@ class ApiOneApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiOneResponse> apiOnePost(ApiOneRequest request) {
     var _url = null;
@@ -109,7 +109,7 @@ class ApiOneApi {
    * error.
    *
    * If the used [http.Client] completes with an error when making a REST call,
-   * this method  will complete with the same error.
+   * this method will complete with the same error.
    */
   async.Future<ApiOneResponse> hello() {
     var _url = null;
