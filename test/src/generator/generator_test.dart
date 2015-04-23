@@ -102,7 +102,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['discovery', '-i', join('lib', 'multipleApis.dart')]);
+          packagePath, ['discovery', '-i', join(libPath, 'multipleApis.dart')]);
       var expectedDiscovery =
           new File(join(dataPath, 'expected_multiple_discovery.json'));
       expect(result.stdout, expectedDiscovery.readAsStringSync());
@@ -122,7 +122,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['client', '-i', join('lib', 'multipleApis.dart')]);
+          packagePath, ['client', '-i', join(libPath, 'multipleApis.dart')]);
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
       expect(
           identicalFiles(libPath, 'apioneapi.dart',
@@ -147,7 +147,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['discovery', '-i', join('lib', 'toyapi.dart')]);
+          packagePath, ['discovery', '-i', join(libPath, 'toyapi.dart')]);
       var expectedDiscovery =
           new File(join(dataPath, 'expected_toy_discovery.json'));
       expect(result.stdout, expectedDiscovery.readAsStringSync());
@@ -166,7 +166,7 @@ main() {
       }
       expect(result.exitCode, 0);
       result = runGenerator(
-          packagePath, ['client', '-i', join('lib', 'toyapi.dart')]);
+          packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       expect('[SUCCESS]'.allMatches(result.stdout).length, 1);
       expect(
           identicalFiles(libPath, 'toyapi.dart', 'expected_toyapi.dartt'),
@@ -177,7 +177,7 @@ main() {
   group('rpc-generator-failing', () {
     test('wrong-api-file', () {
       var packagePath = setupPackage();
-      var fileName =  join('lib', 'toyapi.dart');
+      var fileName =  join(packagePath, 'lib', 'toyapi.dart');
       var result = runGenerator(
           packagePath, ['discovery', '-i', fileName]);
       expect(result.stdout.startsWith('Cannot find API file \'$fileName\''),
@@ -190,7 +190,7 @@ main() {
       var rpcExamplePath = join(rpcRootPath, 'example');
       copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
       var result = runGenerator(
-          packagePath, ['client', '-i', join('lib', 'toyapi.dart')]);
+          packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       expect(result.stdout.contains('must be in a valid package.'), isTrue);
     });
 
@@ -200,7 +200,7 @@ main() {
       var rpcExamplePath = join(rpcRootPath, 'example');
       copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
       var result = runGenerator(
-          packagePath, ['client', '-i', join('lib', 'toyapi.dart')]);
+          packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       expect(result.stdout.startsWith('Please run \'pub get\' in your API '
           'package before running the generator.'), isTrue);
     });
