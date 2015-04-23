@@ -31,6 +31,9 @@ main() {
   var config = new GeneratorTestConfiguration();
   unittestConfiguration = config;
   var rpcRootPath = findPackageRoot('.');
+  if (rpcRootPath == null && Platform.packageRoot != null) {
+    rpcRootPath = findPackageRoot(Platform.packageRoot);
+  }
   // Common path to the necessary test data.
   var dataPath = join(rpcRootPath, 'test', 'src', 'generator', 'data');
 
