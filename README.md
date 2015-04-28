@@ -20,7 +20,7 @@ create an API and in the following sections a more elaborate description follows
 of how to build the API and setup an API server.
 
 ```dart
-@ApiClass(version: 'v1', description: 'My Dart server side API' /* optional */)
+@ApiClass(version: 'v1')
 class Cloud {
   @ApiMethod(method: 'GET', path: 'resource/{name}')
   ResourceMessage getResource(String name) {
@@ -61,9 +61,8 @@ We use the following concepts below when describing how to build your API.
 version. The top-level class is defined via the `ApiClass` annotation.
 - Resource - Resources are used to group methods together for a cleaner API
 structure. Class fields annotated with `@ApiResource` are exposed as resources. 
-- Method - Methods are what's invoked!! They specify how to route requests and
-the valid parameters and the response. Only methods annotated with the
-`ApiMethod` annotation are exposed. 
+- Method - Methods are what can be invoked. Only methods annotated with
+@ApiMethod are exposed as remotely accessible methods.
 - Schema - Schemas are used to describe response and the request messages
 passed in the body of the HTTP request.
 - Properties - A schema contains properties. Each property can optionally be
@@ -160,8 +159,8 @@ corresponding to the generated Discovery Document schema.
 Method parameters can be passed in three different ways.
 
 - As a path parameter in the method path (supported on all HTTP methods)
-- As a query string parameter (supported for GET)
-- As the request body (supported for POST or PUT)  
+- As a query string parameter (supported for GET and DELETE)
+- As the request body (supported for POST and PUT)
 
 Path parameters and the request body parameter are required. The query
 string parameters are optional named parameters.
@@ -324,11 +323,11 @@ E.g. to use `dart:io` you would do something like:
 
 ```dart
 
-final ApiServer _apiServer = new ApiServer('' /* empty api prefix */);
+final ApiServer _apiServer = new ApiServer();
 
 main() async {
   _apiServer.addApi(new Cloud());
-  HttpServer server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 9090);
+  HttpServer server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 8080);
   server.listen(_apiServer.httpRequestHandler);
 }
 
@@ -380,57 +379,74 @@ The JSON format for errors is:
 }      
 ```
 
-##### Calling the API
+##### Generating client stub code
 
-Once your API is deployed you can use the
-[Discovery API Client Generator](https://github.com/dart-lang/discoveryapis_generator)
-for Dart to generate client side libraries to access your API. Discovery
-Document generators for other languages can also be used to call
-your API from e.g Python or Java.
+Once your server API is written you can generate a Discovery Document describing
+the API and use it to generate a client stub library to call the server
+from your client.
 
-There are currently two ways to generate a client library. First you get the
-Discovery Document from the server.
+There a two ways to generate a Discovery Document from your server API.
+
+- Use the rpc:generate script to generate it from the commandline
+- Retrieve it from a running server instance
+
+Using the rpc:generate script you can generate a Discovery Document by running
+the script on the file where you put the class annotated with @ApiClass.
+Assuming your @ApiClass class is in a file 'lib/server/cloudapi.dart' you would
+write:
+
+```
+pub global activate rpc
+cd <your package directory>
+mkdir json
+pub global run rpc:generate discovery -i lib/server/cloudapi.dart > json/cloud.json
+```
+
+In order for the rpc:generate script to work the API class (@ApiClass class)
+must have a default constructor taking no required arguments.
+
+The other way to retrive a Discovery Document if from a running server instance.
+This requires the Discovery Service to be enabled. This is done by calling the
+'ApiServer.enableDiscoveryApi()' method on the ApiServer, see [Example](https://github.com/dart-lang/rpc/tree/master/example).
+for details.
+
+After enabling the Discovery Service deploy the server and download the
+Discovery Document. For example if we have the 'cloud' API from the above
+example the Discovery Document can be retrieved from the deployed server by:
 
 ```bash
 URL='https://your_app_server/discovery/v1/apis/cloud/v1/rest'
-mkdir input
-curl -o input/cloud.json $URL
+mkdir json
+curl -o json/cloud.json $URL
 ```
 
-Then you can either checkout the generator locally or add it as a dependency in
-your `pubspec.yaml`.
+Once you have the Discovery Document you can generate a client stub library using
+a Discovery Document client API generator. For Dart we have the
+[Discovery API Client Generator](https://github.com/dart-lang/discoveryapis_generator).
+Discovery Document generators for other languages can also be used to call
+your API from e.g Python or Java.
 
-###### Checking out the GitHub generator repository
+If you want to generate a standalone client library for calling your server do:
 
-```
-$ git clone https://github.com/dart-lang/discoveryapis_generator.git
-$ cd discoveryapis_generator
-$ pub get
-$ dart bin/generate.dart generate --input-dir=input --output-dir=output --package-name=cloud
-```
-
-You can then include the generated library in your own client project, or
-simply copy the generated dart file into your package and add the dependencies
-from the generated `pubspec.yaml` file to your client package's
-`pubspec.yaml`.
-
-###### Using a `pubspec.yaml` dependency to your project
-
-Edit your project's `pubspec.yaml` file to contain a dependency to the client
-generator. It should be sufficient to make it a `dev_dependency`.
-
-```
-dev_dependencies:
-  discovery_api_client_generator:
-    git:
-      url: https://github.com/dart-lang/discoveryapis_generator.git
-```
-Run the below commands within your project.
-
-```
-$ pub get
-$ pub run discovery_api_client_generator:generate generate --input-dir=input --output-dir=output --package-name=myapi
+```bash
+pub global activate discoveryapis_generator
+pub global run discoveryapis_generator:generate package -i json -o client
 ```
 
-The libraries can be used like any of the other Google Client API libraries,
+This will create a new Dart package with generated client stubs for calling each
+of your API methods. The generated library can be used like any of the other
+Google Client API libraries,
 [some samples here](https://github.com/dart-lang/googleapis_examples).
+
+If you want to generate a client stub code that should be integrates into an
+existing client you can instead do:
+
+```bash
+pub global activate discoveryapis_generator
+pub global run discoveryapis_generator:generate files -i json -o <path to existing client package>
+```
+
+This will just generate a file in the directory specified by the '-o' option. 
+NOTE: you might have to modify the existing client's pubspec.yaml file to 
+include the packages required by the generated client stub code.
+
