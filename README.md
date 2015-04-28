@@ -385,7 +385,7 @@ Once your server API is written you can generate a Discovery Document describing
 the API and use it to generate a client stub library to call the server
 from your client.
 
-There a two ways to generate a Discovery Document from your server API.
+There are two ways to generate a Discovery Document from your server API.
 
 - Use the rpc:generate script to generate it from the commandline
 - Retrieve it from a running server instance
@@ -407,7 +407,7 @@ must have a default constructor taking no required arguments.
 
 The other way to retrive a Discovery Document if from a running server instance.
 This requires the Discovery Service to be enabled. This is done by calling the
-'ApiServer.enableDiscoveryApi()' method on the ApiServer, see [Example](https://github.com/dart-lang/rpc/tree/master/example).
+`ApiServer.enableDiscoveryApi()` method on the ApiServer, see [Example](https://github.com/dart-lang/rpc/tree/master/example).
 for details.
 
 After enabling the Discovery Service deploy the server and download the
@@ -420,8 +420,8 @@ mkdir json
 curl -o json/cloud.json $URL
 ```
 
-Once you have the Discovery Document you can generate a client stub library using
-a Discovery Document client API generator. For Dart we have the
+Once you have the Discovery Document you can generate a client stub library
+using a Discovery Document client API generator. For Dart we have the
 [Discovery API Client Generator](https://github.com/dart-lang/discoveryapis_generator).
 Discovery Document generators for other languages can also be used to call
 your API from e.g Python or Java.
@@ -438,7 +438,7 @@ of your API methods. The generated library can be used like any of the other
 Google Client API libraries,
 [some samples here](https://github.com/dart-lang/googleapis_examples).
 
-If you want to generate a client stub code that should be integrates into an
+If you want to generate a client stub code that should be integrated into an
 existing client you can instead do:
 
 ```bash
