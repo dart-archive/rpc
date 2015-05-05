@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Fix bug with handling OPTIONS request from Shelf.
+
 ## 0.4.1
 
 - Fix windows path handling in the generate script.
