@@ -707,8 +707,8 @@ main() {
   });
 
   group('api-invoke-options', () {
-    Map extraHeaders(List<String> methods) => {
-      'access-control-request-method': methods,
+    Map extraHeaders(List<String> methods, {bool asString: false}) => {
+      'access-control-request-method': asString ? methods.join(','): methods,
       'access-control-request-headers': 'content-type'
     };
 
@@ -723,17 +723,51 @@ main() {
       expect(response.headers[HttpHeaders.ALLOW], isNull);
     });
 
-    test('all', () async {
-      HttpApiResponse response = await _sendRequest(
-          'OPTIONS', 'get/simple',
-          extraHeaders: extraHeaders(['GET', 'POST', 'DELETE', 'PUT']));
-      expect(response.status, HttpStatus.OK);
-      expect(response.headers['access-control-allow-origin'], '*');
-      expect(response.headers['access-control-allow-credentials'], 'true');
-      expect(response.headers['access-control-allow-headers'],
-          'origin, x-requested-with, content-type, accept');
-      expect(response.headers['access-control-allow-methods'], ['GET']);
-      expect(response.headers[HttpHeaders.ALLOW], ['GET']);
+    test('invalid-all', () {
+      [true, false].forEach((methodsAsString) async {
+        HttpApiResponse response = await _sendRequest(
+            'OPTIONS', 'get/invalid',
+            extraHeaders: extraHeaders(['GET', 'DELETE', 'POST', 'PUT'],
+                                       asString: methodsAsString));
+        expect(response.status, HttpStatus.OK);
+        expect(response.headers['access-control-allow-origin'], '*');
+        expect(response.headers['access-control-allow-credentials'], 'true');
+        expect(response.headers['access-control-allow-headers'], isNull);
+        expect(response.headers['access-control-allow-methods'], isNull);
+        expect(response.headers[HttpHeaders.ALLOW], isNull);
+      });
+    });
+
+    test('all', () {
+      [true, false].forEach((methodsAsString) async {
+        HttpApiResponse response = await _sendRequest(
+            'OPTIONS', 'get/simple',
+            extraHeaders: extraHeaders(['GET', 'POST', 'DELETE', 'PUT'],
+                                       asString: methodsAsString));
+        expect(response.status, HttpStatus.OK);
+        expect(response.headers['access-control-allow-origin'], '*');
+        expect(response.headers['access-control-allow-credentials'], 'true');
+        expect(response.headers['access-control-allow-headers'],
+            'origin, x-requested-with, content-type, accept');
+        expect(response.headers['access-control-allow-methods'], ['GET']);
+        expect(response.headers[HttpHeaders.ALLOW], ['GET']);
+      });
+    });
+
+    test('all-post', () {
+      [true, false].forEach((methodsAsString) async {
+        HttpApiResponse response = await _sendRequest(
+            'OPTIONS', 'post/identity',
+            extraHeaders: extraHeaders(['GET', 'POST', 'DELETE', 'PUT'],
+                                       asString: methodsAsString));
+        expect(response.status, HttpStatus.OK);
+        expect(response.headers['access-control-allow-origin'], '*');
+        expect(response.headers['access-control-allow-credentials'], 'true');
+        expect(response.headers['access-control-allow-headers'],
+            'origin, x-requested-with, content-type, accept');
+        expect(response.headers['access-control-allow-methods'], ['POST']);
+        expect(response.headers[HttpHeaders.ALLOW], ['POST']);
+      });
     });
 
     test('get', () async {

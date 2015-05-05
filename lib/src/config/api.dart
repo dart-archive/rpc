@@ -42,11 +42,14 @@ class ApiConfig extends ApiConfigResource {
       ParsedHttpApiRequest request) async {
     var requestedHttpMethods = request.headers['access-control-request-method'];
     List<String> allowed = [];
+    if (requestedHttpMethods is String) {
+      requestedHttpMethods = requestedHttpMethods.split(',');
+    }
     assert('OPTIONS'.allMatches(request.methodKey).length == 1);
     if (requestedHttpMethods != null) {
-      requestedHttpMethods.forEach((httpMethod) {
+      requestedHttpMethods.forEach((String httpMethod) {
         var methodKey =
-            request.methodKey.replaceFirst('OPTIONS', httpMethod);
+            request.methodKey.replaceFirst('OPTIONS', httpMethod.trim());
         final List<ApiConfigMethod> methods = _methodMap[methodKey];
         if (methods != null) {
           for (var method in methods) {
