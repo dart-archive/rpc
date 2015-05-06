@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.3
+
+- Support constructors taking arguments for message classes used only for
+  responses (however not when generating client stubs inside existing
+  project).
+- Make sure we return header values as strings if passed as strings.
+
 ## 0.4.2
 
 - Fix bug with handling OPTIONS request from Shelf.
