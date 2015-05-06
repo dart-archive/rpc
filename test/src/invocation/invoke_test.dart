@@ -749,8 +749,10 @@ main() {
         expect(response.headers['access-control-allow-credentials'], 'true');
         expect(response.headers['access-control-allow-headers'],
             'origin, x-requested-with, content-type, accept');
-        expect(response.headers['access-control-allow-methods'], ['GET']);
-        expect(response.headers[HttpHeaders.ALLOW], ['GET']);
+        var expectedMethods = methodsAsString ? 'GET' : ['GET'];
+        expect(
+            response.headers['access-control-allow-methods'], expectedMethods);
+        expect(response.headers[HttpHeaders.ALLOW], expectedMethods);
       });
     });
 
@@ -765,8 +767,10 @@ main() {
         expect(response.headers['access-control-allow-credentials'], 'true');
         expect(response.headers['access-control-allow-headers'],
             'origin, x-requested-with, content-type, accept');
-        expect(response.headers['access-control-allow-methods'], ['POST']);
-        expect(response.headers[HttpHeaders.ALLOW], ['POST']);
+        var expectedMethods = methodsAsString ? 'POST' : ['POST'];
+        expect(
+            response.headers['access-control-allow-methods'], expectedMethods);
+        expect(response.headers[HttpHeaders.ALLOW], expectedMethods);
       });
     });
 

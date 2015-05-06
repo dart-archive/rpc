@@ -42,7 +42,11 @@ class ApiConfig extends ApiConfigResource {
       ParsedHttpApiRequest request) async {
     var requestedHttpMethods = request.headers['access-control-request-method'];
     List<String> allowed = [];
-    if (requestedHttpMethods is String) {
+    // If the header value is passed as a String we split the String into a List
+    // and make sure the returned values are Strings (see 'Create OPTIONS
+    // response' below).
+    bool valueAsString = requestedHttpMethods is String;
+    if (valueAsString) {
       requestedHttpMethods = requestedHttpMethods.split(',');
     }
     assert('OPTIONS'.allMatches(request.methodKey).length == 1);
@@ -65,8 +69,9 @@ class ApiConfig extends ApiConfigResource {
     // Create OPTIONS response.
     var headers = new Map.from(defaultResponseHeaders);
     if (allowed.isNotEmpty) {
-      headers[HttpHeaders.ALLOW] = allowed;
-      headers['access-control-allow-methods'] = allowed;
+      var allowedMethods = valueAsString ? allowed.join(',') : allowed;
+      headers[HttpHeaders.ALLOW] = allowedMethods;
+      headers['access-control-allow-methods'] = allowedMethods;
       headers['access-control-allow-headers'] =
         'origin, x-requested-with, content-type, accept';
     }
