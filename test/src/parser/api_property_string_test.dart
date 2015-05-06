@@ -44,14 +44,14 @@ class WrongString {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-string-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectString));
+          parser.parseSchema(reflectClass(CorrectString), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectString'], apiSchema);
@@ -83,7 +83,8 @@ void main() {
   group('api-string-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongString));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongString), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

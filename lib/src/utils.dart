@@ -34,7 +34,7 @@ final Logger rpcLogger = new Logger('rpc');
 
 // Used to generate the etag.
 final ApiConfigSchema discoveryDocSchema =
-    new ApiParser().parseSchema(reflectType(discovery.RestDescription));
+    new ApiParser().parseSchema(reflectType(discovery.RestDescription), false);
 
 // Utility method for creating an HTTP error response given an expcetion.
 // Optionally drains the request body.

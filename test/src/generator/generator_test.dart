@@ -116,7 +116,7 @@ main() {
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
 
-    test('multipleApis-client', () {
+    solo_test('multipleApis-client', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['multipleApis.dart',
@@ -134,6 +134,7 @@ main() {
         logMessage('Could not find dart. Skipping $currentTestCase!');
         return;
       }
+      print(result.stdout);
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
       checkFilesIdentical(
           libPath, 'apioneapi.dart', 'expected_apioneapi.dartt');

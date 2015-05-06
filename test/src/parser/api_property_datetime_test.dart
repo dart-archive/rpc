@@ -46,14 +46,14 @@ class WrongDateTime {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-datetime-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectDateTime));
+          parser.parseSchema(reflectClass(CorrectDateTime), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectDateTime'], apiSchema);
@@ -89,7 +89,7 @@ void main() {
     test('simple', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongDateTime));
+          parser.parseSchema(reflectClass(WrongDateTime), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

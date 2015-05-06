@@ -708,6 +708,9 @@ void main() {
         new ApiConfigError(
             'ListOfdynamic: ListOfdynamicProperty: Properties cannot be of '
             'type: \'dynamic\'.'),
+        new ApiConfigError(
+            'ListOfdynamic: ListOfdynamicProperty: Properties cannot be of '
+            'type: \'dynamic\'.'),
         new ApiConfigError('ListOfListOfdynamic: ListOfListOfdynamicProperty: '
             'Properties cannot be of type: \'dynamic\'.')
         ];
@@ -723,6 +726,9 @@ void main() {
             'MapOfdynamic: Maps must have keys of type \'String\'.'),
         new ApiConfigError(
             'MapOfdynamic: Maps must have keys of type \'String\'.'),
+        new ApiConfigError(
+            'MapOfdynamic: MapOfdynamicProperty: Properties cannot be of type: '
+            '\'dynamic\'.'),
         new ApiConfigError(
             'MapOfdynamic: MapOfdynamicProperty: Properties cannot be of type: '
             '\'dynamic\'.'),

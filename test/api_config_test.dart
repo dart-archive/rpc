@@ -592,7 +592,7 @@ void main() {
     group('misconfig', () {
       test('wrong_schema', () {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(WrongSchema1));
+        parser.parseSchema(reflectClass(WrongSchema1), true);
         var errors = [new ApiConfigError('WrongSchema1: Schema '
             '\'WrongSchema1\' must have an unnamed constructor taking no '
             'arguments.')];
@@ -600,7 +600,7 @@ void main() {
       });
       test('schema_with_conflicting_classes', () {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(WrongSchema2));
+        parser.parseSchema(reflectClass(WrongSchema2), true);
         var errors = [new ApiConfigError('TestMessage2: Schema '
             '\'messages2.TestMessage2\' has a name conflict with '
             '\'test_api.TestMessage2\'.')];
@@ -608,7 +608,7 @@ void main() {
       });
       test('schema_with_nested_conflicting_classes', () {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(WrongSchema3));
+        parser.parseSchema(reflectClass(WrongSchema3), true);
         var errors = [new ApiConfigError('TestMessage2: Schema '
             '\'messages2.TestMessage2\' has a name conflict with '
             '\'test_api.TestMessage2\'.')];
@@ -619,26 +619,26 @@ void main() {
     test('recursion', () {
       expect(new Future.sync(() {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage1));
+        parser.parseSchema(reflectClass(RecursiveMessage1), true);
       }), completes);
       expect(new Future.sync(() {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage2));
+        parser.parseSchema(reflectClass(RecursiveMessage2), true);
       }), completes);
       expect(new Future.sync(() {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage3));
+        parser.parseSchema(reflectClass(RecursiveMessage3), true);
       }), completes);
       expect(new Future.sync(() {
         var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage2));
-        parser.parseSchema(reflectClass(RecursiveMessage3));
+        parser.parseSchema(reflectClass(RecursiveMessage2), true);
+        parser.parseSchema(reflectClass(RecursiveMessage3), true);
       }), completes);
     });
 
     test('variants', () {
       var parser = new ApiParser();
-      var message = parser.parseSchema(reflectClass(TestMessage3));
+      var message = parser.parseSchema(reflectClass(TestMessage3), true);
       var instance = message.fromRequest(
           {'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
       expect(instance.count32, 1);
@@ -654,7 +654,7 @@ void main() {
 
     test('request-parsing', () {
       var parser = new ApiParser();
-      var m1 = parser.parseSchema(reflectClass(TestMessage1));
+      var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
       var instance = m1.fromRequest({'requiredValue': 10});
       expect(instance, new isInstanceOf<TestMessage1>());
       instance = m1.fromRequest({
@@ -701,7 +701,7 @@ void main() {
 
     test('request-parsing-map-list', () {
       var parser = new ApiParser();
-      var schema = parser.parseSchema(reflectClass(TestMessage5));
+      var schema = parser.parseSchema(reflectClass(TestMessage5), true);
       var jsonRequest ={
         'myStrings': ['foo', 'bar'],
         'listOfObjects' : [
@@ -724,13 +724,13 @@ void main() {
 
     test('required', () {
       var parser = new ApiParser();
-      var m1 = parser.parseSchema(reflectClass(TestMessage4));
+      var m1 = parser.parseSchema(reflectClass(TestMessage4), true);
       expect(() => m1.fromRequest({'requiredValue': 1}), returnsNormally);
     });
 
     test('bad-request-creation', () {
       var parser = new ApiParser();
-      var m1 = parser.parseSchema(reflectClass(TestMessage1));
+      var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
       var requests = [
         {'count': 'x'},
         {'date': 'x'},
@@ -754,7 +754,7 @@ void main() {
 
     test('missing-required', () {
       var parser = new ApiParser();
-      var m1 = parser.parseSchema(reflectClass(TestMessage4));
+      var m1 = parser.parseSchema(reflectClass(TestMessage4), true);
       var requests = [{}, {'count': 1}];
       requests.forEach((request) {
         expect(
@@ -766,7 +766,7 @@ void main() {
 
     test('response-creation', () {
       var parser = new ApiParser();
-      var m1 = parser.parseSchema(reflectClass(TestMessage1));
+      var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
       var instance = new TestMessage1();
       instance.count = 1;
       instance.message = 'message';

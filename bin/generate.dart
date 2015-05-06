@@ -305,9 +305,12 @@ class ClientApiGenerator {
         String document = await _generateDocument(api, apiPort, apiPrefix);
 
         // Compute map from schema (aka. message class) to Dart file location.
-        var parser = new ApiParser();
-        parser.parse(api);
-        assert(parser.isValid);
+        var parser = new ApiParser(strict: true);
+        var apiConfig = parser.parse(api);
+        if (!parser.isValid) {
+          throw \'RPC: Failed to parse API.\\n\\n\${apiConfig.apiKey}:\\n\' +
+                 parser.errors.join(\'\\n\') + \'\\n\';
+        }
         Map<String, String> importMap = {};
         parser.apiSchemas.forEach((name, schemaConfig) {
           importMap[name] =

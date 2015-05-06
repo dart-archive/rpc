@@ -10,9 +10,13 @@ class ApiConfigSchema {
   final String schemaName;
   final ClassMirror schemaClass;
   final Map<Symbol, ApiConfigSchemaProperty> _properties = {};
+  // This bool tells whether the schema is used as a request in which case it
+  // must have a zero-argument constructor in order for us to instantiate it
+  // using reflection.
+  final bool isUsedForRequest;
   bool propertiesInitialized = false;
 
-  ApiConfigSchema(this.schemaName, this.schemaClass);
+  ApiConfigSchema(this.schemaName, this.schemaClass, this.isUsedForRequest);
 
   // Helper to add properties. We use this to be able to create the schema
   // before having parsed its properties to detect cycles. However we don't
@@ -73,8 +77,8 @@ class ApiConfigSchema {
 class NamedListSchema extends ApiConfigSchema {
   ApiConfigSchemaProperty _itemsProperty;
 
-  NamedListSchema(String schemaName, ClassMirror schemaClass)
-      : super(schemaName, schemaClass);
+  NamedListSchema(String schemaName, ClassMirror schemaClass, bool isRequest)
+      : super(schemaName, schemaClass, isRequest);
 
   void initItemsProperty(ApiConfigSchemaProperty itemsProperty) {
     assert(_itemsProperty == null);
@@ -112,8 +116,8 @@ class NamedListSchema extends ApiConfigSchema {
 class NamedMapSchema extends ApiConfigSchema {
   ApiConfigSchemaProperty _additionalProperty;
 
-  NamedMapSchema(String schemaName, ClassMirror schemaClass)
-      : super(schemaName, schemaClass);
+  NamedMapSchema(String schemaName, ClassMirror schemaClass, bool isRequest)
+      : super(schemaName, schemaClass, isRequest);
 
   void initAdditionalProperty(ApiConfigSchemaProperty additionalProperty) {
     assert(_additionalProperty == null);

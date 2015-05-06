@@ -59,13 +59,14 @@ class WrongEnum {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-enum-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(CorrectEnum));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(CorrectEnum), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectEnum'], apiSchema);
@@ -114,7 +115,8 @@ void main() {
   group('api-enum-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongEnum));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongEnum), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

@@ -37,13 +37,14 @@ class WrongBool {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-bool-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(CorrectBool));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(CorrectBool), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectBool'], apiSchema);
@@ -68,7 +69,8 @@ void main() {
   group('api-bool-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongBool));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongBool), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

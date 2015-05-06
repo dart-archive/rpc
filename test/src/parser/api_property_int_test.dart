@@ -138,13 +138,14 @@ class WrongInt {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-integer-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(CorrectInt));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(CorrectInt), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectInt'], apiSchema);
@@ -205,7 +206,8 @@ void main() {
   group('api-integer-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongInt));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongInt), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError('WrongInt: anIntWithEnumValues: Invalid property '

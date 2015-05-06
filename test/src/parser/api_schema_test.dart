@@ -136,14 +136,14 @@ class WrongConflictingApi {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-schema-correct', () {
     test('simple', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectSimple));
+          parser.parseSchema(reflectClass(CorrectSimple), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectSimple'], apiSchema);
@@ -165,7 +165,7 @@ void main() {
     test('modifiers', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectModifiers));
+          parser.parseSchema(reflectClass(CorrectModifiers), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectModifiers'], apiSchema);
@@ -187,7 +187,7 @@ void main() {
     test('containers', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectContainers));
+          parser.parseSchema(reflectClass(CorrectContainers), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 2);
       expect(parser.apiSchemas['CorrectContainers'], apiSchema);
@@ -244,7 +244,7 @@ void main() {
     test('nested', () {
       var parser = new ApiParser();
       ApiConfigSchema correctNestedSchema =
-          parser.parseSchema(reflectClass(CorrectNested));
+          parser.parseSchema(reflectClass(CorrectNested), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 2);
       expect(parser.apiSchemas['CorrectNested'], correctNestedSchema);
@@ -273,7 +273,7 @@ void main() {
     test('recursive', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectRecursive));
+          parser.parseSchema(reflectClass(CorrectRecursive), true);
       expect(parser.isValid, isTrue);
       var json = jsonSchema.toResponse(apiSchema.asDiscovery);
       var expectedJson = {
@@ -290,7 +290,7 @@ void main() {
     test('indirect-recursive', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectIndirectRecursive));
+          parser.parseSchema(reflectClass(CorrectIndirectRecursive), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 2);
       var json = jsonSchema.toResponse(apiSchema.asDiscovery);
@@ -309,7 +309,8 @@ void main() {
   group('api-schema-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongSimple));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongSimple), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -330,7 +331,7 @@ void main() {
     test('containers', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongContainers));
+          parser.parseSchema(reflectClass(WrongContainers), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

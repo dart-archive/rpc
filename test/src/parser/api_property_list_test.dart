@@ -50,13 +50,14 @@ class WrongList {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-list-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(CorrectList));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(CorrectList), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 2);
       expect(parser.apiSchemas['CorrectList'], apiSchema);
@@ -93,7 +94,8 @@ void main() {
   group('api-list-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongList));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongList), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

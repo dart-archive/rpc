@@ -50,13 +50,14 @@ class WrongMap {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-map-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(CorrectMap));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(CorrectMap), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 2);
       expect(parser.apiSchemas['CorrectMap'], apiSchema);
@@ -99,7 +100,8 @@ void main() {
   group('api-map-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongMap));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongMap), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

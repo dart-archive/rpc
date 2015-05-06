@@ -52,14 +52,14 @@ class WrongClass {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-class-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectClass));
+          parser.parseSchema(reflectClass(CorrectClass), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 2);
       expect(parser.apiSchemas['CorrectClass'], apiSchema);
@@ -90,7 +90,8 @@ void main() {
   group('api-class-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongClass));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongClass), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

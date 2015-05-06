@@ -74,14 +74,14 @@ class WrongDouble {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema));
+    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-double-property-correct', () {
     test('simple', () {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(CorrectDouble));
+          parser.parseSchema(reflectClass(CorrectDouble), true);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectDouble'], apiSchema);
@@ -139,7 +139,8 @@ void main() {
   group('api-double-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema = parser.parseSchema(reflectClass(WrongDouble));
+      ApiConfigSchema apiSchema =
+          parser.parseSchema(reflectClass(WrongDouble), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
