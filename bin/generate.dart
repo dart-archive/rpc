@@ -176,6 +176,19 @@ class ClientApiGenerator {
           'Please run \'pub get\' in your API package before running the '
           'generator.');
     }
+
+    // Make a rudimentary check that this is not a file which is 'part of' a
+    // library. If so fail, asking the user to point it at the file with the
+    // `library` statement.
+    var partOfRegexp = new RegExp(r'\s*part\s*of\s*(\w*)');
+    apiFile.readAsLinesSync().forEach((String line) {
+      var matches = partOfRegexp.matchAsPrefix(line);
+      if (matches != null) {
+        throw new GeneratorException('Please use the file with the `library '
+            '${matches.group(1)};` statement as input file instead of the '
+            '`part of` file $dartFilePath.');
+      }
+    });
   }
 
   Future<List<String>> generateDiscovery() async {

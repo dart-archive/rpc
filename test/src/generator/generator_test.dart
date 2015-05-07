@@ -116,7 +116,7 @@ main() {
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
 
-    solo_test('multipleApis-client', () {
+    test('multipleApis-client', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['multipleApis.dart',
@@ -134,7 +134,6 @@ main() {
         logMessage('Could not find dart. Skipping $currentTestCase!');
         return;
       }
-      print(result.stdout);
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
       checkFilesIdentical(
           libPath, 'apioneapi.dart', 'expected_apioneapi.dartt');
@@ -198,6 +197,27 @@ main() {
       }
       expect(result.stdout.startsWith('Cannot find API file \'$fileName\''),
           isTrue);
+    });
+
+    test('part-api-file', () {
+      var packagePath = setupPackage();
+      var libPath = join(packagePath, 'lib');
+      copyFiles(dataPath, libPath, ['libraryWithPart.dart', 'partApi.dart']);
+      var fileName =  join(packagePath, 'lib', 'partApi.dart');
+      var result = runPub(packagePath, ['get']);
+      if (result == null) {
+        logMessage('Could not find pub. Skipping $currentTestCase!');
+        return;
+      }
+      expect(result.exitCode, 0);
+      result = runGenerator(
+          packagePath, ['discovery', '-i', fileName]);
+      if (result == null) {
+        logMessage('Could not find dart. Skipping $currentTestCase!');
+        return;
+      }
+      expect(result.stdout.startsWith(
+          'Please use the file with the `library libraryWithPart'), isTrue);
     });
 
     test('no-pub-spec', () {
