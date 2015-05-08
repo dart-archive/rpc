@@ -6,7 +6,7 @@ library toyapi;
 
 import 'dart:io';
 
-import 'package:rpc/api.dart';
+import 'package:rpc/rpc.dart';
 
 class ToyResponse {
   String result;
@@ -90,6 +90,10 @@ class ToyApi {
 
   @ApiMethod(path: 'helloPost/{name}', method: 'POST')
   ToyResponse helloNamePostAge(String name, ToyAgeRequest request) {
+    // Use the invocation context to change the response's status code.
+    // Can also be used to pass response headers and look at the HTTP requests
+    // headers, cookies, and url.
+    context.responseStatusCode = HttpStatus.CREATED;
     return new ToyResponse()..result = 'Hello ${name} of age ${request.age}!';
   }
 

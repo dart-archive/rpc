@@ -33,14 +33,18 @@ class HttpApiRequest {
   /// Request body containing parameters for a POST request.
   final Stream<List<int>> body;
 
+  // Request cookies (optional). Not supported with shelf_rpc.
+  final List<Cookie> cookies;
+
   factory HttpApiRequest(String httpMethod, Uri uri,
                          Map<String, dynamic> headers,
-                         Stream<List<int>> body) {
+                         Stream<List<int>> body,
+                         {List<Cookie> cookies}) {
     var headersLowerCase = new Map<String, dynamic>();
     headers.forEach((String key, dynamic value) =>
         headersLowerCase[key.toLowerCase()] = value);
     return new HttpApiRequest._(
-        httpMethod, uri, headersLowerCase, body);
+        httpMethod, uri, headersLowerCase, cookies, body);
   }
 
   factory HttpApiRequest.fromHttpRequest(HttpRequest request) {
@@ -51,10 +55,12 @@ class HttpApiRequest {
         (String key, dynamic value) => headers[key] = value);
 
     return new HttpApiRequest._(
-        request.method, request.requestedUri, headers, request);
+        request.method, request.requestedUri, headers, request.cookies,
+        request);
   }
 
-  HttpApiRequest._(this.httpMethod, this.uri, this.headers, this.body);
+  HttpApiRequest._(
+      this.httpMethod, this.uri, this.headers, this.cookies, this.body);
 
   Map<String, dynamic> get queryParameters => uri.queryParameters;
 }
@@ -84,9 +90,10 @@ class HttpApiResponse {
   /// Holds a stacktrace if passed via constructor.
   final StackTrace stack;
 
-  HttpApiResponse(this.status, this.body,
-                  {Map<String, dynamic> headers, this.exception, this.stack})
-      : this.headers = headers == null ? {} : headers;
+  HttpApiResponse(
+      this.status, this.body, this.headers, {this.exception, this.stack}) {
+    assert(headers != null);
+  }
 
   factory HttpApiResponse.error(int status,
                                 String message,
@@ -95,7 +102,7 @@ class HttpApiResponse {
     Map json = { 'error': { 'code': status, 'message': message } };
     Stream<List<int>> s =
         new Stream.fromIterable([_jsonToBytes.convert(json)]);
-    return new HttpApiResponse(status, s, headers: defaultResponseHeaders,
+    return new HttpApiResponse(status, s, defaultResponseHeaders,
                                exception: exception, stack: stack);
   }
 }

@@ -122,6 +122,22 @@ class GetAPI {
   Int64Message getInt64(int value) {
     return new Int64Message()..anInt = value;
   }
+
+  @ApiMethod(path: 'get/response')
+  VoidMessage getResponse() {
+    context.responseStatusCode = HttpStatus.FOUND;
+    context.responseHeaders['Location'] = 'http://some-other-url';
+    return null;
+  }
+
+  @ApiMethod(path: 'get/withCookies')
+  Future<StringMessage> getWithCookies() async {
+    if (context.requestCookies == null) {
+      throw new BadRequestError('missing cookies');
+    }
+    return new StringMessage()..aString =
+        'Received cookies: ${context.requestCookies}';
+  }
 }
 
 class DeleteAPI {
@@ -156,8 +172,21 @@ class PostAPI {
     // The framework guarantees the map is not null.
     assert(existingResources != null);
     existingResources[resource] = id;
+    // Set the HTTP response's status code to 201 (Created).
+    context.responseStatusCode = HttpStatus.CREATED;
     return existingResources;
   }
+
+  // Method used to test response status code override and response headers.
+  @ApiMethod(method: 'POST', path: 'post/response')
+  DefaultValueMessage responsePost(DefaultValueMessage message) {
+    context.responseStatusCode = HttpStatus.ACCEPTED;
+    context.responseHeaders['Content-type'] = 'contentType1';
+    context.responseHeaders['content-Type'] = 'contentType2';
+    context.responseHeaders['my-Own-header'] = 'aHeaderValue';
+    return message;
+  }
+
 }
 
 class PutAPI {
@@ -174,7 +203,7 @@ main() {
 
   Future<HttpApiResponse> _sendRequest(String method, String path,
       {String api: 'testAPI/v1/', extraHeaders: const {},
-       String query: '', body}) {
+       String query: '', body, List<Cookie> cookies}) {
     var headers = {'content-type': 'application/json'};
     headers.addAll(extraHeaders);
     var bodyStream;
@@ -186,7 +215,8 @@ main() {
     assert(query.isEmpty || query.startsWith('?'));
     Uri uri = Uri.parse('http://server/$api$path$query');
     path = '$api$path';
-    var request = new HttpApiRequest(method, uri, headers, bodyStream);
+    var request =
+        new HttpApiRequest(method, uri, headers, bodyStream, cookies: cookies);
     return _apiServer.handleHttpApiRequest(request);
   }
 
@@ -200,7 +230,7 @@ main() {
   group('api-invoke-get', () {
     test('simple', () async {
       HttpApiResponse response = await _sendRequest('GET', 'get/simple');
-      expect(response.status, HttpStatus.OK);
+      expect(response.status, HttpStatus.NO_CONTENT);
     });
 
     test('throwing', () async {
@@ -299,12 +329,35 @@ main() {
           'RPC Error with status: 500 and message: Integer return value: '
           '\'-9223372036854775809\' not within the \'int64\' property range.');
     });
+
+    test('get-response', () async {
+      HttpApiResponse response =
+          await _sendRequest('GET', 'get/response');
+      expect(response.status, HttpStatus.FOUND);
+      expect(
+          response.headers['content-type'], 'application/json; charset=utf-8');
+      expect(response.headers['location'], 'http://some-other-url');
+    });
+
+    test('get-with-cookies', () async {
+      var cookies = [
+        new Cookie('my-cookie', 'cookie-value'),
+        new Cookie('my-other-cookie', 'other-cookie-value')..httpOnly = false];
+      HttpApiResponse response =
+          await _sendRequest('GET', 'get/withCookies', cookies: cookies);
+      expect(response.status, HttpStatus.OK);
+      var result = await _decodeBody(response.body);
+      var expectedResult =
+          'Received cookies: [my-cookie=cookie-value; HttpOnly, '
+          'my-other-cookie=other-cookie-value]';
+      expect(result['aString'], expectedResult);
+    });
   });
 
   group('api-invoke-delete', () {
     test('simple', () async {
       HttpApiResponse response = await _sendRequest('DELETE', 'delete/simple');
-      expect(response.status, HttpStatus.OK);
+      expect(response.status, HttpStatus.NO_CONTENT);
     });
   });
 
@@ -374,14 +427,24 @@ main() {
       var body = null;
       HttpApiResponse response = await _sendRequest(
           'POST', 'post/add/firstResource/size/10', body: {});
-      expect(response.status, HttpStatus.OK);
+      expect(response.status, HttpStatus.CREATED);
       var resultBody = await _decodeBody(response.body);
       expect(resultBody, {'firstResource': 10});
       response = await _sendRequest('POST', 'post/add/secondResource/size/20',
           body: resultBody);
-      expect(response.status, HttpStatus.OK);
+      expect(response.status, HttpStatus.CREATED);
       resultBody = await _decodeBody(response.body);
       expect(resultBody, {'firstResource': 10, 'secondResource': 20});
+      expect(
+          response.headers['content-type'], 'application/json; charset=utf-8');
+    });
+    test('response-modifications', () async {
+      var body = null;
+      HttpApiResponse response = await _sendRequest(
+          'POST', 'post/response', body: {});
+      expect(response.status, HttpStatus.ACCEPTED);
+      expect(response.headers['content-type'], 'contentType2');
+      expect(response.headers['my-own-header'], 'aHeaderValue');
     });
   });
 
@@ -436,7 +499,7 @@ main() {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': '41460d700e8e913af5f76e511e0b2373427103e2',
+        'etag': 'fc28d86fff41ba1ebc210c19b886792abb43ead8',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -616,6 +679,21 @@ main() {
                 },
                 'parameterOrder': ['value'],
                 'response': {r'$ref': 'Int64Message'}
+              },
+              'getResponse': {
+                'id': 'TestAPI.get.getResponse',
+                'path': 'get/response',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': []
+              },
+              'getWithCookies': {
+                'id': 'TestAPI.get.getWithCookies',
+                'path': 'get/withCookies',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': [],
+                'response': {r'$ref': 'StringMessage'}
               }
             },
             'resources': {}
@@ -682,6 +760,15 @@ main() {
                 'parameterOrder': ['resource', 'id'],
                 'request': {r'$ref': 'MapOfint'},
                 'response': {r'$ref': 'MapOfint'}
+              },
+              'responsePost': {
+                'id': 'TestAPI.post.responsePost',
+                'path': 'post/response',
+                'httpMethod': 'POST',
+                'parameters': {},
+                'parameterOrder': [],
+                'request': {r'$ref': 'DefaultValueMessage'},
+                'response': {r'$ref': 'DefaultValueMessage'}
               }
             },
             'resources': {}

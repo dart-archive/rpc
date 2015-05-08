@@ -75,7 +75,7 @@ class ApiConfig extends ApiConfigResource {
       headers['access-control-allow-headers'] =
         'origin, x-requested-with, content-type, accept';
     }
-    return new HttpApiResponse(HttpStatus.OK, null, headers: headers);
+    return new HttpApiResponse(HttpStatus.OK, null, headers);
   }
 
   discovery.RestDescription generateDiscoveryDocument(String baseUrl,

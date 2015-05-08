@@ -126,56 +126,74 @@ class ApiConfigMethod {
         // parameter.
       }
     }
-    var apiResult;
-    try {
-      if (bodyLessMethods.contains(httpMethod)) {
-        apiResult = await invokeNoBody(request, positionalParams, namedParams);
+    // We run the entire invocation and creation of the httpApiResponse inside
+    // a separate scope containing the invocation context. This allows the
+    // implementor of the API to see the current request's headers, url, etc.
+    // and to provide response headers and possibly other (future) values to be
+    // used in the response.
+    return ss.fork(() async {
+      ss.register(INVOCATION_CONTEXT, new InvocationContext(request));
+
+      var apiResult;
+      try {
+        if (bodyLessMethods.contains(httpMethod)) {
+          apiResult =
+              await invokeNoBody(request, positionalParams, namedParams);
+        } else {
+          apiResult =
+              await invokeWithBody(request, positionalParams, namedParams);
+        }
+      } on RpcError catch (error, stack) {
+        // Catch RpcError explicitly and wrap them in the http error response.
+        return httpErrorResponse(request.originalRequest, error, stack: stack,
+                                 drainRequest: false);
+      } catch (error, stack) {
+        // All other exceptions thrown are caught and wrapped as
+        // ApplicationError with status code 500. Otherwise these exceptions
+        // would be shown as Unknown API Error since we cannot distinguish them
+        // from e.g. an internal null pointer exception.
+        return httpErrorResponse(request.originalRequest,
+            new ApplicationError(error), stack: stack, drainRequest: false);
+      }
+      rpcLogger.fine('Method returned result: $apiResult');
+      var resultAsJson = {};
+      var resultBody;
+      var statusCode;
+      if (_responseSchema != null && _responseSchema.containsData) {
+        if (apiResult == null) {
+          // We don't allow for method to return null if they have specified a
+          // responce schema. Log the error and return internal server error to
+          // client.
+          rpcLogger.warning(
+              'Method $name returned null instead of valid return value');
+          return httpErrorResponse(
+              request.originalRequest,
+              new InternalServerError(
+                  'Method with non-void return type returned \'null\''),
+              drainRequest: false);
+        }
+        resultAsJson = _responseSchema.toResponse(apiResult);
+        rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
+        var resultAsBytes = request.jsonToBytes.convert(resultAsJson);
+        rpcLogger.finest(
+            'Successfully encoded json as bytes:\n  $resultAsBytes');
+        resultBody = new Stream.fromIterable([resultAsBytes]);
+        statusCode = HttpStatus.OK;
       } else {
-        apiResult =
-            await invokeWithBody(request, positionalParams, namedParams);
+        // Return an empty stream.
+        resultBody = new Stream.fromIterable([]);
+        statusCode = HttpStatus.NO_CONTENT;
       }
-    } on RpcError catch (error, stack) {
-      // Catch RpcError explicitly and wrap them in the http error response.
-      return httpErrorResponse(request.originalRequest, error, stack: stack,
-                               drainRequest: false);
-    } catch (error, stack) {
-      // All other exceptions thrown are caught and wrapped as ApplicationError
-      // with status code 500. Otherwise these exceptions would be shown as
-      // Unknown API Error since we cannot distinguish them from e.g. an
-      // internal null pointer exception.
-      return httpErrorResponse(request.originalRequest,
-          new ApplicationError(error), stack: stack, drainRequest: false);
-    }
-    rpcLogger.fine('Method returned result: $apiResult');
-    var resultAsJson = {};
-    var resultBody;
-    if (_responseSchema != null && _responseSchema.containsData) {
-      if (apiResult == null) {
-        // We don't allow for method to return null if they have specified a
-        // responce schema. Log the error and return internal server error to
-        // client.
-        rpcLogger.warning(
-            'Method $name returned null instead of valid return value');
-        return httpErrorResponse(
-            request.originalRequest,
-            new InternalServerError(
-                'Method with non-void return type returned \'null\''),
-            drainRequest: false);
+      // If the api method has set a specific response status code use that
+      // instead of the above default based on the result content.
+      if (context.responseStatusCode != null) {
+        statusCode = context.responseStatusCode;
       }
-      resultAsJson = _responseSchema.toResponse(apiResult);
-      rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
-      var resultAsBytes = request.jsonToBytes.convert(resultAsJson);
-      rpcLogger.finest('Successfully encoded json as bytes:\n  $resultAsBytes');
-      resultBody = new Stream.fromIterable([resultAsBytes]);
-    } else {
-      // Return an empty stream.
-      resultBody = new Stream.fromIterable([]);
-    }
-    var response =
-        new HttpApiResponse(HttpStatus.OK, resultBody,
-                            headers: defaultResponseHeaders);
-    logResponse(response, resultAsJson);
-    return response;
+      var response =
+          new HttpApiResponse(statusCode, resultBody, context.responseHeaders);
+      logResponse(response, resultAsJson);
+      return response;
+    });
   }
 
   Future<dynamic> invokeNoBody(ParsedHttpApiRequest request,
@@ -185,14 +203,7 @@ class ApiConfigMethod {
     await request.body.drain();
     logRequest(request, null);
     logMethodInvocation(symbol, positionalParams, namedParams);
-    var result = await ss.fork(() async {
-      // Setting up the context accessible within the method being invoked.
-      ss.register(INVOCATION_CONTEXT,
-          new InvocationContext(request.headers, request.originalRequest.uri));
-
-      return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
-    });
-    return result;
+    return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
   }
 
   Future<dynamic> invokeWithBody(ParsedHttpApiRequest request,
@@ -222,19 +233,11 @@ class ApiConfigMethod {
         }
       } else if (error is RpcError) {
         throw error;
-      } else {
-        throw new BadRequestError(
-            'Failed to decode request with internal error: $error');
       }
+      throw new BadRequestError(
+            'Failed to decode request with internal error: $error');
     }
     logMethodInvocation(symbol, positionalParams, namedParams);
-    var result = await ss.fork(() async {
-      // Setting up the context accessible within the method being invoked.
-      ss.register(INVOCATION_CONTEXT,
-          new InvocationContext(request.headers, request.originalRequest.uri));
-
-      return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
-    });
-    return result;
+    return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
   }
 }

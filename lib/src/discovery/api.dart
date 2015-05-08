@@ -6,7 +6,6 @@ library discovery.api;
 
 import 'config.dart';
 
-import 'package:rpc/api.dart';
 import 'package:rpc/rpc.dart';
 
 const _API_NAME = 'discovery';
