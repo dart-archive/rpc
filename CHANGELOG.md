@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Support for setting HTTP response status code and headers.
+- Added HTTP request cookies to the invocation context.
+- Changed the default HTTP response status code for empty responses to be
+  NO_CONTENT.
+- Improve error messages in the rpc:generate script.
+- A few bugfixes.
+
 ## 0.4.3
 
 - Support constructors taking arguments for message classes used only for
