@@ -17,5 +17,5 @@ dev_dependencies:
   unittest: '>=0.11.0 <0.12.0'
   shelf: '>=0.5.6 <0.6.0'
   shelf_route: '>=0.11.0+1 <0.12.0'
-  shelf_rpc: '>=0.0.3 <0.0.4'
+  shelf_rpc: 'any'
   logging_handlers: ">=0.8.0 <0.9.0"
