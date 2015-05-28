@@ -35,7 +35,7 @@ class ApiClass {
 }
 
 /// Use as annotation for your API resources that should be added to a parent
-/// toplevel API class.
+/// top-level API class.
 class ApiResource {
   /// Name of the resource.
   ///

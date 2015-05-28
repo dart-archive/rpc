@@ -15,7 +15,7 @@ import '../test_api/messages2.dart';
 @ApiClass(version: 'v1')
 class CorrectPostApi {
   @ApiMethod(method: 'POST', path: 'minimumPost')
-  VoidMessage minumumPost(SimpleMessage msg) { return null; }
+  VoidMessage minimumPost(SimpleMessage msg) { return null; }
 
   @ApiMethod(name: 'namedPost', method: 'POST', path: 'namedPost')
   VoidMessage namedPost(SimpleMessage msg) { return null; }
@@ -159,8 +159,8 @@ void main() {
         }
       };
       var expectedMethods = {
-        'minumumPost': {
-          'id': 'CorrectPostApi.minumumPost',
+        'minimumPost': {
+          'id': 'CorrectPostApi.minimumPost',
           'path': 'minimumPost',
           'httpMethod': 'POST',
           'parameters': {},

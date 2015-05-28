@@ -12,7 +12,7 @@ import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
 import 'package:unittest/unittest.dart';
 
-// Simple class used as a property type in the below unittests.
+// Simple class used as a property type in the below unit tests.
 class SomeClass {
   int foo;
   String bar;

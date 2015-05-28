@@ -164,7 +164,7 @@ class ClientApiGenerator {
     _apiFilePath = toUri(absolute(apiFile.path)).toString();
 
     // Find the package directory from where to serve the packages used by the
-    // toplevel API class.
+    // top-level API class.
     _packageDirectoryPath = findPackageRoot(_apiFilePath);
     if (_packageDirectoryPath == null) {
       throw new GeneratorException(
@@ -378,7 +378,7 @@ class ClientApiGenerator {
       var apiInstance;
       if (dm is ClassMirror && annotations.length == 1) {
         // We only support automatic generation of client stubs using same
-        // message classes for toplevel API classes with a default constructor
+        // message classes for top-level API classes with a default constructor
         // taking no arguments.
         try {
           apiInstance = dm.newInstance(new Symbol(''), []).reflectee;

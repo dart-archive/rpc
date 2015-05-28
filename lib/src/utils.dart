@@ -36,7 +36,7 @@ final Logger rpcLogger = new Logger('rpc');
 final ApiConfigSchema discoveryDocSchema =
     new ApiParser().parseSchema(reflectType(discovery.RestDescription), false);
 
-// Utility method for creating an HTTP error response given an expcetion.
+// Utility method for creating an HTTP error response given an exception.
 // Optionally drains the request body.
 Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
                                           Exception error,

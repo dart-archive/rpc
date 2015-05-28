@@ -30,7 +30,7 @@ class ApiParser {
 
   final bool strict;
 
-  // If the strict flag is set to true, the parser will require all messsage
+  // If the strict flag is set to true, the parser will require all message
   // classes to have a zero-arg default constructor. When 'false' this is only
   // required for messages classes used for requests.
   ApiParser({this.strict: false});
@@ -129,7 +129,7 @@ class ApiParser {
     return apiConfig;
   }
 
-  // Scan through all class instance fields and parse the one's annotated
+  // Scan through all class instance fields and parse the ones annotated
   // with @ApiResource.
   Map<String, ApiConfigResource> _parseResources(InstanceMirror classInstance) {
     var resources= {};

@@ -162,7 +162,7 @@ class ApiConfigMethod {
       if (_responseSchema != null && _responseSchema.containsData) {
         if (apiResult == null) {
           // We don't allow for method to return null if they have specified a
-          // responce schema. Log the error and return internal server error to
+          // response schema. Log the error and return internal server error to
           // client.
           rpcLogger.warning(
               'Method $name returned null instead of valid return value');
