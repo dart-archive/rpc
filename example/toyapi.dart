@@ -7,6 +7,7 @@ library toyapi;
 import 'dart:io';
 
 import 'package:rpc/rpc.dart';
+import 'dart:async';
 
 class ToyResponse {
   String result;
@@ -81,6 +82,14 @@ class ToyApi {
   ToyResponse helloPost(ToyRequest request) {
     return new ToyResponse()
         ..result = 'Hello ${request.name} of age ${request.age}!';
+  }
+
+  @ApiMethod(path: 'helloPostWithAsync', method: 'POST')
+  Future<ToyResponse> helloPostWithAsync(ToyRequest request) async{
+    int delayInSeconds = 5;
+    await new Future.delayed(new Duration(seconds:delayInSeconds));
+    return new ToyResponse()
+      ..result = 'I waited ${delayInSeconds} seconds to say: Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloVoid', method: 'POST')
