@@ -50,7 +50,7 @@ Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
   } else {
     response =
         new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
-                                  'Unknown API Error.', error, stack);
+                                  'Unknown error occurred with API.', error, stack);
   }
   if (drainRequest) {
     // Drain the request before responding.
