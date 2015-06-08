@@ -115,7 +115,7 @@ class WrongContainers {
 }
 
 // Schema which conflicts with similar named schema class from another library.
-// Spefically messages2.WrongConflictingWithOther in
+// Specifically messages2.WrongConflictingWithOther in
 // test/src/test_api/messages2.dart.
 class WrongConflictingWithOther {
   String aString;

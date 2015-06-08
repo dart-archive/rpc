@@ -13,7 +13,7 @@ import 'package:unittest/unittest.dart';
 @ApiClass(version: 'v1')
 class CorrectGetApi {
   @ApiMethod(path: 'minimumGet')
-  VoidMessage minumumGet() { return null; }
+  VoidMessage minimumGet() { return null; }
 
   @ApiMethod(name: 'namedGet', path: 'namedGet')
   VoidMessage namedGet() { return null; }
@@ -156,8 +156,8 @@ void main() {
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
       var expectedMethods = {
-        'minumumGet': {
-          'id': 'CorrectGetApi.minumumGet',
+        'minimumGet': {
+          'id': 'CorrectGetApi.minimumGet',
           'path': 'minimumGet',
           'httpMethod': 'GET',
           'parameters': {},

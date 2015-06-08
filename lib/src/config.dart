@@ -46,7 +46,7 @@ class ParsedHttpApiRequest {
   // Whether this request is an OPTIONS request.
   final bool isOptions;
 
-  // Key for looking up the method group targetted by the request.
+  // Key for looking up the method group targeted by the request.
   // The key is the HTTP method followed by the number of method path segments.
   final String methodKey;
 

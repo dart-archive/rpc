@@ -19,7 +19,7 @@ class TestMessage2 {
 }
 
 // Schema which conflicts with similar named schema class from another library.
-// Spefically api_schema_tests.WrongConflictingWithOther in
+// Specifically api_schema_tests.WrongConflictingWithOther in
 // test/src/parser/api_schema_test.dart.
 class WrongConflictingWithOther {
  int anInt;

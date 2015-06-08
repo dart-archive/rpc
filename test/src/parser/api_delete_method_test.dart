@@ -13,7 +13,7 @@ import 'package:unittest/unittest.dart';
 @ApiClass(version: 'v1')
 class CorrectDeleteApi {
   @ApiMethod(method: 'DELETE', path: 'minimumDelete')
-  VoidMessage minumumDelete() { return null; }
+  VoidMessage minimumDelete() { return null; }
 
   @ApiMethod(name: 'namedDelete', method: 'DELETE', path: 'namedDelete')
   VoidMessage namedDelete() { return null; }
@@ -162,8 +162,8 @@ void main() {
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
       var expectedMethods = {
-        'minumumDelete': {
-          'id': 'CorrectDeleteApi.minumumDelete',
+        'minimumDelete': {
+          'id': 'CorrectDeleteApi.minimumDelete',
           'path': 'minimumDelete',
           'httpMethod': 'DELETE',
           'parameters': {},

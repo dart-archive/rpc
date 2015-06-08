@@ -176,7 +176,7 @@ class JsonSchema {
   /**
    * In a variant data type, the value of one property is used to determine how
    * to interpret the entire entity. Its value must exist in a map of
-   * descriminant values to schema names.
+   * discriminant values to schema names.
    */
   JsonSchemaVariant variant;
 

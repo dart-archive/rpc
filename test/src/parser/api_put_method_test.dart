@@ -15,7 +15,7 @@ import '../test_api/messages2.dart';
 @ApiClass(version: 'v1')
 class CorrectPutApi {
   @ApiMethod(method: 'PUT', path: 'minimumPut')
-  VoidMessage minumumPut(SimpleMessage msg) { return null; }
+  VoidMessage minimumPut(SimpleMessage msg) { return null; }
 
   @ApiMethod(name: 'namedPut', method: 'PUT', path: 'namedPut')
   VoidMessage namedPut(SimpleMessage msg) { return null; }
@@ -159,8 +159,8 @@ void main() {
         }
       };
       var expectedMethods = {
-        'minumumPut': {
-          'id': 'CorrectPutApi.minumumPut',
+        'minimumPut': {
+          'id': 'CorrectPutApi.minimumPut',
           'path': 'minimumPut',
           'httpMethod': 'PUT',
           'parameters': {},
