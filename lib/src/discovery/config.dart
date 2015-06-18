@@ -108,6 +108,9 @@ class JsonSchema {
   /** Used to describe parameters of type int. */
   static const PARAM_INTEGER_TYPE = 'integer';
 
+  /** Used to describe parameters of type bool */
+  static const PARAM_BOOL_TYPE = 'boolean';
+
   /* Used to describe parameters of type string. */
   static const PARAM_STRING_TYPE  = 'string';
 

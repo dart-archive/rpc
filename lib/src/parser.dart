@@ -312,9 +312,9 @@ class ApiParser {
       if (pm.isOptional || pm.isNamed) {
         addError('No support for optional path parameters in API methods.');
       }
-      if (pm.type.simpleName != #int && pm.type.simpleName != #String) {
+      if (pm.type.simpleName != #int && pm.type.simpleName != #String && pm.type.simpleName != #bool) {
         addError(
-            'Path parameter \'$pathParamName\' must be of type int or String.');
+            'Path parameter \'$pathParamName\' must be of type int, String or bool.');
       }
       pathParams.add(new ApiParameter(pathParamName, pm));
     }
@@ -335,9 +335,9 @@ class ApiParser {
         addError(
             'Non-path parameter \'$paramName\' must be a named parameter.');
       }
-      if (pm.type.simpleName != #int && pm.type.simpleName != #String) {
+      if (pm.type.simpleName != #int && pm.type.simpleName != #String && pm.type.simpleName != #bool) {
         addError(
-            'Query parameter \'$paramName\' must be of type int or String.');
+            'Query parameter \'$paramName\' must be of type int, String or bool.');
       }
       queryParams.add(new ApiParameter(paramName, pm));
     }
