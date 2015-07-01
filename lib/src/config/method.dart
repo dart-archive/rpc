@@ -98,14 +98,7 @@ class ApiConfigMethod {
                                   '${error.toString()}'), stack: stack);
         }
       } else if(param.isBool){
-        try {
           positionalParams.add(value == 'true');
-        } on FormatException catch (error, stack) {
-          return httpErrorResponse(request.originalRequest,
-          new BadRequestError('Invalid bool value: $value for '
-          'path parameter: ${param.name}. '
-          '${error.toString()}'), stack: stack);
-        }
       } else {
         positionalParams.add(value);
       }
@@ -128,14 +121,7 @@ class ApiConfigMethod {
                                       '${error.toString()}'), stack: stack);
             }
           } else if(param.isBool){
-            try {
               namedParams[param.symbol] = value == 'true';
-            } on FormatException catch (error, stack) {
-              return httpErrorResponse(request.originalRequest,
-              new BadRequestError('Invalid bool value: $value for '
-              'query parameter: ${param.name}. '
-              '${error.toString()}'), stack: stack);
-            }
           } else {
             namedParams[param.symbol] = value;
           }
