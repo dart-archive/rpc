@@ -78,6 +78,22 @@ class ToyApi {
     return new ToyResponse()..result = 'Hello ${name} of age ${age}!';
   }
 
+  @ApiMethod(path: 'hero/{name}/{isHero}')
+  ToyResponse helloHeroWithBoolean(String name, bool isHero, {bool fromComics}) {
+    String isHeroString;
+    if(isHero){
+      isHeroString = "you are a hero";
+
+      if(fromComics != null && fromComics){
+        isHeroString = "${isHeroString} from comics";
+      }
+    }else{
+      isHeroString = "you are not a hero";
+    }
+    String response = "Hello ${name} ${isHeroString}";
+    return new ToyResponse()..result = response;
+  }
+
   @ApiMethod(path: 'helloPost', method: 'POST')
   ToyResponse helloPost(ToyRequest request) {
     return new ToyResponse()

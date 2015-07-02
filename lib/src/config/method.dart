@@ -47,7 +47,7 @@ class ApiConfigMethod {
     _pathParams.forEach((param) {
       var schema = new discovery.JsonSchema();
       schema..type = param.isInt ? discovery.JsonSchema.PARAM_INTEGER_TYPE
-                                 : discovery.JsonSchema.PARAM_STRING_TYPE
+                                 : (param.isBool ? discovery.JsonSchema.PARAM_BOOL_TYPE : discovery.JsonSchema.PARAM_STRING_TYPE)
             ..required = true
             ..description = 'Path parameter: \'${param.name}\'.'
             ..location = discovery.JsonSchema.PARAM_LOCATION_PATH;
@@ -57,7 +57,7 @@ class ApiConfigMethod {
       _queryParams.forEach((param) {
         var schema = new discovery.JsonSchema();
         schema..type = param.isInt ? discovery.JsonSchema.PARAM_INTEGER_TYPE
-                                   : discovery.JsonSchema.PARAM_STRING_TYPE
+                                   : (param.isBool ? discovery.JsonSchema.PARAM_BOOL_TYPE : discovery.JsonSchema.PARAM_STRING_TYPE)
               ..required = false
               ..description = 'Query parameter: \'${param.name}\'.'
               ..location = discovery.JsonSchema.PARAM_LOCATION_QUERY;
@@ -97,6 +97,8 @@ class ApiConfigMethod {
                                   'path parameter: ${param.name}. '
                                   '${error.toString()}'), stack: stack);
         }
+      } else if(param.isBool){
+          positionalParams.add(value == 'true');
       } else {
         positionalParams.add(value);
       }
@@ -118,6 +120,8 @@ class ApiConfigMethod {
                                       'query parameter: ${param.name}. '
                                       '${error.toString()}'), stack: stack);
             }
+          } else if(param.isBool){
+              namedParams[param.symbol] = value == 'true';
           } else {
             namedParams[param.symbol] = value;
           }
