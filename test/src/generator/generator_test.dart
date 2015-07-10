@@ -144,8 +144,7 @@ main() {
     test('toyApi-discovery', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
-      var rpcExamplePath = join(rpcRootPath, 'example');
-      copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
+      copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
         logMessage('Could not find pub. Skipping $currentTestCase!');
@@ -166,8 +165,7 @@ main() {
     test('toyApi-client', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
-      var rpcExamplePath = join(rpcRootPath, 'example');
-      copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
+      copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
         logMessage('Could not find pub. Skipping $currentTestCase!');
@@ -223,8 +221,7 @@ main() {
     test('no-pub-spec', () {
       var packagePath = setupPackage(addPubSpec: false);
       var libPath = join(packagePath, 'lib');
-      var rpcExamplePath = join(rpcRootPath, 'example');
-      copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
+      copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runGenerator(
           packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       if (result == null) {
@@ -237,8 +234,7 @@ main() {
     test('no-pub-get', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
-      var rpcExamplePath = join(rpcRootPath, 'example');
-      copyFiles(rpcExamplePath, libPath, ['toyapi.dart']);
+      copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runGenerator(
           packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       if (result == null) {

@@ -421,7 +421,7 @@ void main() {
             '\'msg\'.'),
         new ApiConfigError(
             'WrongPutApiWithPathQuery.missingPathParam: Path parameter \'id\' '
-            'must be of type int or String.'),
+            'must be of type int, String or bool.'),
         new ApiConfigError(
             'WrongPutApiWithPathQuery.missingPathParam: API methods using '
             'PUT must have a signature of path parameters followed by one '

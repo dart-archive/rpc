@@ -145,9 +145,6 @@ class WrongMethodApi {
 }
 
 class WrongMethodApiWithPathParam {
-  @ApiMethod(path: 'invalidPathParamBool/{aBool}')
-  VoidMessage invalidPathParamBool(bool aBool) { return null; }
-
   @ApiMethod(path: 'missingPathParam')
   VoidMessage missingPathParam(String missing) { return null; }
 
@@ -655,9 +652,6 @@ void main() {
             'WrongMethodApiWithPathParam: @ApiClass.version field is '
             'required.'),
         new ApiConfigError(
-            'WrongMethodApiWithPathParam.invalidPathParamBool: Path parameter '
-            '\'aBool\' must be of type int or String.'),
-        new ApiConfigError(
             'WrongMethodApiWithPathParam.missingPathParam: Non-path parameter '
             '\'missing\' must be a named parameter.'),
         new ApiConfigError(
@@ -665,7 +659,7 @@ void main() {
             'parameters specified in method path: missingMethodParam/{id}.'),
         new ApiConfigError(
             'WrongMethodApiWithPathParam.mismatchMethodParam: Path parameter '
-            '\'aMessage\' must be of type int or String.')
+            '\'aMessage\' must be of type int, String or bool.')
         ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });

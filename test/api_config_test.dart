@@ -533,9 +533,7 @@ void main() {
         new ApiConfigError('WrongMethods.wrongMethodParameter: Non-path '
             'parameter \'_\' must be a named parameter.'),
         new ApiConfigError('WrongMethods.wrongMethodParameter: Query '
-            'parameter \'_\' must be of type int or String.'),
-        new ApiConfigError('WrongMethods.wrongParameterType: Path parameter '
-            '\'test\' must be of type int or String.'),
+            'parameter \'_\' must be of type int, String or bool.'),
         new ApiConfigError('WrongMethods.wrongPathAnnotation: Non-path '
             'parameter \'test\' must be a named parameter.'),
         new ApiConfigError('WrongMethods.wrongResponseType1: Return type: '
@@ -547,12 +545,12 @@ void main() {
         new ApiConfigError('WrongMethods.genericFutureResponse: API Method '
             'return type has to be a instantiable class.'),
         new ApiConfigError('WrongMethods.missingPathParam1: Missing methods '
-            'parameters specified in method path: test10/{id}.'),
+            'parameters specified in method path: test9/{id}.'),
         new ApiConfigError('WrongMethods.missingPathParam2: Expected method '
             'parameter with name \'id\', but found parameter with name '
             '\'request\'.'),
         new ApiConfigError('WrongMethods.missingPathParam2: Path parameter '
-            '\'id\' must be of type int or String.'),
+            '\'id\' must be of type int, String or bool.'),
         new ApiConfigError('WrongMethods.missingPathParam2: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
@@ -567,9 +565,9 @@ void main() {
         new ApiConfigError('WrongMethods.genericRequest: API Method parameter '
             'has to be an instantiable class.'),
         new ApiConfigError('WrongMethods.invalidPath1: Invalid path: '
-            'test16/{wrong. Failed with error: ParseException: test16/{wrong'),
+            'test15/{wrong. Failed with error: ParseException: test15/{wrong'),
         new ApiConfigError('WrongMethods.invalidPath2: Invalid path: '
-            'test17/wrong}. Failed with error: ParseException: test17/wrong}')
+            'test16/wrong}. Failed with error: ParseException: test16/wrong}')
       ];
       expect(parser.errors.toString(), errors.toString());
     });
@@ -962,7 +960,7 @@ void main() {
             'parameter with name \'queryParam\', but found parameter with '
             'name \'pathParam\'.'),
         new ApiConfigError('WrongQueryParameterTester.query3: Query parameter '
-            '\'queryParam\' must be of type int or String.'),
+            '\'queryParam\' must be of type int, String or bool.'),
         new ApiConfigError('WrongQueryParameterTester.query4: No support for '
             'optional path parameters in API methods.'),
         new ApiConfigError('WrongQueryParameterTester.query5: Non-path '

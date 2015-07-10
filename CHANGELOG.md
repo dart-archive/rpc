@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1
+- Update pubspec dependencies.
+- Move the examples directory into separate github repo, dart-lang/rpc-examples,
+  to avoid having example dependencies in the rpc package.
+- Fix up broken tests.
+
 ## 0.5.0
 
 - Support for setting HTTP response status code and headers.

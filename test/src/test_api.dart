@@ -24,54 +24,51 @@ class WrongMethods {
   @ApiMethod(name: 'test3', method: 'GET', path: 'test3')
   VoidMessage wrongMethodParameter(VoidMessage _) { return null;}
 
-  @ApiMethod(name: 'test4', method: 'GET', path: 'test4/{test}')
-  VoidMessage wrongParameterType(bool test) { return null; }
-
-  @ApiMethod(name: 'test5', method: 'GET', path: 'test5')
+  @ApiMethod(name: 'test4', method: 'GET', path: 'test4')
   VoidMessage wrongPathAnnotation(String test) { return null; }
 
-  @ApiMethod(name: 'test6', method: 'GET', path: 'test6')
+  @ApiMethod(name: 'test5', method: 'GET', path: 'test5')
   String wrongResponseType1() {
     return '';
   }
 
-  @ApiMethod(name: 'test7', method: 'GET', path: 'test7')
+  @ApiMethod(name: 'test6', method: 'GET', path: 'test6')
   bool wrongResponseType2() {
     return true;
   }
 
-  @ApiMethod(name: 'test8', method: 'GET', path: 'test8')
+  @ApiMethod(name: 'test7', method: 'GET', path: 'test7')
   Future<bool> wrongFutureResponse() {
     return new Future.value(true);
   }
 
-  @ApiMethod(name: 'test9', method: 'GET', path: 'test9')
+  @ApiMethod(name: 'test8', method: 'GET', path: 'test8')
   Future genericFutureResponse() {
     return new Future.value(true);
   }
 
-  @ApiMethod(name: 'test10', method: 'GET', path: 'test10/{id}')
+  @ApiMethod(name: 'test9', method: 'GET', path: 'test9/{id}')
   VoidMessage missingPathParam1() { return null; }
 
-  @ApiMethod(name: 'test11', method: 'POST', path: 'test11/{id}')
+  @ApiMethod(name: 'test10', method: 'POST', path: 'test10/{id}')
   VoidMessage missingPathParam2(TestMessage1 request) { return null; }
 
-  @ApiMethod(name: 'test12', method: 'POST', path: 'test12')
+  @ApiMethod(name: 'test11', method: 'POST', path: 'test11')
   void voidResponse(VoidMessage _) {}
 
-  @ApiMethod(name: 'test13', method: 'POST', path: 'test13')
+  @ApiMethod(name: 'test12', method: 'POST', path: 'test12')
   VoidMessage noRequest1() { return null; }
 
-  @ApiMethod(name: 'test14', method: 'POST', path: 'test14/{id}')
+  @ApiMethod(name: 'test13', method: 'POST', path: 'test13/{id}')
   VoidMessage noRequest2(String id) { return null; }
 
-  @ApiMethod(name: 'test15', method: 'POST', path: 'test15')
+  @ApiMethod(name: 'test14', method: 'POST', path: 'test14')
   VoidMessage genericRequest(request) { return null; }
 
-  @ApiMethod(name: 'test16', method: 'GET', path: 'test16/{wrong')
+  @ApiMethod(name: 'test15', method: 'GET', path: 'test15/{wrong')
   VoidMessage invalidPath1() { return null; }
 
-  @ApiMethod(name: 'test17', method: 'GET', path: 'test17/wrong}')
+  @ApiMethod(name: 'test16', method: 'GET', path: 'test16/wrong}')
   VoidMessage invalidPath2() { return null; }
 }
 

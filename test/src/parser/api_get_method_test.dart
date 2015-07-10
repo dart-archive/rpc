@@ -564,7 +564,7 @@ void main() {
             '\'requestMessage\' must be a named parameter.'),
         new ApiConfigError(
             'WrongGetApi.getWithMessageArg: Query parameter \'requestMessage\' '
-            'must be of type int or String.')
+            'must be of type int, String or bool.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
@@ -584,7 +584,7 @@ void main() {
             '\'pathParam\'.'),
         new ApiConfigError(
             'WrongGetApiWithPathQuery.query3: Query parameter \'queryParam\' '
-            'must be of type int or String.'),
+            'must be of type int, String or bool.'),
         new ApiConfigError(
             'WrongGetApiWithPathQuery.query4: No support for optional path '
             'parameters in API methods.'),

@@ -49,7 +49,7 @@ class UpdateMessage {
 ```
 
 Two complete examples using respectively `dart:io` and `shelf` can be found at
-[Example](https://github.com/dart-lang/rpc/tree/master/example).
+[Example](https://github.com/dart-lang/rpc-examples/tree/master/bin).
 
 ### Usage
 
@@ -316,8 +316,10 @@ Creating a RPC API server is done by first creating an instance of the
 annotated with the `@ApiClass` annotation.
 
 You can choose to use any web server framework you prefer for serving HTTP
-requests. The RPC package includes examples for both the standard `dart:io`
-`HttpServer` as well as an example using the shelf middleware.
+requests. The rpc-examples github repository
+(https://github.com/dart-lang/rpc-examples) includes examples for both the
+standard `dart:io` `HttpServer` as well as an example using the shelf
+middleware.
 
 E.g. to use `dart:io` you would do something like:
 

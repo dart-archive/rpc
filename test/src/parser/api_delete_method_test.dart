@@ -570,7 +570,7 @@ void main() {
             '\'requestMessage\' must be a named parameter.'),
         new ApiConfigError(
             'WrongDeleteApi.deleteWithMessageArg: Query parameter '
-            '\'requestMessage\' must be of type int or String.')
+            '\'requestMessage\' must be of type int, String or bool.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
@@ -590,7 +590,7 @@ void main() {
             '\'pathParam\'.'),
         new ApiConfigError(
             'WrongDeleteApiWithPathQuery.query3: Query parameter '
-            '\'queryParam\' must be of type int or String.'),
+            '\'queryParam\' must be of type int, String or bool.'),
         new ApiConfigError(
             'WrongDeleteApiWithPathQuery.query4: No support for optional path '
             'parameters in API methods.'),

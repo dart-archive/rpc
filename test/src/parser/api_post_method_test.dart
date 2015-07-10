@@ -40,6 +40,9 @@ class CorrectPostApiWithPath {
   @ApiMethod(method: 'POST', path: 'postWithInt/{anInt}')
   VoidMessage postWithInt(int anInt, SimpleMessage msg) { return null; }
 
+  @ApiMethod(method: 'POST', path: 'postWithBool/{aBool}')
+  VoidMessage postWithBool(bool aBool, SimpleMessage msg) { return null; }
+
   @ApiMethod(method: 'POST', path: 'postWithStringInt/{aString}/{anInt}')
   VoidMessage postWithStringInt(String aString, int anInt, SimpleMessage msg) {
     return null;
@@ -61,6 +64,11 @@ class CorrectPostApiWithPath {
 
   @ApiMethod(method: 'POST', path: 'postWithIntInt/{anInt1}/{anInt2}')
   VoidMessage postWithIntInt(int anInt1, int anInt2, SimpleMessage msg) {
+    return null;
+  }
+
+  @ApiMethod(method: 'POST', path: 'postWithBoolInt/{aBool}/{anInt}')
+  VoidMessage postWithBoolInt(int aBool, int anInt, SimpleMessage msg) {
     return null;
   }
 
@@ -202,7 +210,7 @@ void main() {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new CorrectPostApiWithPath());
       expect(parser.isValid, isTrue);
-      expect(apiCfg.methods.length, 8);
+      expect(apiCfg.methods.length, 10);
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
       var json = discoveryDocSchema.toResponse(discoveryDoc);
@@ -246,6 +254,21 @@ void main() {
             }
           },
           'parameterOrder': ['anInt'],
+          'request': {r'$ref': 'SimpleMessage'}
+        },
+        'postWithBool': {
+          'id': 'CorrectPostApiWithPath.postWithBool',
+          'path': 'postWithBool/{aBool}',
+          'httpMethod': 'POST',
+          'parameters': {
+            'aBool': {
+              'type': 'boolean',
+              'description': 'Path parameter: \'aBool\'.',
+              'required': true,
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['aBool'],
           'request': {r'$ref': 'SimpleMessage'}
         },
         'postWithStringInt': {
@@ -330,6 +353,27 @@ void main() {
             }
           },
           'parameterOrder': ['anInt1', 'anInt2'],
+          'request': {r'$ref': 'SimpleMessage'}
+        },
+        'postWithBoolInt': {
+          'id': 'CorrectPostApiWithPath.postWithBoolInt',
+          'path': 'postWithBoolInt/{aBool}/{anInt}',
+          'httpMethod': 'POST',
+          'parameters': {
+            'aBool': {
+              'type': 'integer',
+              'description': 'Path parameter: \'aBool\'.',
+              'required': true,
+              'location': 'path'
+            },
+            'anInt': {
+              'type': 'integer',
+              'description': 'Path parameter: \'anInt\'.',
+              'required': true,
+              'location': 'path'
+            }
+          },
+          'parameterOrder': ['aBool', 'anInt'],
           'request': {r'$ref': 'SimpleMessage'}
         },
         'postWithIntKeywordInt': {
@@ -421,7 +465,7 @@ void main() {
             '\'msg\'.'),
         new ApiConfigError(
             'WrongPostApiWithPathQuery.missingPathParam: Path parameter \'id\' '
-            'must be of type int or String.'),
+            'must be of type int, String or bool.'),
         new ApiConfigError(
             'WrongPostApiWithPathQuery.missingPathParam: API methods using '
             'POST must have a signature of path parameters followed by one '
