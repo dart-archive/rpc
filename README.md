@@ -257,9 +257,9 @@ Example schema:
 class MyRequest {
    @ApiProperty(
      format: 'uint32',
-     defaultValue=40,
-     minValue=0,
-     maxValue=150)
+     defaultValue: 40,
+     minValue: 0,
+     maxValue: 150)
    int age;
 
    @ApiProperty(format: 'float')
