@@ -33,6 +33,9 @@ class CorrectString {
       required: true,
       defaultValue: 'foo')
   String aStringWithAllAnnotations;
+
+  @ApiProperty(ignore: true)
+  String ignored;
 }
 
 class WrongString {

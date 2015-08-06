@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.2
+- Add support for ignored fields in a request/response schema class.
+
 ## 0.5.1
 - Update pubspec dependencies.
 - Move the examples directory into separate github repo, dart-lang/rpc-examples,

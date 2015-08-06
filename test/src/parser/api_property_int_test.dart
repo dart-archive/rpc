@@ -45,6 +45,9 @@ class CorrectInt {
       format: 'uint64', minValue: 0, maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
       defaultValue: 0xFFFFFFFFFFFFFFFF)
   int aBoundedUInt64;
+
+  @ApiProperty(ignore: true)
+  int ignored;
 }
 
 class WrongInt {
@@ -211,7 +214,7 @@ void main() {
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError('WrongInt: anIntWithEnumValues: Invalid property '
-            'annotation. Property of type double does not support the '
+            'annotation. Property of type integer does not support the '
             'ApiProperty field: values'),
         new ApiConfigError(
             'WrongInt: aBoundedIntWithTooHighDefault: Default value must be '

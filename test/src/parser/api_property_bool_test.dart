@@ -23,6 +23,9 @@ class CorrectBool {
 
   @ApiProperty(required: true)
   bool aRequiredBool;
+
+  @ApiProperty(ignore: true)
+  bool ignored;
 }
 
 class WrongBool {

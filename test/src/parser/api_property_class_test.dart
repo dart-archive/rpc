@@ -35,6 +35,9 @@ class CorrectClass {
       description: 'Description of a Class.',
       required: true)
   SomeClass aClassWithAllAnnotations;
+
+  @ApiProperty(ignore: true)
+  SomeClass ignored;
 }
 
 class WrongClass {

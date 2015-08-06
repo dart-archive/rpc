@@ -33,6 +33,9 @@ class CorrectMap {
   @ApiProperty(
       name: 'aFullMap', description: 'Description of a Map.', required: true)
   Map<String, SomeClass> aMapWithAllAnnotations;
+
+  @ApiProperty(ignore: true)
+  Map<String, SomeClass> ignore;
 }
 
 class WrongMap {

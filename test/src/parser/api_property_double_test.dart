@@ -45,6 +45,9 @@ class CorrectDouble {
 
   @ApiProperty(required: false)
   double anOptionalDouble;
+
+  @ApiProperty(ignore: true)
+  double ignored;
 }
 
 class WrongDouble {

@@ -39,6 +39,11 @@ class CorrectEnum{
       required: true,
       defaultValue: 'bar')
   String anEnumWithAllAnnotations;
+
+  @ApiProperty(
+      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
+      ignore: true)
+  String ignored;
 }
 
 class WrongEnum {

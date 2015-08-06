@@ -33,6 +33,9 @@ class CorrectList {
   @ApiProperty(
       name: 'aFullList', description: 'Description of a List.', required: true)
   List<SomeClass> aListWithAllAnnotations;
+
+  @ApiProperty(ignore: true)
+  List<SomeClass> ignored;
 }
 
 class WrongList {

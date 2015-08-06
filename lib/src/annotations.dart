@@ -103,6 +103,12 @@ class ApiProperty {
   /// required.
   final bool required;
 
+  /// Whether the property should be ignored.
+  ///
+  /// For a request this means the field is left uninitialized. For a response
+  /// the field is left out of the response if true.
+  final bool ignore;
+
   /// Default value for this property if it's not supplied.
   final defaultValue;
 
@@ -121,6 +127,7 @@ class ApiProperty {
       this.description,
       this.format,
       this.required: false,
+      this.ignore: false,
       this.defaultValue,
       this.minValue,
       this.maxValue,

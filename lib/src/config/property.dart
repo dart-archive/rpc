@@ -14,11 +14,9 @@ class ApiConfigSchemaProperty {
 
   final String _apiType;
   final String _apiFormat;
-  final String _apiParameterType;
 
   ApiConfigSchemaProperty(this.name, this.description, this.required,
-                          this.defaultValue, this._apiType,
-                          this._apiFormat, this._apiParameterType);
+                          this.defaultValue, this._apiType, this._apiFormat);
 
   discovery.JsonSchema get typeAsDiscovery {
     return new discovery.JsonSchema()
@@ -71,7 +69,7 @@ class IntegerProperty extends ApiConfigSchemaProperty {
                   this.minValue, this.maxValue)
       : super(name, description, required,
               defaultValue != null ? defaultValue.toString() : null,
-              apiType, apiFormat, apiFormat);
+              apiType, apiFormat);
 
   _singleResponseValue(value) {
     assert(value != null);
@@ -137,7 +135,7 @@ class DoubleProperty extends ApiConfigSchemaProperty {
                  double defaultValue, String apiFormat)
       : super(name, description, required,
               defaultValue != null ? defaultValue.toString() : null,
-              'number', apiFormat, apiFormat);
+              'number', apiFormat);
 
   _singleRequestValue(value) {
     assert(value != null);
@@ -164,8 +162,7 @@ class StringProperty extends ApiConfigSchemaProperty {
 
   StringProperty(String name, String description, bool required,
                  String defaultValue)
-      : super(name, description, required, defaultValue, 'string',
-          null, 'string');
+      : super(name, description, required, defaultValue, 'string', null);
 }
 
 class EnumProperty extends ApiConfigSchemaProperty {
@@ -174,8 +171,7 @@ class EnumProperty extends ApiConfigSchemaProperty {
 
   EnumProperty(String name, String description, bool required,
                String defaultValue, this._values)
-      : super(name, description, required, defaultValue, 'string', null,
-              'string');
+      : super(name, description, required, defaultValue, 'string', null);
 
   discovery.JsonSchema get asDiscovery {
     return super.asDiscovery
@@ -196,7 +192,7 @@ class BooleanProperty extends ApiConfigSchemaProperty {
                   bool defaultValue)
       : super(name, description, required,
               defaultValue != null ? defaultValue.toString() : null,
-              'boolean', null, 'boolean');
+              'boolean', null);
 
   _singleRequestValue(value) {
     assert(value != null);
@@ -218,7 +214,7 @@ class DateTimeProperty extends ApiConfigSchemaProperty {
                    DateTime defaultValue)
       : super(name, description, required,
           defaultValue != null ? defaultValue.toUtc().toIso8601String() : null,
-          'string', 'date-time', 'string');
+          'string', 'date-time');
 
   _singleResponseValue(value) {
     assert(value != null);
@@ -240,7 +236,7 @@ class SchemaProperty extends ApiConfigSchemaProperty {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
-      : super(name, description, required, null, null, null, null);
+      : super(name, description, required, null, null, null);
 
   _singleResponseValue(value) {
     assert(value != null);
@@ -266,7 +262,7 @@ class ListProperty extends ApiConfigSchemaProperty {
 
   ListProperty(String name, String description, bool required,
                this._itemsProperty)
-      : super(name, description, required, null, null, null, null);
+      : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
       new discovery.JsonSchema()..type = 'array';
@@ -294,7 +290,7 @@ class MapProperty extends ApiConfigSchemaProperty {
 
   MapProperty(String name, String description, bool required,
               this._additionalProperty)
-      : super(name, description, required, null, null, null, null);
+      : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
       new discovery.JsonSchema()..type = 'object';

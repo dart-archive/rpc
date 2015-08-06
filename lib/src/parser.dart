@@ -656,6 +656,13 @@ class ApiParser {
                                         String propertyName,
                                         ApiProperty metadata,
                                         bool isRequest) {
+    if (metadata.ignore) {
+      // Don't do any parsing just return null. This means this field will
+      // not be part of the schema's properties and hence not be a valid value
+      // to pass in the request, will not be returned in a response, and will
+      // not be part of the discovery document.
+      return null;
+    }
     if (propertyType.simpleName == #dynamic) {
       addError('$propertyName: Properties cannot be of type: \'dynamic\'.');
       return null;
@@ -696,7 +703,7 @@ class ApiParser {
     assert(metadata != null);
     const List<Symbol> extraFields =
         const [#defaultValue, #format, #minValue, #maxValue];
-    _checkValidFields(propertyName, 'double', metadata, extraFields);
+    _checkValidFields(propertyName, 'integer', metadata, extraFields);
     String apiFormat = metadata.format;
     if (apiFormat == null || apiFormat.isEmpty) {
       apiFormat = 'int32';
@@ -725,8 +732,8 @@ class ApiParser {
     }
     return new IntegerProperty(propertyName, metadata.description,
                                metadata.required, metadata.defaultValue,
-                               apiType, apiFormat, metadata.minValue,
-                               metadata.maxValue);
+                               apiType, apiFormat,
+                               metadata.minValue, metadata.maxValue);
   }
 
   // Parses a value to determine if it is a valid integer value.
@@ -934,7 +941,8 @@ class ApiParser {
                          ApiProperty metadata,
                          List<Symbol> extraFields) {
     assert(extraFields != null);
-    const List<Symbol> commonFields = const [#name, #description, #required];
+    const List<Symbol> commonFields =
+        const [#name, #description, #required, #ignore];
     InstanceMirror im = reflect(metadata);
     im.type.declarations.forEach((Symbol field, DeclarationMirror fieldMirror) {
       if (fieldMirror is !VariableMirror || commonFields.contains(field)) {

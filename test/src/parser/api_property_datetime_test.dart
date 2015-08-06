@@ -26,6 +26,9 @@ class CorrectDateTime {
 
   @ApiProperty(required: false)
   DateTime anOptionalDateTime;
+
+  @ApiProperty(ignore: true)
+  DateTime ignored;
 }
 
 class WrongDateTime {

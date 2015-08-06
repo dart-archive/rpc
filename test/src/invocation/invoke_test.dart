@@ -36,6 +36,9 @@ class DefaultValueMessage {
   },
       defaultValue: 'enum_value2')
   String anEnum;
+
+  @ApiProperty(ignore: true)
+  Type ignoredProperty;
 }
 
 var _expectedDefaultResult = {
