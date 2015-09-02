@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.3
+- Fix bug in the rpc generator causing it to fail on Dart 1.12.
+
 ## 0.5.2
 - Add support for ignored fields in a request/response schema class.
 

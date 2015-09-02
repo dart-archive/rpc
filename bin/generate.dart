@@ -236,6 +236,11 @@ class ClientApiGenerator {
         request.response
           ..add(packageFile.readAsBytesSync())
           ..close();
+      } else if (path.contains('.packages')) {
+        // Didn't find .packages so revert to /packages/.
+        request.response
+            ..statusCode = HttpStatus.NOT_FOUND
+            ..close();
       } else {
         request.response
           ..add(UTF8.encode(generatorSource))
