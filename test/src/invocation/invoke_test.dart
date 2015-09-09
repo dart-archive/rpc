@@ -141,6 +141,16 @@ class GetAPI {
     return new StringMessage()..aString =
         'Received cookies: ${context.requestCookies}';
   }
+
+  @ApiMethod(path: 'get/blob')
+  Future<Blob> getBlob() async {
+    final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
+    final file = new File.fromUri(path);
+    return new Blob()
+        ..bytes = file.readAsBytesSync()
+        ..contentType = 'image/png'
+        ..modified = file.lastModifiedSync();
+  }
 }
 
 class DeleteAPI {
@@ -355,6 +365,30 @@ main() {
           'my-other-cookie=other-cookie-value]';
       expect(result['aString'], expectedResult);
     });
+
+    test('get-blob-media', () async {
+      HttpApiResponse response = await _sendRequest('GET', 'get/blob');
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'image/png');
+      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
+      final file = new File.fromUri(path);
+      expect(response.headers[HttpHeaders.LAST_MODIFIED],
+          file.lastModifiedSync().toUtc());
+      final bytes = await response.body.toList();
+      expect(file.readAsBytesSync(), bytes[0]);
+    });
+
+    test('get-blob-json', () async {
+      HttpApiResponse response = await _sendRequest('GET', 'get/blob?alt=json');
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'application/json; charset=utf-8');
+      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
+      final file = new File.fromUri(path);
+      final blob = await _decodeBody(response.body);
+      expect(DateTime.parse(blob['modified']).toUtc(), file.lastModifiedSync().toUtc());
+      expect(blob['bytes'], file.readAsBytesSync());
+      expect(blob['contentType'], 'image/png');
+    });
   });
 
   group('api-invoke-delete', () {
@@ -502,7 +536,7 @@ main() {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'fc28d86fff41ba1ebc210c19b886792abb43ead8',
+        'etag': 'a6bbfc4287d6148ab84854567391685e7bb07f0a',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -524,12 +558,7 @@ main() {
             'id': 'MinMaxIntMessage',
             'type': 'object',
             'properties': {
-              'aBoundedInt': {
-                'type': 'integer',
-                'format': 'int32',
-                'minimum': '0',
-                'maximum': '10'
-              }
+              'aBoundedInt': {'type': 'integer', 'format': 'int32', 'minimum': '0', 'maximum': '10'}
             }
           },
           'Int32Message': {
@@ -542,17 +571,22 @@ main() {
             'type': 'object',
             'properties': {'anInt': {'type': 'string', 'format': 'int64'}}
           },
+          'Blob': {
+            'id': 'Blob',
+            'type': 'object',
+            'properties': {
+              'bytes': {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}},
+              'modified': {'type': 'string', 'format': 'date-time'},
+              'contentType': {'type': 'string'}
+            }
+          },
           'DefaultValueMessage': {
             'id': 'DefaultValueMessage',
             'type': 'object',
             'properties': {
               'anInt': {'type': 'integer', 'default': '5', 'format': 'int32'},
               'aBool': {'type': 'boolean', 'default': 'true'},
-              'aDouble': {
-                'type': 'number',
-                'default': '4.2',
-                'format': 'double'
-              },
+              'aDouble': {'type': 'number', 'default': '4.2', 'format': 'double'},
               'aDate': {
                 'type': 'string',
                 'default': '1969-07-20T20:18:00.000Z',
@@ -571,11 +605,7 @@ main() {
               }
             }
           },
-          'ListOfString': {
-            'id': 'ListOfString',
-            'type': 'array',
-            'items': {'type': 'string'}
-          },
+          'ListOfString': {'id': 'ListOfString', 'type': 'array', 'items': {'type': 'string'}},
           'MapOfint': {
             'id': 'MapOfint',
             'type': 'object',
@@ -697,6 +727,15 @@ main() {
                 'parameters': {},
                 'parameterOrder': [],
                 'response': {r'$ref': 'StringMessage'}
+              },
+              'getBlob': {
+                'id': 'TestAPI.get.getBlob',
+                'path': 'get/blob',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': [],
+                'response': {r'$ref': 'Blob'},
+                'supportsMediaDownload': true
               }
             },
             'resources': {}

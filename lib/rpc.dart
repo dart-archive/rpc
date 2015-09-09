@@ -11,3 +11,4 @@ export 'src/context.dart';
 export 'src/errors.dart';
 export 'src/message.dart';
 export 'src/server.dart';
+export 'src/blob.dart';
