@@ -69,6 +69,9 @@ class ApiConfigMethod {
           new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
     }
     if (_responseSchema != null && _responseSchema.containsData) {
+      if (_responseSchema.schemaClass == reflectClass(Blob)) {
+        method.supportsMediaDownload = true;
+      }
       method.response = new discovery.RestMethodResponse()
                             ..P_ref = _responseSchema.schemaName;
     }
@@ -176,11 +179,20 @@ class ApiConfigMethod {
                   'Method with non-void return type returned \'null\''),
               drainRequest: false);
         }
-        resultAsJson = _responseSchema.toResponse(apiResult);
-        rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
-        var resultAsBytes = request.jsonToBytes.convert(resultAsJson);
-        rpcLogger.finest(
-            'Successfully encoded json as bytes:\n  $resultAsBytes');
+        var resultAsBytes;
+        final alt = context.requestUri.queryParameters['alt'];
+        if (apiResult is! Blob || alt == 'json') {
+          resultAsJson = _responseSchema.toResponse(apiResult);
+          rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
+          resultAsBytes = request.jsonToBytes.convert(resultAsJson);
+          rpcLogger.finest(
+              'Successfully encoded json as bytes:\n  $resultAsBytes');
+        } else {
+          resultAsBytes = apiResult.bytes;
+          context.responseHeaders[HttpHeaders.CONTENT_TYPE] = apiResult.contentType;
+          context.responseHeaders[HttpHeaders.LAST_MODIFIED] = apiResult.modified.toUtc();
+        }
+
         resultBody = new Stream.fromIterable([resultAsBytes]);
         statusCode = HttpStatus.OK;
       } else {
