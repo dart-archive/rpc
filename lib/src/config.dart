@@ -17,6 +17,7 @@ import 'errors.dart';
 import 'message.dart';
 import 'utils.dart';
 import 'discovery/config.dart' as discovery;
+import 'blob.dart';
 
 part 'config/api.dart';
 part 'config/method.dart';
