@@ -10,6 +10,7 @@ import 'dart:io';
 
 import 'package:rpc/rpc.dart';
 import 'package:unittest/unittest.dart';
+import 'package:crypto/crypto.dart';
 
 // Tests for exercising the setting of default values
 class DefaultValueMessage {
@@ -143,13 +144,32 @@ class GetAPI {
   }
 
   @ApiMethod(path: 'get/blob')
-  Future<Blob> getBlob() async {
+  Future<MediaMessage> getBlob() async {
     final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
     final file = new File.fromUri(path);
-    return new Blob()
+    return new MediaMessage()
         ..bytes = file.readAsBytesSync()
         ..contentType = 'image/png'
-        ..modified = file.lastModifiedSync();
+        ..updated = file.lastModifiedSync();
+  }
+
+  @ApiMethod(path: 'get/blob/extra')
+  Future<MediaMessage> getBlobExtra() async {
+    final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
+    final file = new File.fromUri(path);
+    final bytes = file.readAsBytesSync();
+    final md5 = new MD5();
+    md5.add(bytes);
+    final md5Hash = CryptoUtils.bytesToHex(md5.close());
+
+    return new MediaMessage()
+      ..bytes = bytes
+      ..contentType = 'image/png'
+      ..updated = file.lastModifiedSync()
+      ..md5Hash = md5Hash
+      ..metadata = {
+        'description': 'logo'
+      };
   }
 }
 
@@ -385,9 +405,37 @@ main() {
       final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
       final file = new File.fromUri(path);
       final blob = await _decodeBody(response.body);
-      expect(DateTime.parse(blob['modified']).toUtc(), file.lastModifiedSync().toUtc());
+      expect(DateTime.parse(blob['updated']).toUtc(), file.lastModifiedSync().toUtc());
       expect(blob['bytes'], file.readAsBytesSync());
       expect(blob['contentType'], 'image/png');
+    });
+
+    test('get-blob-media-unmodified', () async {
+      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
+      final file = new File.fromUri(path);
+      HttpApiResponse response = await _sendRequest('GET', 'get/blob', extraHeaders: {
+        HttpHeaders.IF_MODIFIED_SINCE: file.lastModifiedSync()
+      });
+      expect(response.status, HttpStatus.NOT_MODIFIED);
+      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'image/png');
+      expect(response.headers[HttpHeaders.LAST_MODIFIED],
+          file.lastModifiedSync().toUtc());
+      final bytes = await response.body.toList();
+      expect(bytes.isEmpty, true);
+    });
+
+    test('get-blob-extra', () async {
+      HttpApiResponse response = await _sendRequest('GET', 'get/blob/extra?alt=json');
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'application/json; charset=utf-8');
+      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
+      final file = new File.fromUri(path);
+      final blob = await _decodeBody(response.body);
+      expect(DateTime.parse(blob['updated']).toUtc(), file.lastModifiedSync().toUtc());
+      expect(blob['bytes'], file.readAsBytesSync());
+      expect(blob['contentType'], 'image/png');
+      expect(blob['metadata'], {'description': 'logo'});
+      expect(blob['md5Hash'], 'a675cb93b75d5f1656c920dceecdcb38');
     });
   });
 
@@ -536,7 +584,7 @@ main() {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'a6bbfc4287d6148ab84854567391685e7bb07f0a',
+        'etag': 'e3a3be71c1c88ce66197569968bf793a458bf752',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -571,13 +619,18 @@ main() {
             'type': 'object',
             'properties': {'anInt': {'type': 'string', 'format': 'int64'}}
           },
-          'Blob': {
-            'id': 'Blob',
+          'MediaMessage': {
+            'id': 'MediaMessage',
             'type': 'object',
             'properties': {
               'bytes': {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}},
-              'modified': {'type': 'string', 'format': 'date-time'},
-              'contentType': {'type': 'string'}
+              'updated': {'type': 'string', 'format': 'date-time'},
+              'contentType': {'type': 'string'},
+              'cacheControl': {'type': 'string'},
+              'contentEncoding': {'type': 'string'},
+              'contentLanguage': {'type': 'string'},
+              'md5Hash': {'type': 'string'},
+              'metadata': {'type': 'object', 'additionalProperties': {'type': 'string'}}
             }
           },
           'DefaultValueMessage': {
@@ -734,7 +787,16 @@ main() {
                 'httpMethod': 'GET',
                 'parameters': {},
                 'parameterOrder': [],
-                'response': {r'$ref': 'Blob'},
+                'response': {r'$ref': 'MediaMessage'},
+                'supportsMediaDownload': true
+              },
+              'getBlobExtra': {
+                'id': 'TestAPI.get.getBlobExtra',
+                'path': 'get/blob/extra',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': [],
+                'response': {r'$ref': 'MediaMessage'},
                 'supportsMediaDownload': true
               }
             },
