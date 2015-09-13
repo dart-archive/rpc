@@ -69,6 +69,9 @@ class ApiConfigMethod {
           new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
     }
     if (_responseSchema != null && _responseSchema.containsData) {
+      if (_responseSchema.schemaClass == reflectClass(MediaMessage)) {
+        method.supportsMediaDownload = true;
+      }
       method.response = new discovery.RestMethodResponse()
                             ..P_ref = _responseSchema.schemaName;
     }
@@ -176,11 +179,59 @@ class ApiConfigMethod {
                   'Method with non-void return type returned \'null\''),
               drainRequest: false);
         }
-        resultAsJson = _responseSchema.toResponse(apiResult);
-        rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
-        var resultAsBytes = request.jsonToBytes.convert(resultAsJson);
-        rpcLogger.finest(
-            'Successfully encoded json as bytes:\n  $resultAsBytes');
+        var resultAsBytes;
+        final alt = context.requestUri.queryParameters['alt'];
+        if (apiResult is! MediaMessage || alt == 'json') {
+          resultAsJson = _responseSchema.toResponse(apiResult);
+          rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
+          resultAsBytes = request.jsonToBytes.convert(resultAsJson);
+          rpcLogger.finest(
+              'Successfully encoded json as bytes:\n  $resultAsBytes');
+        } else if (apiResult is MediaMessage) {
+          resultAsBytes = apiResult.bytes;
+          if (apiResult.contentType == null) {
+            rpcLogger.warning('Method $name returned MediaMessage without contentType');
+          } else {
+            context.responseHeaders[HttpHeaders.CONTENT_TYPE] = apiResult.contentType;
+          }
+          if (apiResult.updated != null)
+            context.responseHeaders[HttpHeaders.LAST_MODIFIED] = apiResult.updated.toUtc();
+          if (apiResult.contentEncoding != null)
+           context.responseHeaders[HttpHeaders.CONTENT_ENCODING] = apiResult.contentEncoding;
+          if (apiResult.contentLanguage != null)
+            context.responseHeaders[HttpHeaders.CONTENT_LANGUAGE] = apiResult.contentLanguage;
+          if (apiResult.md5Hash != null) {
+            context.responseHeaders[HttpHeaders.CONTENT_MD5] = apiResult.md5Hash;
+          }
+        }
+
+        if (apiResult is MediaMessage) {
+          // Better solution to force cache?
+          context.responseHeaders.remove(HttpHeaders.PRAGMA);
+          if (apiResult.cacheControl != null) {
+            context.responseHeaders[HttpHeaders.CACHE_CONTROL] =
+                apiResult.cacheControl;
+          } else {
+            context.responseHeaders.remove(HttpHeaders.CACHE_CONTROL);
+          }
+
+          if (context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE] != null) {
+            DateTime ifModifiedSince;
+            if (context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE] is! DateTime) {
+              ifModifiedSince = parseHttpDate(
+                  context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE][0]);
+            } else {
+              ifModifiedSince = context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE];
+            }
+            if (ifModifiedSince != null &&
+                !apiResult.updated.isAfter(ifModifiedSince)) {
+              return new HttpApiResponse(
+                  HttpStatus.NOT_MODIFIED, new Stream.empty(),
+                  context.responseHeaders);
+            }
+          }
+        }
+
         resultBody = new Stream.fromIterable([resultAsBytes]);
         statusCode = HttpStatus.OK;
       } else {

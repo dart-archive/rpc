@@ -11,12 +11,14 @@ import 'dart:mirrors';
 import 'package:crypto/crypto.dart';
 import 'package:gcloud/service_scope.dart' as ss;
 import 'package:uri/uri.dart';
+import 'package:http_parser/http_parser.dart';
 
 import 'context.dart';
 import 'errors.dart';
 import 'message.dart';
 import 'utils.dart';
 import 'discovery/config.dart' as discovery;
+import 'media_message.dart';
 
 part 'config/api.dart';
 part 'config/method.dart';
