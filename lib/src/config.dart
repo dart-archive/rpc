@@ -11,12 +11,14 @@ import 'dart:mirrors';
 import 'package:crypto/crypto.dart';
 import 'package:gcloud/service_scope.dart' as ss;
 import 'package:uri/uri.dart';
+import 'package:http_parser/http_parser.dart';
 
 import 'context.dart';
 import 'errors.dart';
 import 'message.dart';
 import 'utils.dart';
 import 'discovery/config.dart' as discovery;
+import 'media_message.dart';
 
 part 'config/api.dart';
 part 'config/method.dart';
@@ -57,7 +59,7 @@ class ParsedHttpApiRequest {
   Map<String, String> pathParameters;
 
   factory ParsedHttpApiRequest(HttpApiRequest request, String apiPrefix,
-                               Converter<Object, dynamic> jsonToBytes) {
+      Converter<Object, dynamic> jsonToBytes) {
     var path = request.uri.path;
     // Get rid of any double '//' in path.
     while (path.contains('//')) path = path.replaceAll('//', '/');
@@ -90,11 +92,11 @@ class ParsedHttpApiRequest {
     var methodKey = '${request.httpMethod}${methodPathSegments.length}';
     var methodUri = Uri.parse(methodPathSegments.join('/'));
     return new ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
-                                      methodUri, jsonToBytes);
+        methodUri, jsonToBytes);
   }
 
   ParsedHttpApiRequest._(this.originalRequest, this.apiKey, this.isOptions,
-                         this.methodKey, this.methodUri, this.jsonToBytes);
+      this.methodKey, this.methodUri, this.jsonToBytes);
 
   String get httpMethod => originalRequest.httpMethod;
 
