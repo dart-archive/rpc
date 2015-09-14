@@ -47,15 +47,18 @@ class ApiConfigSchema {
           '\'$schemaName\'.');
     }
     InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
-    _properties.forEach((sym, prop) {
+    for (Symbol sym in _properties.keys) {
+      final prop = _properties[sym];
+
       if (request.containsKey(prop.name)) {
-        schema.setField(sym, prop.fromRequest(request[prop.name]));
+        if (request[prop.name] is MediaMessage) schema.setField(sym, request[prop.name]);
+        else schema.setField(sym, prop.fromRequest(request[prop.name]));
       } else if (prop.hasDefault) {
         schema.setField(sym, prop.fromRequest(prop.defaultValue));
       } else if (prop.required) {
         throw new BadRequestError('Required field ${prop.name} is missing');
       }
-    });
+    }
     return schema.reflectee;
   }
 

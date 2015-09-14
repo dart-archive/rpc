@@ -4,12 +4,10 @@
 
 library rpc.media_message;
 
-import 'dart:typed_data';
-
 /// Special API Message to use when a method returns a Blob.
 class MediaMessage {
   /// Blob data as bytes.
-  Uint8List bytes;
+  List<int> bytes;
 
   /// The creation or modification time of the media. Optional.
   DateTime updated;
@@ -30,6 +28,5 @@ class MediaMessage {
   String md5Hash;
 
   /// User-provided metadata, in key/value pairs. Optional.
-  // Todo: support dynamic in parser.
   Map<String, String> metadata;
 }
