@@ -12,12 +12,14 @@ import 'package:crypto/crypto.dart';
 import 'package:gcloud/service_scope.dart' as ss;
 import 'package:uri/uri.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 import 'context.dart';
 import 'errors.dart';
 import 'message.dart';
 import 'utils.dart';
 import 'discovery/config.dart' as discovery;
+import 'http_body_parser.dart';
 import 'media_message.dart';
 
 part 'config/api.dart';
@@ -58,6 +60,8 @@ class ParsedHttpApiRequest {
   // A map from path parameter name to path parameter value.
   Map<String, String> pathParameters;
 
+  ContentType contentType;
+
   factory ParsedHttpApiRequest(HttpApiRequest request, String apiPrefix,
       Converter<Object, dynamic> jsonToBytes) {
     var path = request.uri.path;
@@ -91,12 +95,20 @@ class ParsedHttpApiRequest {
     var isOptions = request.httpMethod.toUpperCase() == 'OPTIONS';
     var methodKey = '${request.httpMethod}${methodPathSegments.length}';
     var methodUri = Uri.parse(methodPathSegments.join('/'));
+
+    ContentType contentType;
+    if (request.headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+      final header = request.headers[HttpHeaders.CONTENT_TYPE];
+
+      if (header is List) contentType = ContentType.parse(header.join(' '));
+      else contentType = ContentType.parse(header);
+    }
     return new ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
-        methodUri, jsonToBytes);
+        methodUri, jsonToBytes, contentType);
   }
 
   ParsedHttpApiRequest._(this.originalRequest, this.apiKey, this.isOptions,
-      this.methodKey, this.methodUri, this.jsonToBytes);
+      this.methodKey, this.methodUri, this.jsonToBytes, this.contentType);
 
   String get httpMethod => originalRequest.httpMethod;
 

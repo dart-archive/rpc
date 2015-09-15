@@ -270,13 +270,14 @@ class ApiConfigMethod {
     var decodedRequest = {};
     try {
       if (_requestSchema.containsData) {
-        decodedRequest = await request.body.transform(_bytesToJson).first;
+        decodedRequest = (await parseRequestBody(request)).body;
         logRequest(request, decodedRequest);
       }
       // The request schema is the last positional parameter, so just adding
       // it to the list of position parameters.
-      positionalParams.add(_requestSchema.fromRequest(decodedRequest));
-    } catch (error) {
+      final schema = _requestSchema.fromRequest(decodedRequest);
+      positionalParams.add(schema);
+    } catch (error, stack) {
       rpcLogger.warning('Failed to decode request body: $error');
       if (error is FormatException) {
         if (error.message == 'Unexpected end of input') {

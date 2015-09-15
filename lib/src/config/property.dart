@@ -245,7 +245,7 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 
   _singleRequestValue(value) {
     assert(value != null);
-    if (value is! Map) {
+    if (value is! Map && value is! MediaMessage) {
       throw new BadRequestError('Invalid request message');
     }
     return _ref.fromRequest(value);
