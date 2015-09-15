@@ -96,8 +96,13 @@ class ParsedHttpApiRequest {
     var methodKey = '${request.httpMethod}${methodPathSegments.length}';
     var methodUri = Uri.parse(methodPathSegments.join('/'));
 
-    // Is it possible to have a content-type list with more than 1 value?
-    var contentType = request.headers.containsKey(HttpHeaders.CONTENT_TYPE) ? ContentType.parse(request.headers[HttpHeaders.CONTENT_TYPE][0]) : null;
+    ContentType contentType;
+    if (request.headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+      final header = request.headers[HttpHeaders.CONTENT_TYPE];
+
+      if (header is List) contentType = ContentType.parse(header.join(' '));
+      else contentType = ContentType.parse(header);
+    }
     return new ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
         methodUri, jsonToBytes, contentType);
   }

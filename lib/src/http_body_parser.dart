@@ -74,7 +74,13 @@ Future<PostData> _asFormData(ParsedHttpApiRequest request) {
       .then(Future.wait)
       .then((List<List> parts) {
     Map<String, dynamic> map = {};
-    for (var part in parts) map[part[0]] = part[1];
+    // Form input file multiple
+    for (var part in parts) {
+      if (map[part[0]] != null) {
+        if (map[part[0]] is List) map[part[0]].add(part[1]);
+        else map[part[0]] = [map[part[0]], part[1]];
+      } else map[part[0]] = part[1];
+    }
     return new PostData('form', map);
   });
 }

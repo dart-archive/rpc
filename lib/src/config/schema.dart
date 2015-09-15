@@ -51,8 +51,21 @@ class ApiConfigSchema {
       final prop = _properties[sym];
 
       if (request.containsKey(prop.name)) {
-        if (request[prop.name] is MediaMessage) schema.setField(sym, request[prop.name]);
-        else schema.setField(sym, prop.fromRequest(request[prop.name]));
+        // MediaMessage special case
+        if (request[prop.name] is MediaMessage || request[prop.name] is List<MediaMessage>) {
+          // If in form, there is an (input[type="file"] multiple) and the user
+          // put only one file. It's not an error and it should be accept.
+          // Maybe it cans be optimized.
+          if (schema.type.instanceMembers[sym].returnType.reflectedType.toString() == 'List<MediaMessage>' && request[prop.name] is MediaMessage) {
+            schema.setField(sym, [request[prop.name]]);
+          } else if (request[prop.name] is List) {
+            schema.setField(sym, prop.fromRequest(request[prop.name]));
+          } else {
+            schema.setField(sym, request[prop.name]);
+          }
+        } else {
+          schema.setField(sym, prop.fromRequest(request[prop.name]));
+        }
       } else if (prop.hasDefault) {
         schema.setField(sym, prop.fromRequest(prop.defaultValue));
       } else if (prop.required) {
