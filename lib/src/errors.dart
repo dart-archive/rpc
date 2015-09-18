@@ -83,4 +83,16 @@ class RpcErrorDetail {
       this.locationType,
       this.extendedHelp,
       this.sendReport});
+
+  Map<String, String> toJson() {
+    var json = {};
+    if (domain != null) json['domain'] = domain;
+    if (reason != null) json['reason'] = reason;
+    if (message != null) json['message'] = message;
+    if (location != null) json['location'] = location;
+    if (locationType != null) json['locationType'] = locationType;
+    if (extendedHelp != null) json['extendedHelp'] = extendedHelp;
+    if (sendReport != null) json['sendReport'] = sendReport;
+    return json;
+  }
 }
