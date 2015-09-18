@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'utils.dart';
+import 'errors.dart';
 
 /// Class used when invoking Http API requests.
 ///
@@ -95,14 +96,17 @@ class HttpApiResponse {
     assert(headers != null);
   }
 
-  factory HttpApiResponse.error(int status,
-                                String message,
-                                Exception exception,
-                                StackTrace stack) {
-    Map json = { 'error': { 'code': status, 'message': message } };
-    Stream<List<int>> s =
-        new Stream.fromIterable([_jsonToBytes.convert(json)]);
+  factory HttpApiResponse.error(
+      int status, String message, Exception exception, StackTrace stack,
+      {List<RpcErrorDetail> errors}) {
+    Map json = {
+      'error': {'code': status, 'message': message}
+    };
+    if (errors != null && errors.length > 0) {
+      json['error']['errors'] = errors.map((error) => error.toJson()).toList();
+    }
+    Stream<List<int>> s = new Stream.fromIterable([_jsonToBytes.convert(json)]);
     return new HttpApiResponse(status, s, defaultResponseHeaders,
-                               exception: exception, stack: stack);
+        exception: exception, stack: stack);
   }
 }
