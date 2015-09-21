@@ -372,11 +372,11 @@ containing the `toString()` version of the internal exception as the method.
 
 The JSON format for errors is:
 
-```JSON
+```
 {
-  error: {
-    code: <http status code>
-    message: <error message>
+  "error": {
+    "code": <http status code>
+    "message": <error message>
   }
 }      
 ```
@@ -394,10 +394,10 @@ This will return the JSON:
 
 ```JSON
 {
-  error: {
-    code: 403
-    message: "User does not exist"
-    errors: [
+  "error": {
+    "code": 403
+    "message": "User does not exist"
+    "errors": [
       {"reason": "UserDoesNotExist"}
     ]
   }
