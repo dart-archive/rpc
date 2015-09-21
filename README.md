@@ -375,7 +375,7 @@ The JSON format for errors is:
 ```
 {
   "error": {
-    "code": <http status code>
+    "code": <http status code>,
     "message": <error message>
   }
 }      
@@ -395,8 +395,8 @@ This will return the JSON:
 ```JSON
 {
   "error": {
-    "code": 403
-    "message": "User does not exist"
+    "code": 403,
+    "message": "User does not exist",
     "errors": [
       {"reason": "UserDoesNotExist"}
     ]
