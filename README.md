@@ -372,11 +372,34 @@ containing the `toString()` version of the internal exception as the method.
 
 The JSON format for errors is:
 
-```
+```JSON
 {
   error: {
     code: <http status code>
     message: <error message>
+  }
+}      
+```
+
+In addition to the basic way of returning an http status code and an error
+message, you can attach `RpcErrorDetail` objects to your `RpcError` (as
+specified in the [Google JSON style guide](http://google-styleguide.googlecode.com/svn/trunk/jsoncstyleguide.xml?showone=error#error.errors)):
+
+```dart
+throw new RpcError(403, 'InvalidUser', 'User does not exist')
+    ..errors.add(new RpcErrorDetail(reason: 'UserDoesNotExist'));
+```
+
+This will return the JSON:
+
+```JSON
+{
+  error: {
+    code: 403
+    message: "User does not exist"
+    errors: [
+      {"reason": "UserDoesNotExist"}
+    ]
   }
 }      
 ```
