@@ -11,10 +11,10 @@ class RpcError implements Exception {
   List<RpcErrorDetail> errors;
 
   RpcError(this.statusCode, this.name, this.message,
-      {List<RpcErrorDetail> errors}) {
-    // Making sure that errors can be added later on.
-    this.errors = errors == null ? [] : errors;
-  }
+      {List<RpcErrorDetail> errors})
+      :
+        // Making sure that errors can be added later on.
+        this.errors = errors == null ? [] : errors;
 
   String toString() =>
       'RPC Error with status: $statusCode and message: $message';
