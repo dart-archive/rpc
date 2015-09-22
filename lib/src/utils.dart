@@ -45,8 +45,9 @@ Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
   // TODO support more encodings.
   var response;
   if (error is RpcError) {
-    response =
-        new HttpApiResponse.error(error.statusCode, error.message, error, stack);
+    response = new HttpApiResponse.error(
+        error.statusCode, error.message, error, stack,
+        errors: error.errors);
   } else {
     response =
         new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,

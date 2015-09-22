@@ -94,6 +94,16 @@ class GetAPI {
     throw new BadRequestError('No request is good enough!');
   }
 
+  @ApiMethod(path: 'get/errors')
+  VoidMessage getErrors() {
+    var errors = [
+      new RpcErrorDetail(
+          reason: 'FailureByDesign', message: 'This is supposed to happen'),
+      new RpcErrorDetail(reason: 'SecondReason', message: 'Second message')
+    ];
+    throw new BadRequestError('This is bad :(')..errors = errors;
+  }
+
   // This should always fail since a method is not allowed to return null.
   @ApiMethod(path: 'get/null')
   StringMessage getNull() {
@@ -241,6 +251,25 @@ main() {
       expect(response.status, HttpStatus.BAD_REQUEST);
       expect(response.exception.toString(),
           'RPC Error with status: 400 and message: No request is good enough!');
+    });
+
+    test('errors', () async {
+      HttpApiResponse response = await _sendRequest('GET', 'get/errors');
+      expect(response.status, HttpStatus.BAD_REQUEST);
+      expect(response.exception.toString(),
+          'RPC Error with status: 400 and message: This is bad :(');
+
+      // Now check that the returned JSON contains the list of errors
+      var body = await _decodeBody(response.body);
+      expect(body['error'].containsKey('errors'), isTrue);
+      List<RpcErrorDetail> errors = body['error']['errors'];
+      expect(errors.length, 2);
+      expect(errors.first, {
+        'reason': 'FailureByDesign',
+        'message': 'This is supposed to happen'
+      });
+      expect(
+          errors.last, {'reason': 'SecondReason', 'message': 'Second message'});
     });
 
     test('null', () async {
@@ -502,7 +531,7 @@ main() {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'fc28d86fff41ba1ebc210c19b886792abb43ead8',
+        'etag': '4f93b8d67f527517a9d1c5c0492704a9578b1afb',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -596,6 +625,13 @@ main() {
               'getThrowing': {
                 'id': 'TestAPI.get.getThrowing',
                 'path': 'get/throwing',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': []
+              },
+              'getErrors': {
+                'id': 'TestAPI.get.getErrors',
+                'path': 'get/errors',
                 'httpMethod': 'GET',
                 'parameters': {},
                 'parameterOrder': []
