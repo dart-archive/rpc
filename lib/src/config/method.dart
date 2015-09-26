@@ -195,7 +195,7 @@ class ApiConfigMethod {
             context.responseHeaders[HttpHeaders.CONTENT_TYPE] = apiResult.contentType;
           }
           if (apiResult.updated != null)
-            context.responseHeaders[HttpHeaders.LAST_MODIFIED] = apiResult.updated.toUtc();
+            context.responseHeaders[HttpHeaders.LAST_MODIFIED] = formatHttpDate(apiResult.updated);
           if (apiResult.contentEncoding != null)
             context.responseHeaders[HttpHeaders.CONTENT_ENCODING] = apiResult.contentEncoding;
           if (apiResult.contentLanguage != null)
@@ -216,18 +216,12 @@ class ApiConfigMethod {
           }
 
           if (context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE] != null) {
-            DateTime ifModifiedSince;
-            if (context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE] is! DateTime) {
-              ifModifiedSince = parseHttpDate(
-                  context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE][0]);
-            } else {
-              ifModifiedSince = context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE];
-            }
+            DateTime ifModifiedSince = parseHttpDate(
+                context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE]);
             if (ifModifiedSince != null &&
                 !apiResult.updated.isAfter(ifModifiedSince)) {
-              return new HttpApiResponse(
-                  HttpStatus.NOT_MODIFIED, new Stream.empty(),
-                  context.responseHeaders);
+              return new HttpApiResponse(HttpStatus.NOT_MODIFIED,
+                  new Stream.empty(), context.responseHeaders);
             }
           }
         }

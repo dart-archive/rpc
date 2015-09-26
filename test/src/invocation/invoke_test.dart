@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:rpc/rpc.dart';
 import 'package:unittest/unittest.dart';
 import 'package:crypto/crypto.dart';
+import 'package:http_parser/http_parser.dart';
 
 // Tests for exercising the setting of default values
 class DefaultValueMessage {
@@ -404,7 +405,9 @@ main() {
     test('get-with-cookies', () async {
       var cookies = [
         new Cookie('my-cookie', 'cookie-value'),
-        new Cookie('my-other-cookie', 'other-cookie-value')..httpOnly = false];
+        new Cookie('my-other-cookie', 'other-cookie-value')
+          ..httpOnly = false
+      ];
       HttpApiResponse response =
       await _sendRequest('GET', 'get/withCookies', cookies: cookies);
       expect(response.status, HttpStatus.OK);
@@ -422,7 +425,7 @@ main() {
       final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
       final file = new File.fromUri(path);
       expect(response.headers[HttpHeaders.LAST_MODIFIED],
-          file.lastModifiedSync().toUtc());
+          formatHttpDate(file.lastModifiedSync()));
       final bytes = await response.body.toList();
       expect(file.readAsBytesSync(), bytes[0]);
     });
@@ -430,11 +433,13 @@ main() {
     test('get-blob-json', () async {
       HttpApiResponse response = await _sendRequest('GET', 'get/blob?alt=json');
       expect(response.status, HttpStatus.OK);
-      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'application/json; charset=utf-8');
+      expect(response.headers[HttpHeaders.CONTENT_TYPE],
+          'application/json; charset=utf-8');
       final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
       final file = new File.fromUri(path);
       final blob = await _decodeBody(response.body);
-      expect(DateTime.parse(blob['updated']).toUtc(), file.lastModifiedSync().toUtc());
+      expect(DateTime.parse(blob['updated']).toUtc(),
+          file.lastModifiedSync().toUtc());
       expect(blob['bytes'], file.readAsBytesSync());
       expect(blob['contentType'], 'image/png');
     });
@@ -442,25 +447,29 @@ main() {
     test('get-blob-media-unmodified', () async {
       final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
       final file = new File.fromUri(path);
-      HttpApiResponse response = await _sendRequest('GET', 'get/blob', extraHeaders: {
-        HttpHeaders.IF_MODIFIED_SINCE: file.lastModifiedSync()
+      HttpApiResponse response = await _sendRequest(
+          'GET', 'get/blob', extraHeaders: {
+        HttpHeaders.IF_MODIFIED_SINCE: formatHttpDate(file.lastModifiedSync())
       });
       expect(response.status, HttpStatus.NOT_MODIFIED);
       expect(response.headers[HttpHeaders.CONTENT_TYPE], 'image/png');
       expect(response.headers[HttpHeaders.LAST_MODIFIED],
-          file.lastModifiedSync().toUtc());
+          formatHttpDate(file.lastModifiedSync()));
       final bytes = await response.body.toList();
       expect(bytes.isEmpty, true);
     });
 
     test('get-blob-extra', () async {
-      HttpApiResponse response = await _sendRequest('GET', 'get/blob/extra?alt=json');
+      HttpApiResponse response = await _sendRequest(
+          'GET', 'get/blob/extra?alt=json');
       expect(response.status, HttpStatus.OK);
-      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'application/json; charset=utf-8');
+      expect(response.headers[HttpHeaders.CONTENT_TYPE],
+          'application/json; charset=utf-8');
       final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
       final file = new File.fromUri(path);
       final blob = await _decodeBody(response.body);
-      expect(DateTime.parse(blob['updated']).toUtc(), file.lastModifiedSync().toUtc());
+      expect(DateTime.parse(blob['updated']).toUtc(),
+          file.lastModifiedSync().toUtc());
       expect(blob['bytes'], file.readAsBytesSync());
       expect(blob['contentType'], 'image/png');
       expect(blob['metadata'], {'description': 'logo'});
@@ -613,7 +622,7 @@ main() {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': '4f93b8d67f527517a9d1c5c0492704a9578b1afb',
+        'etag': '860729ad6fcbdf4a95a0d33ba9f9ed5714959928',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
