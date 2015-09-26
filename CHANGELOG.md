@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.4
+- Allow user specific error details in RPC responses.
+
 ## 0.5.3
 - Fix bug in the rpc generator causing it to fail on Dart 1.12.
 
