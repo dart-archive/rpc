@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.5
+- Added support for MediaMessage, full upload/download support for blob data. 
+
 ## 0.5.4
 - Allow user specific error details in RPC responses.
 
