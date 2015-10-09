@@ -22,9 +22,9 @@ class ApiConfigMethod {
   final UriParser _parser;
 
   ApiConfigMethod(this.id, this._instance, this.symbol, this.name, this.path,
-                  this.httpMethod, this.description, this._pathParams,
-                  this._queryParams, this._requestSchema,
-                  this._responseSchema, this._parser);
+      this.httpMethod, this.description, this._pathParams,
+      this._queryParams, this._requestSchema,
+      this._responseSchema, this._parser);
 
   bool matches(ParsedHttpApiRequest request) {
     UriMatch match = _parser.match(request.methodUri);
@@ -39,38 +39,41 @@ class ApiConfigMethod {
   discovery.RestMethod get asDiscovery {
     var method = new discovery.RestMethod();
     method..id = id
-          ..path = path
-          ..httpMethod = httpMethod.toUpperCase()
-          ..description = description
-          ..parameterOrder = _pathParams.map((param) => param.name).toList();
+      ..path = path
+      ..httpMethod = httpMethod.toUpperCase()
+      ..description = description
+      ..parameterOrder = _pathParams.map((param) => param.name).toList();
     method.parameters = new Map<String, discovery.JsonSchema>();
     _pathParams.forEach((param) {
       var schema = new discovery.JsonSchema();
       schema..type = param.isInt ? discovery.JsonSchema.PARAM_INTEGER_TYPE
-                                 : (param.isBool ? discovery.JsonSchema.PARAM_BOOL_TYPE : discovery.JsonSchema.PARAM_STRING_TYPE)
-            ..required = true
-            ..description = 'Path parameter: \'${param.name}\'.'
-            ..location = discovery.JsonSchema.PARAM_LOCATION_PATH;
+          : (param.isBool ? discovery.JsonSchema.PARAM_BOOL_TYPE : discovery.JsonSchema.PARAM_STRING_TYPE)
+        ..required = true
+        ..description = 'Path parameter: \'${param.name}\'.'
+        ..location = discovery.JsonSchema.PARAM_LOCATION_PATH;
       method.parameters[param.name] = schema;
     });
     if (_queryParams != null) {
       _queryParams.forEach((param) {
         var schema = new discovery.JsonSchema();
         schema..type = param.isInt ? discovery.JsonSchema.PARAM_INTEGER_TYPE
-                                   : (param.isBool ? discovery.JsonSchema.PARAM_BOOL_TYPE : discovery.JsonSchema.PARAM_STRING_TYPE)
-              ..required = false
-              ..description = 'Query parameter: \'${param.name}\'.'
-              ..location = discovery.JsonSchema.PARAM_LOCATION_QUERY;
+            : (param.isBool ? discovery.JsonSchema.PARAM_BOOL_TYPE : discovery.JsonSchema.PARAM_STRING_TYPE)
+          ..required = false
+          ..description = 'Query parameter: \'${param.name}\'.'
+          ..location = discovery.JsonSchema.PARAM_LOCATION_QUERY;
         method.parameters[param.name] = schema;
       });
     }
     if (_requestSchema != null && _requestSchema.containsData) {
       method.request =
-          new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
+      new discovery.RestMethodRequest()..P_ref = _requestSchema.schemaName;
     }
     if (_responseSchema != null && _responseSchema.containsData) {
+      if (_responseSchema.schemaClass == reflectClass(MediaMessage)) {
+        method.supportsMediaDownload = true;
+      }
       method.response = new discovery.RestMethodResponse()
-                            ..P_ref = _responseSchema.schemaName;
+        ..P_ref = _responseSchema.schemaName;
     }
     return method;
   }
@@ -94,11 +97,11 @@ class ApiConfigMethod {
         } on FormatException catch (error, stack) {
           return httpErrorResponse(request.originalRequest,
               new BadRequestError('Invalid integer value: $value for '
-                                  'path parameter: ${param.name}. '
-                                  '${error.toString()}'), stack: stack);
+                  'path parameter: ${param.name}. '
+                  '${error.toString()}'), stack: stack);
         }
       } else if(param.isBool){
-          positionalParams.add(value == 'true');
+        positionalParams.add(value == 'true');
       } else {
         positionalParams.add(value);
       }
@@ -117,11 +120,11 @@ class ApiConfigMethod {
             } on FormatException catch (error, stack) {
               return httpErrorResponse(request.originalRequest,
                   new BadRequestError('Invalid integer value: $value for '
-                                      'query parameter: ${param.name}. '
-                                      '${error.toString()}'), stack: stack);
+                      'query parameter: ${param.name}. '
+                      '${error.toString()}'), stack: stack);
             }
           } else if(param.isBool){
-              namedParams[param.symbol] = value == 'true';
+            namedParams[param.symbol] = value == 'true';
           } else {
             namedParams[param.symbol] = value;
           }
@@ -142,15 +145,15 @@ class ApiConfigMethod {
       try {
         if (bodyLessMethods.contains(httpMethod)) {
           apiResult =
-              await invokeNoBody(request, positionalParams, namedParams);
+          await invokeNoBody(request, positionalParams, namedParams);
         } else {
           apiResult =
-              await invokeWithBody(request, positionalParams, namedParams);
+          await invokeWithBody(request, positionalParams, namedParams);
         }
       } on RpcError catch (error, stack) {
         // Catch RpcError explicitly and wrap them in the http error response.
         return httpErrorResponse(request.originalRequest, error, stack: stack,
-                                 drainRequest: false);
+            drainRequest: false);
       } catch (error, stack) {
         // All other exceptions thrown are caught and wrapped as
         // ApplicationError with status code 500. Otherwise these exceptions
@@ -176,11 +179,53 @@ class ApiConfigMethod {
                   'Method with non-void return type returned \'null\''),
               drainRequest: false);
         }
-        resultAsJson = _responseSchema.toResponse(apiResult);
-        rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
-        var resultAsBytes = request.jsonToBytes.convert(resultAsJson);
-        rpcLogger.finest(
-            'Successfully encoded json as bytes:\n  $resultAsBytes');
+        var resultAsBytes;
+        final alt = context.requestUri.queryParameters['alt'];
+        if (apiResult is! MediaMessage || alt == 'json') {
+          resultAsJson = _responseSchema.toResponse(apiResult);
+          rpcLogger.finest('Successfully encoded result as json: $resultAsJson');
+          resultAsBytes = request.jsonToBytes.convert(resultAsJson);
+          rpcLogger.finest(
+              'Successfully encoded json as bytes:\n  $resultAsBytes');
+        } else if (apiResult is MediaMessage) {
+          resultAsBytes = apiResult.bytes;
+          if (apiResult.contentType == null) {
+            rpcLogger.warning('Method $name returned MediaMessage without contentType');
+          } else {
+            context.responseHeaders[HttpHeaders.CONTENT_TYPE] = apiResult.contentType;
+          }
+          if (apiResult.updated != null)
+            context.responseHeaders[HttpHeaders.LAST_MODIFIED] = formatHttpDate(apiResult.updated);
+          if (apiResult.contentEncoding != null)
+            context.responseHeaders[HttpHeaders.CONTENT_ENCODING] = apiResult.contentEncoding;
+          if (apiResult.contentLanguage != null)
+            context.responseHeaders[HttpHeaders.CONTENT_LANGUAGE] = apiResult.contentLanguage;
+          if (apiResult.md5Hash != null) {
+            context.responseHeaders[HttpHeaders.CONTENT_MD5] = apiResult.md5Hash;
+          }
+        }
+
+        if (apiResult is MediaMessage) {
+          // Better solution to force cache?
+          context.responseHeaders.remove(HttpHeaders.PRAGMA);
+          if (apiResult.cacheControl != null) {
+            context.responseHeaders[HttpHeaders.CACHE_CONTROL] =
+                apiResult.cacheControl;
+          } else {
+            context.responseHeaders.remove(HttpHeaders.CACHE_CONTROL);
+          }
+
+          if (context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE] != null) {
+            DateTime ifModifiedSince = parseHttpDate(
+                context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE]);
+            if (ifModifiedSince != null &&
+                !apiResult.updated.isAfter(ifModifiedSince)) {
+              return new HttpApiResponse(HttpStatus.NOT_MODIFIED,
+                  new Stream.empty(), context.responseHeaders);
+            }
+          }
+        }
+
         resultBody = new Stream.fromIterable([resultAsBytes]);
         statusCode = HttpStatus.OK;
       } else {
@@ -194,15 +239,15 @@ class ApiConfigMethod {
         statusCode = context.responseStatusCode;
       }
       var response =
-          new HttpApiResponse(statusCode, resultBody, context.responseHeaders);
+      new HttpApiResponse(statusCode, resultBody, context.responseHeaders);
       logResponse(response, resultAsJson);
       return response;
     });
   }
 
   Future<dynamic> invokeNoBody(ParsedHttpApiRequest request,
-                               List<dynamic> positionalParams,
-                               Map<Symbol, dynamic> namedParams) async {
+      List<dynamic> positionalParams,
+      Map<Symbol, dynamic> namedParams) async {
     // Drain the request body just in case.
     await request.body.drain();
     logRequest(request, null);
@@ -211,35 +256,36 @@ class ApiConfigMethod {
   }
 
   Future<dynamic> invokeWithBody(ParsedHttpApiRequest request,
-                                 List<dynamic> positionalParams,
-                                 Map<Symbol, dynamic> namedParams) async {
+      List<dynamic> positionalParams,
+      Map<Symbol, dynamic> namedParams) async {
     assert(_requestSchema != null);
     // Decode request body parameters to json.
     // TODO: support other encodings
     var decodedRequest = {};
     try {
       if (_requestSchema.containsData) {
-        decodedRequest = await request.body.transform(_bytesToJson).first;
+        decodedRequest = (await parseRequestBody(request)).body;
         logRequest(request, decodedRequest);
       }
       // The request schema is the last positional parameter, so just adding
       // it to the list of position parameters.
-      positionalParams.add(_requestSchema.fromRequest(decodedRequest));
-    } catch (error) {
+      final schema = _requestSchema.fromRequest(decodedRequest);
+      positionalParams.add(schema);
+    } catch (error, stack) {
       rpcLogger.warning('Failed to decode request body: $error');
       if (error is FormatException) {
         if (error.message == 'Unexpected end of input') {
           // The method expects a body and none was passed.
           throw new BadRequestError(
               'Method \'$name\' requires an instance of '
-              '${_requestSchema.schemaName}. Passing the empty request is not '
-              'supported.');
+                  '${_requestSchema.schemaName}. Passing the empty request is not '
+                  'supported.');
         }
       } else if (error is RpcError) {
         throw error;
       }
       throw new BadRequestError(
-            'Failed to decode request with internal error: $error');
+          'Failed to decode request with internal error: $error');
     }
     logMethodInvocation(symbol, positionalParams, namedParams);
     return _instance.invoke(symbol, positionalParams, namedParams).reflectee;
