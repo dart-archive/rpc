@@ -32,6 +32,9 @@ class ApiConfigMethod {
       return false;
     }
     assert(match.rest.path.length == 0);
+    match.parameters.forEach((key, value) {
+      match.parameters[key] = Uri.decodeFull(value);
+    });
     request.pathParameters = match.parameters;
     return true;
   }
