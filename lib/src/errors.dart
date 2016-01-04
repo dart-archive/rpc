@@ -36,8 +36,7 @@ class InternalServerError extends RpcError {
 }
 
 class ApplicationError extends RpcError {
-  ApplicationError(Exception e)
-      : super(500, 'Application Invocation Error', e.toString());
+  ApplicationError(e) : super(500, 'Application Invocation Error', '${e}');
 }
 
 /// Instances of this class can be added to an [RpcError] to provide detailed
