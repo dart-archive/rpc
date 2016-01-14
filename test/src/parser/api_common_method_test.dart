@@ -644,7 +644,7 @@ void main() {
   group('api-common-method-wrong', () {
     test('wrong-method-api', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongMethodApi());
+      parser.parse(new WrongMethodApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -670,7 +670,7 @@ void main() {
 
     test('wrong-method-api-path-param', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongMethodApiWithPathParam());
+      parser.parse(new WrongMethodApiWithPathParam());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -694,7 +694,7 @@ void main() {
 
     test('wrong-method-api-return-value', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongMethodApiWithReturnValue());
+      parser.parse(new WrongMethodApiWithReturnValue());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -724,7 +724,7 @@ void main() {
 
     test('wrong-method-api-list', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongMethodApiList());
+      parser.parse(new WrongMethodApiList());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -741,7 +741,7 @@ void main() {
 
     test('wrong-method-api-map', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongMethodApiMap());
+      parser.parse(new WrongMethodApiMap());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

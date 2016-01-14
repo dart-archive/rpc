@@ -141,8 +141,7 @@ void main() {
   group('api-double-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongDouble), true);
+      parser.parseSchema(reflectClass(WrongDouble), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

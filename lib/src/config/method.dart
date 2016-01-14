@@ -296,7 +296,7 @@ class ApiConfigMethod {
       // it to the list of position parameters.
       final schema = _requestSchema.fromRequest(decodedRequest);
       positionalParams.add(schema);
-    } catch (error, stack) {
+    } catch (error) {
       rpcLogger.warning('Failed to decode request body: $error');
       if (error is FormatException) {
         if (error.message == 'Unexpected end of input') {

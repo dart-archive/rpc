@@ -86,8 +86,7 @@ void main() {
   group('api-string-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongString), true);
+      parser.parseSchema(reflectClass(WrongString), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

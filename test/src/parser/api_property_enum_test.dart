@@ -111,8 +111,7 @@ void main() {
   group('api-enum-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongEnum), true);
+      parser.parseSchema(reflectClass(WrongEnum), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

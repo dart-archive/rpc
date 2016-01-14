@@ -103,8 +103,7 @@ void main() {
   group('api-map-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongMap), true);
+      parser.parseSchema(reflectClass(WrongMap), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

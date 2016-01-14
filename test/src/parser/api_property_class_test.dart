@@ -93,8 +93,7 @@ void main() {
   group('api-class-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongClass), true);
+      parser.parseSchema(reflectClass(WrongClass), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

@@ -91,8 +91,7 @@ void main() {
   group('api-datetime-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongDateTime), true);
+      parser.parseSchema(reflectClass(WrongDateTime), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

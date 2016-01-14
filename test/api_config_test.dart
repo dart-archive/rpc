@@ -19,7 +19,7 @@ void main() {
   group('api_config_misconfig', () {
     test('no_apiclass_annotation', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new NoAnnotation());
+      parser.parse(new NoAnnotation());
       var expected = [
         new ApiConfigError(
             'NoAnnotation: Missing required @ApiClass annotation.'),
@@ -398,8 +398,7 @@ void main() {
 
     test('multiple_resource_annotations', () {
       var parser = new ApiParser();
-      ApiConfig apiConfig =
-          parser.parse(new TesterWithMultipleResourceAnnotations());
+      parser.parse(new TesterWithMultipleResourceAnnotations());
       expect(parser.isValid, isFalse);
       var errors = [
         new ApiConfigError('TesterWithMultipleResourceAnnotations: Multiple '
@@ -410,8 +409,7 @@ void main() {
 
     test('duplicate_resources', () {
       var parser = new ApiParser();
-      ApiConfig apiConfig =
-          parser.parse(new TesterWithDuplicateResourceNames());
+      parser.parse(new TesterWithDuplicateResourceNames());
       expect(parser.isValid, isFalse);
       var errors = [
         new ApiConfigError('TesterWithDuplicateResourceNames: Duplicate '
@@ -516,7 +514,7 @@ void main() {
   group('api_config_methods', () {
     test('misconfig', () {
       var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new WrongMethods());
+      parser.parse(new WrongMethods());
       expect(parser.isValid, isFalse);
       var errors = [
         new ApiConfigError(
@@ -577,13 +575,13 @@ void main() {
 
     test('recursion', () {
       var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new Recursive());
+      parser.parse(new Recursive());
       expect(parser.isValid, isTrue);
     });
 
     test('correct', () {
       var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new CorrectMethods());
+      parser.parse(new CorrectMethods());
       expect(parser.isValid, isTrue);
     });
   });
@@ -968,7 +966,7 @@ void main() {
 
     test('misconfig', () {
       var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new WrongQueryParameterTester());
+      parser.parse(new WrongQueryParameterTester());
       expect(parser.isValid, isFalse);
       var errors = [
         new ApiConfigError('WrongQueryParameterTester.query1: Non-path '

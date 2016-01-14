@@ -6,7 +6,6 @@ library rpc.parser;
 
 import 'dart:async';
 import 'dart:mirrors';
-import 'dart:typed_data';
 
 import 'package:uri/uri.dart';
 
@@ -891,7 +890,7 @@ class ApiParser {
         // Parse the default string value as a DateTime.
         try {
           defaultValue = DateTime.parse(metadata.defaultValue);
-        } on FormatException catch (error) {
+        } on FormatException {
           addError('$propertyName: Invalid datetime value '
               '\'${metadata.defaultValue}\'. See documentation for '
               'DateTime.parse for format definition.');

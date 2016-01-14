@@ -41,6 +41,10 @@ class CorrectModifiers {
   bool _aBool;
   double _aDouble;
   DateTime _aDate;
+
+  // public method which uses private members
+  // eliminates analyzer warning about unused private members
+  throwAwayPrivateUsage() => [_aString, _anInt, _aBool, _aDouble, _aDate];
 }
 
 class CorrectContainers {
@@ -320,8 +324,7 @@ void main() {
   group('api-schema-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongSimple), true);
+      parser.parseSchema(reflectClass(WrongSimple), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -341,8 +344,7 @@ void main() {
 
     test('containers', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongContainers), true);
+      parser.parseSchema(reflectClass(WrongContainers), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -394,7 +396,7 @@ void main() {
 
     test('conflicting-schemas', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongConflictingApi());
+      parser.parse(new WrongConflictingApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError('WrongConflictingWithOther: Schema '

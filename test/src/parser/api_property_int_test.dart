@@ -262,8 +262,7 @@ void main() {
   group('api-integer-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongInt), true);
+      parser.parseSchema(reflectClass(WrongInt), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError('WrongInt: anIntWithEnumValues: Invalid property '

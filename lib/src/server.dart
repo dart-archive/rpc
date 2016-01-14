@@ -21,7 +21,6 @@ typedef Future HttpRequestHandler(io.HttpRequest request);
 /// The main class for handling all API requests.
 class ApiServer {
   final String _apiPrefix;
-  String _baseUrl;
   String _discoveryApiKey;
 
   Converter<Object, dynamic> _jsonToBytes;

@@ -12,7 +12,6 @@ import 'package:crypto/crypto.dart';
 import 'package:gcloud/service_scope.dart' as ss;
 import 'package:uri/uri.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:mime/mime.dart';
 
 import 'context.dart';
 import 'errors.dart';

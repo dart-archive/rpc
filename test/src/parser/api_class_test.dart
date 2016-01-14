@@ -204,7 +204,7 @@ void main() {
   group('api-class-wrong', () {
     test('no-metadata', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongNoMetadata());
+      parser.parse(new WrongNoMetadata());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -217,7 +217,7 @@ void main() {
 
     test('min-no-version', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongNoVersionMinimum());
+      parser.parse(new WrongNoVersionMinimum());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -243,7 +243,7 @@ void main() {
 
     test('request-with-args', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new InvalidMessageWithArgsApi());
+      parser.parse(new InvalidMessageWithArgsApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

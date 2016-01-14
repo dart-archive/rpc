@@ -513,7 +513,6 @@ main() {
           'aBoundedInt needs to be <= 10');
     });
     test('minmax-invalid-type', () async {
-      var body = {'aBoundedInt': 11};
       HttpApiResponse response =
           await _sendRequest('POST', 'post/minmax', body: [1, 2]);
       expect(response.status, HttpStatus.BAD_REQUEST);
@@ -524,7 +523,6 @@ main() {
           '\'MinMaxIntMessage\'.');
     });
     test('minmax-no-request', () async {
-      var body = {'aBoundedInt': 11};
       HttpApiResponse response =
           await _sendRequest('POST', 'post/minmax', body: 'empty');
       expect(response.status, HttpStatus.BAD_REQUEST);
@@ -535,7 +533,6 @@ main() {
           'Passing the empty request is not supported.');
     });
     test('minmax-null', () async {
-      var body = {'aBoundedInt': 11};
       HttpApiResponse response =
           await _sendRequest('POST', 'post/minmax', body: null);
       expect(response.status, HttpStatus.BAD_REQUEST);
@@ -553,7 +550,6 @@ main() {
       expect(resultBody, body.reversed.toList());
     });
     test('add-resource', () async {
-      var body = null;
       HttpApiResponse response = await _sendRequest(
           'POST', 'post/add/firstResource/size/10',
           body: {});
@@ -569,7 +565,6 @@ main() {
           response.headers['content-type'], 'application/json; charset=utf-8');
     });
     test('response-modifications', () async {
-      var body = null;
       HttpApiResponse response =
           await _sendRequest('POST', 'post/response', body: {});
       expect(response.status, HttpStatus.ACCEPTED);

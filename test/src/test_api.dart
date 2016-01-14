@@ -120,6 +120,10 @@ class CorrectSimple {
   TestMessage1 simple2(TestMessage1 request) {
     return null;
   }
+
+  // public method which uses private members
+  // eliminates analyzer warning about unused private members
+  throwAwayPrivateUsage() => [_foo, _cm, _cmNonFinal];
 }
 
 @ApiClass(name: 'correct', version: 'v1')

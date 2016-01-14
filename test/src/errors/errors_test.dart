@@ -4,10 +4,6 @@
 
 library errors_tests;
 
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:rpc/rpc.dart';
 import 'package:unittest/unittest.dart';
 

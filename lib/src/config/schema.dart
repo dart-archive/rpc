@@ -4,9 +4,6 @@
 
 part of rpc.config;
 
-String _capitalize(String string) =>
-    "${string.substring(0,1).toUpperCase()}${string.substring(1)}";
-
 class ApiConfigSchema {
   final String schemaName;
   final ClassMirror schemaClass;

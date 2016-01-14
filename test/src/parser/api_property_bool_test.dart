@@ -72,8 +72,8 @@ void main() {
   group('api-bool-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongBool), true);
+
+      parser.parseSchema(reflectClass(WrongBool), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
