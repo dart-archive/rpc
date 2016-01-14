@@ -16,7 +16,7 @@ import 'utils.dart';
 import 'discovery/api.dart';
 import 'discovery/config.dart';
 
-typedef Future HttpRequestHandler(HttpRequest);
+typedef Future HttpRequestHandler(io.HttpRequest request);
 
 /// The main class for handling all API requests.
 class ApiServer {
