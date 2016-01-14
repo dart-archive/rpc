@@ -197,12 +197,18 @@ void main() {
         'id': 'CorrectContainers',
         'type': 'object',
         'properties': {
-          'aStringList': {'type': 'array', 'items': {'type': 'string'}},
+          'aStringList': {
+            'type': 'array',
+            'items': {'type': 'string'}
+          },
           'anIntList': {
             'type': 'array',
             'items': {'type': 'integer', 'format': 'int32'}
           },
-          'aBoolList': {'type': 'array', 'items': {'type': 'boolean'}},
+          'aBoolList': {
+            'type': 'array',
+            'items': {'type': 'boolean'}
+          },
           'aDoubleList': {
             'type': 'array',
             'items': {'type': 'number', 'format': 'double'}
@@ -211,7 +217,10 @@ void main() {
             'type': 'array',
             'items': {'type': 'string', 'format': 'date-time'}
           },
-          'aNestedList': {'type': 'array', 'items': {r'$ref': 'Nested'}},
+          'aNestedList': {
+            'type': 'array',
+            'items': {r'$ref': 'Nested'}
+          },
           'aStringMap': {
             'type': 'object',
             'additionalProperties': {'type': 'string'}
@@ -265,7 +274,9 @@ void main() {
       expectedJson = {
         'id': 'Nested',
         'type': 'object',
-        'properties': {'aString': {'type': 'string'}}
+        'properties': {
+          'aString': {'type': 'string'}
+        }
       };
       expect(json, expectedJson);
     });

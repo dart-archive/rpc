@@ -10,7 +10,6 @@ import 'multipleApisResources.dart';
 
 @ApiClass(version: '0.1')
 class ApiOneApi {
-
   ApiOneApi();
 
   @ApiMethod(path: 'apione')
@@ -26,13 +25,12 @@ class ApiOneApi {
   @ApiMethod(path: 'apione/post', method: 'POST')
   ApiOneResponse apiOnePost(ApiOneRequest request) {
     return new ApiOneResponse()
-        ..result = 'Hello ${request.name} of age ${request.age}!';
+      ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 }
 
 @ApiClass(version: '0.1')
 class ApiTwoApi {
-
   ApiTwoApi();
 
   @ApiResource()
@@ -51,7 +49,7 @@ class ApiTwoApi {
   @ApiMethod(path: 'apitwo/put', method: 'PUT')
   ApiTwoResponse apiTwoPut(ApiTwoRequest request) {
     return new ApiTwoResponse()
-        ..result = 'Hello ${request.name} of age ${request.age}!';
+      ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'apitwo/delete', method: 'DELETE')
@@ -59,4 +57,3 @@ class ApiTwoApi {
     return null;
   }
 }
-

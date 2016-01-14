@@ -30,4 +30,3 @@ class ApiTwoRequest {
   @ApiProperty(defaultValue: 2000)
   int age;
 }
-

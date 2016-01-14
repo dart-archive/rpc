@@ -124,8 +124,7 @@ void main() {
           'aFloatWithVeryLargeDefault': {
             'type': 'number',
             'default': '3.4e+38',
-            'format':
-              'float'
+            'format': 'float'
           },
           'aRequiredDouble': {
             'type': 'number',

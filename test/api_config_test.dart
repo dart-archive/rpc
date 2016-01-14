@@ -17,30 +17,28 @@ import 'src/test_api.dart';
 
 void main() {
   group('api_config_misconfig', () {
-
     test('no_apiclass_annotation', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new NoAnnotation());
       var expected = [
-          new ApiConfigError(
-              'NoAnnotation: Missing required @ApiClass annotation.'),
-          new ApiConfigError(
-              'NoAnnotation: @ApiClass.version field is required.')
-        ];
-        expect(parser.errors.toString(), expected.toString());
-      });
+        new ApiConfigError(
+            'NoAnnotation: Missing required @ApiClass annotation.'),
+        new ApiConfigError('NoAnnotation: @ApiClass.version field is required.')
+      ];
+      expect(parser.errors.toString(), expected.toString());
+    });
 
     test('no_apiclass_version', () {
       var parser = new ApiParser();
       parser.parse(new NoVersion());
-      var expected = [new ApiConfigError(
-          'NoVersion: @ApiClass.version field is required.')];
+      var expected = [
+        new ApiConfigError('NoVersion: @ApiClass.version field is required.')
+      ];
       expect(parser.errors.toString(), expected.toString());
     });
   });
 
   group('api_config_correct', () {
-
     test('correct_simple', () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new Tester());
@@ -78,7 +76,9 @@ void main() {
         'TestMessage2': {
           'id': 'TestMessage2',
           'type': 'object',
-          'properties': {'count': {'type': 'integer', 'format': 'int32'}}
+          'properties': {
+            'count': {'type': 'integer', 'format': 'int32'}
+          }
         },
         'TestMessage1': {
           'id': 'TestMessage1',
@@ -89,11 +89,15 @@ void main() {
             'value': {'type': 'number', 'format': 'double'},
             'check': {'type': 'boolean'},
             'date': {'type': 'string', 'format': 'date-time'},
-            'messages': {'type': 'array', 'items': {'type': 'string'}},
+            'messages': {
+              'type': 'array',
+              'items': {'type': 'string'}
+            },
             'submessage': {'\$ref': 'TestMessage2'},
-            'submessages': {'type': 'array',
-                            'items': {'\$ref': 'TestMessage2'}
-                           },
+            'submessages': {
+              'type': 'array',
+              'items': {'\$ref': 'TestMessage2'}
+            },
             'enumValue': {
               'type': 'string',
               'enum': ['test1', 'test2', 'test3'],
@@ -379,7 +383,6 @@ void main() {
   });
 
   group('api_config_resources_misconfig', () {
-
     test('multiple_method_annotations', () {
       var parser = new ApiParser();
       var metadata = new ApiResource();
@@ -387,9 +390,9 @@ void main() {
           'foo', reflect(new MultipleMethodAnnotations()), metadata);
       expect(parser.isValid, isFalse);
       var errors = [
-        new ApiConfigError(
-            'foo: Multiple ApiMethod annotations on declaration '
-            '\'multiAnnotations\'.')];
+        new ApiConfigError('foo: Multiple ApiMethod annotations on declaration '
+            '\'multiAnnotations\'.')
+      ];
       expect(parser.errors.toString(), errors.toString());
     });
 
@@ -400,7 +403,8 @@ void main() {
       expect(parser.isValid, isFalse);
       var errors = [
         new ApiConfigError('TesterWithMultipleResourceAnnotations: Multiple '
-            'ApiResource annotations on declaration \'someResource\'.')];
+            'ApiResource annotations on declaration \'someResource\'.')
+      ];
       expect(parser.errors.toString(), errors.toString());
     });
 
@@ -411,13 +415,13 @@ void main() {
       expect(parser.isValid, isFalse);
       var errors = [
         new ApiConfigError('TesterWithDuplicateResourceNames: Duplicate '
-                           'resource with name: someResource')];
+            'resource with name: someResource')
+      ];
       expect(parser.errors.toString(), errors.toString());
     });
   });
 
   group('api_config_resources_correct', () {
-
     test('simple', () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new TesterWithOneResource());
@@ -490,7 +494,7 @@ void main() {
               'methods': {
                 'method1': {
                   'id': 'TesterWithNestedResources.resourceWithNested'
-                        '.nestedResource.method1',
+                      '.nestedResource.method1',
                   'path': 'nestedResourceMethod',
                   'httpMethod': 'GET',
                   'parameters': {},
@@ -510,7 +514,6 @@ void main() {
   });
 
   group('api_config_methods', () {
-
     test('misconfig', () {
       var parser = new ApiParser();
       ApiConfig apiConfig = parser.parse(new WrongMethods());
@@ -586,52 +589,65 @@ void main() {
   });
 
   group('api_config_schema', () {
-
     group('misconfig', () {
       test('wrong_schema', () {
         var parser = new ApiParser();
         parser.parseSchema(reflectClass(WrongSchema1), true);
-        var errors = [new ApiConfigError('WrongSchema1: Schema '
-            '\'WrongSchema1\' must have an unnamed constructor taking no '
-            'arguments.')];
+        var errors = [
+          new ApiConfigError('WrongSchema1: Schema '
+              '\'WrongSchema1\' must have an unnamed constructor taking no '
+              'arguments.')
+        ];
         expect(parser.errors.toString(), errors.toString());
       });
       test('schema_with_conflicting_classes', () {
         var parser = new ApiParser();
         parser.parseSchema(reflectClass(WrongSchema2), true);
-        var errors = [new ApiConfigError('TestMessage2: Schema '
-            '\'messages2.TestMessage2\' has a name conflict with '
-            '\'test_api.TestMessage2\'.')];
+        var errors = [
+          new ApiConfigError('TestMessage2: Schema '
+              '\'messages2.TestMessage2\' has a name conflict with '
+              '\'test_api.TestMessage2\'.')
+        ];
         expect(parser.errors.toString(), errors.toString());
       });
       test('schema_with_nested_conflicting_classes', () {
         var parser = new ApiParser();
         parser.parseSchema(reflectClass(WrongSchema3), true);
-        var errors = [new ApiConfigError('TestMessage2: Schema '
-            '\'messages2.TestMessage2\' has a name conflict with '
-            '\'test_api.TestMessage2\'.')];
+        var errors = [
+          new ApiConfigError('TestMessage2: Schema '
+              '\'messages2.TestMessage2\' has a name conflict with '
+              '\'test_api.TestMessage2\'.')
+        ];
         expect(parser.errors.toString(), errors.toString());
       });
     });
 
     test('recursion', () {
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage1), true);
-      }), completes);
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage2), true);
-      }), completes);
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage3), true);
-      }), completes);
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
-        parser.parseSchema(reflectClass(RecursiveMessage2), true);
-        parser.parseSchema(reflectClass(RecursiveMessage3), true);
-      }), completes);
+      expect(
+          new Future.sync(() {
+            var parser = new ApiParser();
+            parser.parseSchema(reflectClass(RecursiveMessage1), true);
+          }),
+          completes);
+      expect(
+          new Future.sync(() {
+            var parser = new ApiParser();
+            parser.parseSchema(reflectClass(RecursiveMessage2), true);
+          }),
+          completes);
+      expect(
+          new Future.sync(() {
+            var parser = new ApiParser();
+            parser.parseSchema(reflectClass(RecursiveMessage3), true);
+          }),
+          completes);
+      expect(
+          new Future.sync(() {
+            var parser = new ApiParser();
+            parser.parseSchema(reflectClass(RecursiveMessage2), true);
+            parser.parseSchema(reflectClass(RecursiveMessage3), true);
+          }),
+          completes);
     });
 
     test('variants', () {
@@ -662,9 +678,7 @@ void main() {
         'check': true,
         'messages': ['1', '2', '3'],
         'date': '2014-01-23T11:12:13.456Z',
-        'submessage': {
-          'count': 4
-        },
+        'submessage': {'count': 4},
         'submessages': [
           {'count': 5},
           {'count': 6},
@@ -700,18 +714,15 @@ void main() {
     test('request-parsing-map-list', () {
       var parser = new ApiParser();
       var schema = parser.parseSchema(reflectClass(TestMessage5), true);
-      var jsonRequest ={
+      var jsonRequest = {
         'myStrings': ['foo', 'bar'],
-        'listOfObjects' : [
+        'listOfObjects': [
           {'count': 4},
           {'count': 2}
         ],
-        'mapStringToString': {
-          'foo': 'bar',
-          'bar': 'foo'
-        },
+        'mapStringToString': {'foo': 'bar', 'bar': 'foo'},
         'mapStringToObject': {
-          'some':  {'count': 2},
+          'some': {'count': 2},
           'other': {'count': 4}
         }
       };
@@ -735,30 +746,37 @@ void main() {
         {'value': 'x'},
         {'messages': 'x'},
         {'submessage': 'x'},
-        {'submessage': {'count': 'x'}},
-        {'submessages': ['x']},
-        {'submessages': [{'count': 'x'}]},
+        {
+          'submessage': {'count': 'x'}
+        },
+        {
+          'submessages': ['x']
+        },
+        {
+          'submessages': [
+            {'count': 'x'}
+          ]
+        },
         {'enumValue': 'x'},
         {'limit': 1},
         {'limit': 1000}
       ];
       requests.forEach((request) {
-        expect(
-          () => m1.fromRequest(request),
-          throwsA(new isInstanceOf<BadRequestError>())
-        );
+        expect(() => m1.fromRequest(request),
+            throwsA(new isInstanceOf<BadRequestError>()));
       });
     });
 
     test('missing-required', () {
       var parser = new ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage4), true);
-      var requests = [{}, {'count': 1}];
+      var requests = [
+        {},
+        {'count': 1}
+      ];
       requests.forEach((request) {
-        expect(
-          () => m1.fromRequest(request),
-          throwsA(new isInstanceOf<BadRequestError>())
-        );
+        expect(() => m1.fromRequest(request),
+            throwsA(new isInstanceOf<BadRequestError>()));
       });
     });
 
@@ -806,7 +824,6 @@ void main() {
   });
 
   group('api_config_query_methods', () {
-
     test('correct', () {
       var expectedJsonMethods = {
         'query1': {
@@ -964,7 +981,8 @@ void main() {
         new ApiConfigError('WrongQueryParameterTester.query4: No support for '
             'optional path parameters in API methods.'),
         new ApiConfigError('WrongQueryParameterTester.query5: Non-path '
-            'parameter \'queryParam\' must be a named parameter.')];
+            'parameter \'queryParam\' must be a named parameter.')
+      ];
       expect(parser.errors.toString(), errors.toString());
     });
   });

@@ -27,22 +27,31 @@ class CorrectInt {
   @ApiProperty(minValue: 0, maxValue: 2, defaultValue: 1)
   int aBoundedInt;
 
-  @ApiProperty(format: 'int32', minValue: -0x80000000, // -2^31
+  @ApiProperty(
+      format: 'int32',
+      minValue: -0x80000000, // -2^31
       maxValue: 0x7FFFFFFF, // 2^31-1,
       defaultValue: -0x80000000)
   int aBoundedInt32;
 
-  @ApiProperty(format: 'uint32', minValue: 0, maxValue: 0xFFFFFFFF, // 2^32-1,
+  @ApiProperty(
+      format: 'uint32',
+      minValue: 0,
+      maxValue: 0xFFFFFFFF, // 2^32-1,
       defaultValue: 0xFFFFFFFF)
   int aBoundedUInt32;
 
-  @ApiProperty(format: 'int64', minValue: -0x8000000000000000, // -2^63
+  @ApiProperty(
+      format: 'int64',
+      minValue: -0x8000000000000000, // -2^63
       maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
       defaultValue: -0x8000000000000000)
   int aBoundedInt64;
 
   @ApiProperty(
-      format: 'uint64', minValue: 0, maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
+      format: 'uint64',
+      minValue: 0,
+      maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
       defaultValue: 0xFFFFFFFFFFFFFFFF)
   int aBoundedUInt64;
 
@@ -63,79 +72,115 @@ class WrongInt {
   @ApiProperty(minValue: 2, maxValue: 0)
   int aBoundedIntWithMaxLessThanMin;
 
-  @ApiProperty(format: 'int32', minValue: -0x80000001, // -2^31-1
+  @ApiProperty(
+      format: 'int32',
+      minValue: -0x80000001, // -2^31-1
       maxValue: 0x7FFFFFFF, // 2^31-1,
       defaultValue: 0x7FFFFFFF)
   int anInt32TooSmallMin;
 
-  @ApiProperty(format: 'int32', minValue: -0x80000000, // -2^31
+  @ApiProperty(
+      format: 'int32',
+      minValue: -0x80000000, // -2^31
       maxValue: 0x80000000, // 2^31,
       defaultValue: 0x80000000)
   int anInt32TooLargeMax;
 
-  @ApiProperty(format: 'int32', minValue: -0x80000000, // -2^31
+  @ApiProperty(
+      format: 'int32',
+      minValue: -0x80000000, // -2^31
       maxValue: 0x7FFFFFFF, // 2^31-1,
       defaultValue: 0x80000000)
   int anInt32TooLargeDefault;
 
-  @ApiProperty(format: 'int32', minValue: -0x80000000, // -2^31
+  @ApiProperty(
+      format: 'int32',
+      minValue: -0x80000000, // -2^31
       maxValue: 0x7FFFFFFF, // 2^31-1,
       defaultValue: -0x80000001)
   int anInt32TooSmallDefault;
 
-  @ApiProperty(format: 'uint32', minValue: -1, maxValue: 0xFFFFFFFF, // 2^32-1,
+  @ApiProperty(
+      format: 'uint32',
+      minValue: -1,
+      maxValue: 0xFFFFFFFF, // 2^32-1,
       defaultValue: 0xFFFFFFFF)
   int anUInt32TooSmallMin;
 
-  @ApiProperty(format: 'uint32', minValue: 0, maxValue: 0x100000000, // 2^32,
+  @ApiProperty(
+      format: 'uint32',
+      minValue: 0,
+      maxValue: 0x100000000, // 2^32,
       defaultValue: 0xFFFFFFFF)
   int anUInt32TooLargeMax;
 
-  @ApiProperty(format: 'uint32', minValue: 0, maxValue: 0xFFFFFFFF, // 2^32-1,
+  @ApiProperty(
+      format: 'uint32',
+      minValue: 0,
+      maxValue: 0xFFFFFFFF, // 2^32-1,
       defaultValue: 0x100000000) // 2^32
   int anUInt32TooLargeDefault;
 
-  @ApiProperty(format: 'uint32', minValue: 0, maxValue: 0xFFFFFFFF, // 2^32-1,
+  @ApiProperty(
+      format: 'uint32',
+      minValue: 0,
+      maxValue: 0xFFFFFFFF, // 2^32-1,
       defaultValue: -1)
   int anUInt32TooSmallDefault;
 
-  @ApiProperty(format: 'int64', minValue: -0x8000000000000001, // -2^63-1
+  @ApiProperty(
+      format: 'int64',
+      minValue: -0x8000000000000001, // -2^63-1
       maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
       defaultValue: 0x7FFFFFFFFFFFFFFF)
   int anInt64TooSmallMin;
 
-  @ApiProperty(format: 'int64', minValue: -0x8000000000000000, // -2^63
+  @ApiProperty(
+      format: 'int64',
+      minValue: -0x8000000000000000, // -2^63
       maxValue: 0x8000000000000000, // 2^63,
       defaultValue: 0x7FFFFFFFFFFFFFFF)
   int anInt64TooLargeMax;
 
-  @ApiProperty(format: 'int64', minValue: -0x8000000000000000, // -2^63
+  @ApiProperty(
+      format: 'int64',
+      minValue: -0x8000000000000000, // -2^63
       maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
       defaultValue: 0x8000000000000000)
   int anInt64TooLargeDefault;
 
-  @ApiProperty(format: 'int64', minValue: -0x8000000000000000, // -2^63
+  @ApiProperty(
+      format: 'int64',
+      minValue: -0x8000000000000000, // -2^63
       maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
       defaultValue: -0x8000000000000001)
   int anInt64TooSmallDefault;
 
   @ApiProperty(
-      format: 'uint64', minValue: -1, maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
+      format: 'uint64',
+      minValue: -1,
+      maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
       defaultValue: 0xFFFFFFFFFFFFFFFF)
   int anUInt64TooSmallMin;
 
   @ApiProperty(
-      format: 'uint64', minValue: 0, maxValue: 0x10000000000000000, // 2^64,
+      format: 'uint64',
+      minValue: 0,
+      maxValue: 0x10000000000000000, // 2^64,
       defaultValue: 0xFFFFFFFFFFFFFFFF)
   int anUInt64TooLargeMax;
 
   @ApiProperty(
-      format: 'uint64', minValue: 0, maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
+      format: 'uint64',
+      minValue: 0,
+      maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
       defaultValue: 0x10000000000000000) // 2^64
   int anUInt64TooLargeDefault;
 
   @ApiProperty(
-      format: 'uint64', minValue: 0, maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
+      format: 'uint64',
+      minValue: 0,
+      maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
       defaultValue: -1)
   int anUInt64TooSmallDefault;
 }
@@ -163,8 +208,16 @@ void main() {
             'description': 'Description of an integer.',
             'format': 'int32'
           },
-          'anIntWithDefault': {'type': 'integer', 'default': '42', 'format': 'int32'},
-          'aRequiredInt': {'type': 'integer', 'required': true, 'format': 'int32'},
+          'anIntWithDefault': {
+            'type': 'integer',
+            'default': '42',
+            'format': 'int32'
+          },
+          'aRequiredInt': {
+            'type': 'integer',
+            'required': true,
+            'format': 'int32'
+          },
           'aBoundedInt': {
             'type': 'integer',
             'default': '1',
@@ -255,20 +308,16 @@ void main() {
         new ApiConfigError(
             'WrongInt: anInt64TooLargeMax: Max value: \'9223372036854775808\' '
             'not in the range of an \'int64\''),
-        new ApiConfigError(
-            'WrongInt: anInt64TooLargeDefault: Default value: '
+        new ApiConfigError('WrongInt: anInt64TooLargeDefault: Default value: '
             '\'9223372036854775808\' not in the range of an \'int64\''),
-        new ApiConfigError(
-            'WrongInt: anInt64TooSmallDefault: Default value: '
+        new ApiConfigError('WrongInt: anInt64TooSmallDefault: Default value: '
             '\'-9223372036854775809\' not in the range of an \'int64\''),
         new ApiConfigError(
             'WrongInt: anUInt64TooSmallMin: Min value: \'-1\' not in the range '
             'of an \'uint64\''),
-        new ApiConfigError(
-            'WrongInt: anUInt64TooLargeMax: Max value: '
+        new ApiConfigError('WrongInt: anUInt64TooLargeMax: Max value: '
             '\'18446744073709551616\' not in the range of an \'uint64\''),
-        new ApiConfigError(
-            'WrongInt: anUInt64TooLargeDefault: Default value: '
+        new ApiConfigError('WrongInt: anUInt64TooLargeDefault: Default value: '
             '\'18446744073709551616\' not in the range of an \'uint64\''),
         new ApiConfigError(
             'WrongInt: anUInt64TooSmallDefault: Default value: \'-1\' not in '

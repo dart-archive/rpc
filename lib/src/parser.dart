@@ -71,7 +71,7 @@ class ApiParser {
   // Otherwise returns null.
   dynamic _getMetadata(DeclarationMirror dm, Type apiType) {
     var annotations =
-    dm.metadata.where((a) => a.reflectee.runtimeType == apiType).toList();
+        dm.metadata.where((a) => a.reflectee.runtimeType == apiType).toList();
     if (annotations.length == 0) {
       return null;
     } else if (annotations.length > 1) {
@@ -151,7 +151,7 @@ class ApiParser {
       // class.
       var resourceInstance = classInstance.getField(dm.simpleName);
       ApiConfigResource resourceConfig =
-      parseResource(fieldName, resourceInstance, metadata);
+          parseResource(fieldName, resourceInstance, metadata);
       if (resources.containsKey(resourceConfig.name)) {
         addError('Duplicate resource with name: ${resourceConfig.name}');
       } else {
@@ -320,7 +320,7 @@ class ApiParser {
       if (methodParamName != pathParamName) {
         addError(
             'Expected method parameter with name \'$pathParamName\', but found'
-                ' parameter with name \'$methodParamName\'.');
+            ' parameter with name \'$methodParamName\'.');
       }
       if (pm.isOptional || pm.isNamed) {
         addError('No support for optional path parameters in API methods.');
@@ -506,7 +506,7 @@ class ApiParser {
           schemaClass.originalDeclaration) {
         var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
         var existingSchemaName =
-        MirrorSystem.getName(schemaConfig.schemaClass.qualifiedName);
+            MirrorSystem.getName(schemaConfig.schemaClass.qualifiedName);
         addError('Schema \'$newSchemaName\' has a name conflict with '
             '\'$existingSchemaName\'.');
         _popId();
@@ -521,7 +521,7 @@ class ApiParser {
       // reflection.
       if (schemaConfig.isUsedForRequest || !isRequest) {
         assert(
-        schemaConfig.propertiesInitialized || !schemaConfig.containsData);
+            schemaConfig.propertiesInitialized || !schemaConfig.containsData);
         _popId();
         return schemaConfig;
       }
@@ -535,7 +535,7 @@ class ApiParser {
       if (!methods.isEmpty &&
           methods
               .where((mm) => (mm.simpleName == schemaClass.simpleName &&
-              mm.parameters.isEmpty))
+                  mm.parameters.isEmpty))
               .isEmpty) {
         addError('Schema \'$name\' must have an unnamed constructor taking no '
             'arguments.');
@@ -921,7 +921,7 @@ class ApiParser {
     if (listPropertyType.originalDeclaration != reflectClass(List)) {
       listTypeArguments = listPropertyType.superinterfaces
           .firstWhere((interface) =>
-      interface.originalDeclaration == reflectClass(List))
+              interface.originalDeclaration == reflectClass(List))
           .typeArguments;
     } else {
       listTypeArguments = listPropertyType.typeArguments;

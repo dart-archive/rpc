@@ -8,7 +8,6 @@ import 'package:rpc/src/annotations.dart';
 
 @ApiClass(version: '0.1')
 class NoDefaultConstructorApi {
-
   NoDefaultConstructorApi(String foo);
 
   @ApiMethod(path: 'nodefault')

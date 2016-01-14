@@ -57,7 +57,6 @@ class DirectoryListItems {
   bool preferred;
 }
 
-
 /** Not documented yet. */
 class DirectoryList {
   /** The kind for this response. */
@@ -70,13 +69,11 @@ class DirectoryList {
   List<DirectoryListItems> items;
 }
 
-
 /** Additional information about this property. */
 class JsonSchemaAnnotations {
   /** A list of methods for which this property is required on requests. */
   List<String> required;
 }
-
 
 /** Not documented yet. */
 class JsonSchemaVariantMap {
@@ -87,7 +84,6 @@ class JsonSchemaVariantMap {
   /** Not documented yet. */
   String typeValue;
 }
-
 
 /**
  * In a variant data type, the value of one property is used to determine how to
@@ -102,7 +98,6 @@ class JsonSchemaVariant {
   List<JsonSchemaVariantMap> map;
 }
 
-
 /** Not documented yet. */
 class JsonSchema {
   /** Used to describe parameters of type int. */
@@ -112,7 +107,7 @@ class JsonSchema {
   static const PARAM_BOOL_TYPE = 'boolean';
 
   /* Used to describe parameters of type string. */
-  static const PARAM_STRING_TYPE  = 'string';
+  static const PARAM_STRING_TYPE = 'string';
 
   /** Designates a parameter is part of the url path. */
   static const PARAM_LOCATION_PATH = 'path';
@@ -213,13 +208,11 @@ class JsonSchema {
   JsonSchemaAnnotations annotations;
 }
 
-
 /** The scope value. */
 class RestDescriptionAuthOauth2ScopesValue {
   /** Description of scope. */
   String description;
 }
-
 
 /** OAuth 2.0 authentication information. */
 class RestDescriptionAuthOauth2 {
@@ -227,13 +220,11 @@ class RestDescriptionAuthOauth2 {
   Map<String, RestDescriptionAuthOauth2ScopesValue> scopes;
 }
 
-
 /** Authentication information. */
 class RestDescriptionAuth {
   /** OAuth 2.0 authentication information. */
   RestDescriptionAuthOauth2 oauth2;
 }
-
 
 /** Links to 16x16 and 32x32 icons representing the API. */
 class RestDescriptionIcons {
@@ -243,7 +234,6 @@ class RestDescriptionIcons {
   /** The URL of the 32x32 icon. */
   String x32;
 }
-
 
 /** Not documented yet. */
 class RestDescription {
@@ -339,7 +329,6 @@ class RestDescription {
   Map<String, RestResource> resources;
 }
 
-
 /** Supports the Resumable Media Upload protocol. */
 class RestMethodMediaUploadProtocolsResumable {
   /** True if this endpoint supports uploading multipart media. */
@@ -351,7 +340,6 @@ class RestMethodMediaUploadProtocolsResumable {
    */
   String path;
 }
-
 
 /** Supports uploading as a single HTTP request. */
 class RestMethodMediaUploadProtocolsSimple {
@@ -365,7 +353,6 @@ class RestMethodMediaUploadProtocolsSimple {
   String path;
 }
 
-
 /** Supported upload protocols. */
 class RestMethodMediaUploadProtocols {
   /** Supports the Resumable Media Upload protocol. */
@@ -374,7 +361,6 @@ class RestMethodMediaUploadProtocols {
   /** Supports uploading as a single HTTP request. */
   RestMethodMediaUploadProtocolsSimple simple;
 }
-
 
 /** Media upload parameters. */
 class RestMethodMediaUpload {
@@ -388,7 +374,6 @@ class RestMethodMediaUpload {
   RestMethodMediaUploadProtocols protocols;
 }
 
-
 /** The schema for the request. */
 class RestMethodRequest {
   /** Schema ID for the request schema. */
@@ -399,14 +384,12 @@ class RestMethodRequest {
   String parameterName;
 }
 
-
 /** The schema for the response. */
 class RestMethodResponse {
   /** Schema ID for the response schema. */
   @ApiProperty(name: '\$ref')
   String P_ref;
 }
-
 
 /** Not documented yet. */
 class RestMethod {
@@ -466,7 +449,6 @@ class RestMethod {
   bool supportsSubscription;
 }
 
-
 /** Not documented yet. */
 class RestResource {
   /** Methods on this resource. */
@@ -475,5 +457,3 @@ class RestResource {
   /** Sub-resources on this resource. */
   Map<String, RestResource> resources;
 }
-
-

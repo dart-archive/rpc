@@ -10,9 +10,7 @@ import 'package:discoveryapis_generator/src/utils.dart';
 import 'package:path/path.dart';
 import 'package:unittest/unittest.dart';
 
-
 class GeneratorTestConfiguration extends SimpleConfiguration {
-
   Directory tmpDir;
 
   GeneratorTestConfiguration() {
@@ -73,8 +71,7 @@ main() {
     return null;
   }
 
-  ProcessResult runGenerator(String workingDir,
-                              List<String> arguments) {
+  ProcessResult runGenerator(String workingDir, List<String> arguments) {
     var args = [join(rpcRootPath, 'bin', 'generate.dart')]..addAll(arguments);
     var dartFile = new File(Platform.executable);
     if (!dartFile.existsSync() && !Platform.isWindows) {
@@ -96,9 +93,11 @@ main() {
     test('multipleApis-discovery', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
-      copyFiles(dataPath, libPath, ['multipleApis.dart',
-                                    'multipleApisMessages.dart',
-                                    'multipleApisResources.dart']);
+      copyFiles(dataPath, libPath, [
+        'multipleApis.dart',
+        'multipleApisMessages.dart',
+        'multipleApisResources.dart'
+      ]);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
         logMessage('Could not find pub. Skipping $currentTestCase!');
@@ -119,9 +118,11 @@ main() {
     test('multipleApis-client', () {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
-      copyFiles(dataPath, libPath, ['multipleApis.dart',
-                                    'multipleApisMessages.dart',
-                                    'multipleApisResources.dart']);
+      copyFiles(dataPath, libPath, [
+        'multipleApis.dart',
+        'multipleApisMessages.dart',
+        'multipleApisResources.dart'
+      ]);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
         logMessage('Could not find pub. Skipping $currentTestCase!');
@@ -186,9 +187,8 @@ main() {
   group('rpc-generator-failing', () {
     test('wrong-api-file', () {
       var packagePath = setupPackage();
-      var fileName =  join(packagePath, 'lib', 'toyapi.dart');
-      var result = runGenerator(
-          packagePath, ['discovery', '-i', fileName]);
+      var fileName = join(packagePath, 'lib', 'toyapi.dart');
+      var result = runGenerator(packagePath, ['discovery', '-i', fileName]);
       if (result == null) {
         logMessage('Could not find dart. Skipping $currentTestCase!');
         return;
@@ -201,21 +201,22 @@ main() {
       var packagePath = setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['libraryWithPart.dart', 'partApi.dart']);
-      var fileName =  join(packagePath, 'lib', 'partApi.dart');
+      var fileName = join(packagePath, 'lib', 'partApi.dart');
       var result = runPub(packagePath, ['get']);
       if (result == null) {
         logMessage('Could not find pub. Skipping $currentTestCase!');
         return;
       }
       expect(result.exitCode, 0);
-      result = runGenerator(
-          packagePath, ['discovery', '-i', fileName]);
+      result = runGenerator(packagePath, ['discovery', '-i', fileName]);
       if (result == null) {
         logMessage('Could not find dart. Skipping $currentTestCase!');
         return;
       }
-      expect(result.stdout.startsWith(
-          'Please use the file with the `library libraryWithPart'), isTrue);
+      expect(
+          result.stdout.startsWith(
+              'Please use the file with the `library libraryWithPart'),
+          isTrue);
     });
 
     test('no-pub-spec', () {
@@ -241,8 +242,10 @@ main() {
         logMessage('Could not find dart. Skipping $currentTestCase!');
         return;
       }
-      expect(result.stdout.startsWith('Please run \'pub get\' in your API '
-          'package before running the generator.'), isTrue);
+      expect(
+          result.stdout.startsWith('Please run \'pub get\' in your API '
+              'package before running the generator.'),
+          isTrue);
     });
 
     test('no-default-constructor', () {
@@ -255,17 +258,18 @@ main() {
         return;
       }
       expect(result.exitCode, 0);
-      result = runGenerator(
-          packagePath,
+      result = runGenerator(packagePath,
           ['client', '-i', join('lib', 'noDefaultConstructorApi.dart')]);
       if (result == null) {
         logMessage('Could not find dart. Skipping $currentTestCase!');
         return;
       }
-      expect(result.stdout.startsWith('Failed to create an instance of the '
-          'API class \'NoDefaultConstructorApi\'. For the generator to work '
-          'the class must have a working default constructor taking no '
-          'arguments.'), isTrue);
+      expect(
+          result.stdout.startsWith('Failed to create an instance of the '
+              'API class \'NoDefaultConstructorApi\'. For the generator to work '
+              'the class must have a working default constructor taking no '
+              'arguments.'),
+          isTrue);
     });
   });
 }

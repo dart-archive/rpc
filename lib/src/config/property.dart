@@ -16,12 +16,12 @@ class ApiConfigSchemaProperty {
   final String _apiFormat;
 
   ApiConfigSchemaProperty(this.name, this.description, this.required,
-                          this.defaultValue, this._apiType, this._apiFormat);
+      this.defaultValue, this._apiType, this._apiFormat);
 
   discovery.JsonSchema get typeAsDiscovery {
     return new discovery.JsonSchema()
-        ..type = _apiType
-        ..format = _apiFormat;
+      ..type = _apiType
+      ..format = _apiFormat;
   }
 
   discovery.JsonSchema get asDiscovery {
@@ -60,16 +60,25 @@ class ApiConfigSchemaProperty {
 }
 
 class IntegerProperty extends ApiConfigSchemaProperty {
-
   final int minValue;
   final int maxValue;
 
-  IntegerProperty(String name, String description, bool required,
-                  int defaultValue, String apiType, String apiFormat,
-                  this.minValue, this.maxValue)
-      : super(name, description, required,
-              defaultValue != null ? defaultValue.toString() : null,
-              apiType, apiFormat);
+  IntegerProperty(
+      String name,
+      String description,
+      bool required,
+      int defaultValue,
+      String apiType,
+      String apiFormat,
+      this.minValue,
+      this.maxValue)
+      : super(
+            name,
+            description,
+            required,
+            defaultValue != null ? defaultValue.toString() : null,
+            apiType,
+            apiFormat);
 
   _singleResponseValue(value) {
     assert(value != null);
@@ -118,28 +127,33 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   }
 
   discovery.JsonSchema get asDiscovery {
-      var property = super.asDiscovery;
-      if (minValue != null) {
-        property.minimum = minValue.toString();
-      }
-      if (maxValue != null) {
-        property.maximum = maxValue.toString();
-      }
-      return property;
+    var property = super.asDiscovery;
+    if (minValue != null) {
+      property.minimum = minValue.toString();
+    }
+    if (maxValue != null) {
+      property.maximum = maxValue.toString();
+    }
+    return property;
   }
 }
 
 class DoubleProperty extends ApiConfigSchemaProperty {
-
   DoubleProperty(String name, String description, bool required,
-                 double defaultValue, String apiFormat)
-      : super(name, description, required,
-              defaultValue != null ? defaultValue.toString() : null,
-              'number', apiFormat);
+      double defaultValue, String apiFormat)
+      : super(
+            name,
+            description,
+            required,
+            defaultValue != null ? defaultValue.toString() : null,
+            'number',
+            apiFormat);
 
   _singleRequestValue(value) {
     assert(value != null);
-    if (value is num) { return value; }
+    if (value is num) {
+      return value;
+    }
     try {
       return double.parse(value);
     } on FormatException catch (e) {
@@ -159,44 +173,49 @@ class DoubleProperty extends ApiConfigSchemaProperty {
 }
 
 class StringProperty extends ApiConfigSchemaProperty {
-
-  StringProperty(String name, String description, bool required,
-                 String defaultValue)
+  StringProperty(
+      String name, String description, bool required, String defaultValue)
       : super(name, description, required, defaultValue, 'string', null);
 }
 
 class EnumProperty extends ApiConfigSchemaProperty {
-
   final Map<String, String> _values;
 
   EnumProperty(String name, String description, bool required,
-               String defaultValue, this._values)
+      String defaultValue, this._values)
       : super(name, description, required, defaultValue, 'string', null);
 
   discovery.JsonSchema get asDiscovery {
     return super.asDiscovery
-        ..enum_ = _values.keys.toList()
-        ..enumDescriptions = _values.values.toList();
+      ..enum_ = _values.keys.toList()
+      ..enumDescriptions = _values.values.toList();
   }
 
   _singleRequestValue(value) {
     assert(value != null);
-    if (_values.containsKey(value)) { return value; }
+    if (_values.containsKey(value)) {
+      return value;
+    }
     throw new BadRequestError('Value is not a valid enum value');
   }
 }
 
 class BooleanProperty extends ApiConfigSchemaProperty {
-
-  BooleanProperty(String name, String description, bool required,
-                  bool defaultValue)
-      : super(name, description, required,
-              defaultValue != null ? defaultValue.toString() : null,
-              'boolean', null);
+  BooleanProperty(
+      String name, String description, bool required, bool defaultValue)
+      : super(
+            name,
+            description,
+            required,
+            defaultValue != null ? defaultValue.toString() : null,
+            'boolean',
+            null);
 
   _singleRequestValue(value) {
     assert(value != null);
-    if (value is bool) { return value; }
+    if (value is bool) {
+      return value;
+    }
     if (value is String) {
       if (value.toLowerCase() == 'true') {
         return true;
@@ -209,12 +228,17 @@ class BooleanProperty extends ApiConfigSchemaProperty {
 }
 
 class DateTimeProperty extends ApiConfigSchemaProperty {
-
-  DateTimeProperty(String name, String description, bool required,
-                   DateTime defaultValue)
-      : super(name, description, required,
-          defaultValue != null ? defaultValue.toUtc().toIso8601String() : null,
-          'string', 'date-time');
+  DateTimeProperty(
+      String name, String description, bool required, DateTime defaultValue)
+      : super(
+            name,
+            description,
+            required,
+            defaultValue != null
+                ? defaultValue.toUtc().toIso8601String()
+                : null,
+            'string',
+            'date-time');
 
   _singleResponseValue(value) {
     assert(value != null);
@@ -232,7 +256,6 @@ class DateTimeProperty extends ApiConfigSchemaProperty {
 }
 
 class SchemaProperty extends ApiConfigSchemaProperty {
-
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
@@ -260,15 +283,15 @@ class SchemaProperty extends ApiConfigSchemaProperty {
 class ListProperty extends ApiConfigSchemaProperty {
   final ApiConfigSchemaProperty _itemsProperty;
 
-  ListProperty(String name, String description, bool required,
-               this._itemsProperty)
+  ListProperty(
+      String name, String description, bool required, this._itemsProperty)
       : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
       new discovery.JsonSchema()..type = 'array';
 
   discovery.JsonSchema get asDiscovery =>
-    super.asDiscovery..items = _itemsProperty.asDiscovery;
+      super.asDiscovery..items = _itemsProperty.asDiscovery;
 
   _singleResponseValue(listObject) {
     if (listObject is! List) {
@@ -288,15 +311,15 @@ class ListProperty extends ApiConfigSchemaProperty {
 class MapProperty extends ApiConfigSchemaProperty {
   final ApiConfigSchemaProperty _additionalProperty;
 
-  MapProperty(String name, String description, bool required,
-              this._additionalProperty)
+  MapProperty(
+      String name, String description, bool required, this._additionalProperty)
       : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
       new discovery.JsonSchema()..type = 'object';
 
   discovery.JsonSchema get asDiscovery =>
-    super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
+      super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
 
   _singleResponseValue(mapObject) {
     if (mapObject is! Map) {

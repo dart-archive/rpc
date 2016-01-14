@@ -70,7 +70,10 @@ void main() {
         'id': 'CorrectList',
         'type': 'object',
         'properties': {
-          'aList': {'type': 'array', 'items': {r'$ref': 'SomeClass'}},
+          'aList': {
+            'type': 'array',
+            'items': {r'$ref': 'SomeClass'}
+          },
           'anotherName': {
             'type': 'array',
             'description': 'Description of a List.',
@@ -81,7 +84,10 @@ void main() {
             'required': true,
             'items': {r'$ref': 'SomeClass'}
           },
-          'anOptionalList': {'type': 'array', 'items': {r'$ref': 'SomeClass'}},
+          'anOptionalList': {
+            'type': 'array',
+            'items': {r'$ref': 'SomeClass'}
+          },
           'aFullList': {
             'type': 'array',
             'description': 'Description of a List.',

@@ -16,7 +16,6 @@ import 'errors.dart';
 /// It holds the information necessary to route the request and all
 /// the parameters needed to invoke the method.
 class HttpApiRequest {
-
   /// HTTP method for this request (e.g. GET, POST,...).
   final String httpMethod;
 
@@ -38,9 +37,8 @@ class HttpApiRequest {
   final List<Cookie> cookies;
 
   factory HttpApiRequest(String httpMethod, Uri uri,
-                         Map<String, dynamic> headers,
-                         Stream<List<int>> body,
-                         {List<Cookie> cookies}) {
+      Map<String, dynamic> headers, Stream<List<int>> body,
+      {List<Cookie> cookies}) {
     var headersLowerCase = new Map<String, dynamic>();
     headers.forEach((String key, dynamic value) =>
         headersLowerCase[key.toLowerCase()] = value);
@@ -52,12 +50,11 @@ class HttpApiRequest {
     // Convert HttpHeaders to a Map<String, dynamic>. We don't need to
     // lowercase the keys as they are already lowercased in the HttpRequest.
     var headers = new Map<String, dynamic>();
-    request.headers.forEach(
-        (String key, dynamic value) => headers[key] = value);
+    request.headers
+        .forEach((String key, dynamic value) => headers[key] = value);
 
-    return new HttpApiRequest._(
-        request.method, request.requestedUri, headers, request.cookies,
-        request);
+    return new HttpApiRequest._(request.method, request.requestedUri, headers,
+        request.cookies, request);
   }
 
   HttpApiRequest._(
@@ -91,8 +88,8 @@ class HttpApiResponse {
   /// Holds a stacktrace if passed via constructor.
   final StackTrace stack;
 
-  HttpApiResponse(
-      this.status, this.body, this.headers, {this.exception, this.stack}) {
+  HttpApiResponse(this.status, this.body, this.headers,
+      {this.exception, this.stack}) {
     assert(headers != null);
   }
 

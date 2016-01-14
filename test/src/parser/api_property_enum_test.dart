@@ -12,7 +12,7 @@ import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
 import 'package:unittest/unittest.dart';
 
-class CorrectEnum{
+class CorrectEnum {
   @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'})
   String anEnum;
 
@@ -23,13 +23,10 @@ class CorrectEnum{
   String aNamedEnum;
 
   @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
-      defaultValue: 'foo')
+      values: const {'foo': 'A Foo', 'bar': 'A Bar'}, defaultValue: 'foo')
   String anEnumWithDefault;
 
-  @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
-      required: true)
+  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'}, required: true)
   String aRequiredEnum;
 
   @ApiProperty(
@@ -40,26 +37,20 @@ class CorrectEnum{
       defaultValue: 'bar')
   String anEnumWithAllAnnotations;
 
-  @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
-      ignore: true)
+  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'}, ignore: true)
   String ignored;
 }
 
 class WrongEnum {
   @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
-      minValue: 0, maxValue: 1)
+      values: const {'foo': 'A Foo', 'bar': 'A Bar'}, minValue: 0, maxValue: 1)
   String anEnumWithMinMax;
 
-  @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
-      format: 'int32')
+  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'}, format: 'int32')
   String anEnumWithFormat;
 
   @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
-      defaultValue: 'baz')
+      values: const {'foo': 'A Foo', 'bar': 'A Bar'}, defaultValue: 'baz')
   String anEnumWithIncorrectDefault;
 }
 

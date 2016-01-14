@@ -36,7 +36,6 @@ class ApiConfigError extends Error {
 }
 
 class ParsedHttpApiRequest {
-
   /// The original request given as input.
   final HttpApiRequest originalRequest;
 
@@ -134,5 +133,4 @@ class ApiParameter {
     isInt = pm.type == reflectType(int);
     isBool = pm.type == reflectType(bool);
   }
-
 }

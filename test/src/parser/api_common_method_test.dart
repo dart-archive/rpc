@@ -16,79 +16,77 @@ import '../test_api/messages2.dart';
 
 @ApiClass(version: 'v1')
 class CorrectMethodApiWithReturnValue {
-
   @ApiMethod(path: 'returnsMessage')
   SimpleMessage returnsMessage() {
-   return new SimpleMessage();
+    return new SimpleMessage();
   }
 
   @ApiMethod(path: 'returnsListOfString')
   List<String> returnsListOfString() {
-   return ['foo'];
+    return ['foo'];
   }
 
   @ApiMethod(path: 'returnsListOfInt')
   List<int> returnsListOfInt() {
-   return [42];
+    return [42];
   }
 
   @ApiMethod(path: 'returnsListOfMessage')
   List<SimpleMessage> returnsListOfMessage() {
-   return [new SimpleMessage()];
+    return [new SimpleMessage()];
   }
 
   @ApiMethod(path: 'returnsMapOfString')
   Map<String, String> returnsMapOfString() {
-   return {'foo': 'bar'};
+    return {'foo': 'bar'};
   }
 
   @ApiMethod(path: 'returnsMapOfInt')
   Map<String, int> returnsMapOfInt() {
-   return {'foo': 42};
+    return {'foo': 42};
   }
 
   @ApiMethod(path: 'returnsMapOfMessage')
   Map<String, SimpleMessage> returnsMapOfMessage() {
-   return {'foo': new SimpleMessage()};
+    return {'foo': new SimpleMessage()};
   }
 }
 
 @ApiClass(version: 'v1')
 class CorrectMethodApiWithFutureReturnValue {
-
   @ApiMethod(path: 'returnsMessage')
   Future<SimpleMessage> returnsMessage() {
-   return new Future.value(new SimpleMessage());
+    return new Future.value(new SimpleMessage());
   }
 
   @ApiMethod(path: 'returnsListOfString')
   Future<List<String>> returnsListOfString() {
-   return new Future.value(['foo']);
+    return new Future.value(['foo']);
   }
 
   @ApiMethod(path: 'returnsListOfInt')
   Future<List<int>> returnsListOfInt() {
-   return new Future.value([42]);
+    return new Future.value([42]);
   }
 
   @ApiMethod(path: 'returnsListOfMessage')
   Future<List<SimpleMessage>> returnsListOfMessage() {
-   return new Future.value([new SimpleMessage()]);
+    return new Future.value([new SimpleMessage()]);
   }
 
   @ApiMethod(path: 'returnsMapOfString')
   Future<Map<String, String>> returnsMapOfString() {
-   return new Future.value({'foo': 'bar'});
+    return new Future.value({'foo': 'bar'});
   }
 
   @ApiMethod(path: 'returnsMapOfInt')
   Future<Map<String, int>> returnsMapOfInt() {
-   return new Future.value({'foo': 42});
+    return new Future.value({'foo': 42});
   }
 
   @ApiMethod(path: 'returnsMapOfMessage')
   Future<Map<String, SimpleMessage>> returnsMapOfMessage() {
-   return new Future.value({'foo': new SimpleMessage()});
+    return new Future.value({'foo': new SimpleMessage()});
   }
 }
 
@@ -132,27 +130,41 @@ class CorrectMethodApiListMap {
 
 class WrongMethodApi {
   @ApiMethod(path: 'invalidMethod', method: 'Invalid_Http_Method')
-  VoidMessage invalidHttpMethod() { return null; }
+  VoidMessage invalidHttpMethod() {
+    return null;
+  }
 
   @ApiMethod()
-  VoidMessage noPath() { return null; }
+  VoidMessage noPath() {
+    return null;
+  }
 
   @ApiMethod(name: 'noPath')
-  VoidMessage nameNoPath() { return null; }
+  VoidMessage nameNoPath() {
+    return null;
+  }
 
   @ApiMethod(path: '/invalidPath')
-  VoidMessage invalidPath() { return null; }
+  VoidMessage invalidPath() {
+    return null;
+  }
 }
 
 class WrongMethodApiWithPathParam {
   @ApiMethod(path: 'missingPathParam')
-  VoidMessage missingPathParam(String missing) { return null; }
+  VoidMessage missingPathParam(String missing) {
+    return null;
+  }
 
   @ApiMethod(path: 'missingMethodParam/{id}')
-  VoidMessage missingMethodParam() { return null; }
+  VoidMessage missingMethodParam() {
+    return null;
+  }
 
   @ApiMethod(path: 'mismatchMethodParam/{aMessage}')
-  VoidMessage mismatchMethodParam(SimpleMessage aMessage) { return null; }
+  VoidMessage mismatchMethodParam(SimpleMessage aMessage) {
+    return null;
+  }
 }
 
 class WrongMethodApiWithReturnValue {
@@ -179,7 +191,6 @@ class WrongMethodApiWithReturnValue {
     return new Future.value(true);
   }
 }
-
 
 @ApiClass(version: 'v1')
 class WrongMethodApiList {
@@ -306,7 +317,7 @@ class WrongMethodApiAmbiguousPaths4 {
 
 @ApiClass(version: 'v1')
 class WrongMethodApiAmbiguousPaths5 {
- @ApiMethod(path: 'test5/other/some')
+  @ApiMethod(path: 'test5/other/some')
   VoidMessage method5a() {
     return null;
   }
@@ -393,7 +404,11 @@ void main() {
             'aBool': {'type': 'boolean'}
           }
         },
-        'ListOfString': {'id': 'ListOfString', 'type': 'array', 'items': {'type': 'string'}},
+        'ListOfString': {
+          'id': 'ListOfString',
+          'type': 'array',
+          'items': {'type': 'string'}
+        },
         'ListOfint': {
           'id': 'ListOfint',
           'type': 'array',
@@ -498,7 +513,9 @@ void main() {
       expect(parser.isValid, isTrue);
       var expectedSchemas = {
         'ListOfString': {
-          'id': 'ListOfString', 'type': 'array', 'items': {'type': 'string'}
+          'id': 'ListOfString',
+          'type': 'array',
+          'items': {'type': 'string'}
         },
         'MapOfint': {
           'id': 'MapOfint',
@@ -508,25 +525,34 @@ void main() {
         'MapOfListOfint': {
           'id': 'MapOfListOfint',
           'type': 'object',
-          'additionalProperties':
-            {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}}
+          'additionalProperties': {
+            'type': 'array',
+            'items': {'type': 'integer', 'format': 'int32'}
+          }
         },
         'ListOfMapOfbool': {
           'id': 'ListOfMapOfbool',
           'type': 'array',
-          'items':
-            {'type': 'object', 'additionalProperties': {'type': 'boolean'}}
+          'items': {
+            'type': 'object',
+            'additionalProperties': {'type': 'boolean'}
+          }
         },
         'ListOfListOfint': {
           'id': 'ListOfListOfint',
           'type': 'array',
-          'items':
-            {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}}
+          'items': {
+            'type': 'array',
+            'items': {'type': 'integer', 'format': 'int32'}
+          }
         },
         'ListOfListOfbool': {
           'id': 'ListOfListOfbool',
           'type': 'array',
-          'items': {'type': 'array', 'items': {'type': 'boolean'}}
+          'items': {
+            'type': 'array',
+            'items': {'type': 'boolean'}
+          }
         },
         'MapOfMapOfint': {
           'id': 'MapOfMapOfint',
@@ -539,8 +565,10 @@ void main() {
         'MapOfMapOfbool': {
           'id': 'MapOfMapOfbool',
           'type': 'object',
-          'additionalProperties':
-            {'type': 'object', 'additionalProperties': {'type': 'boolean'}}
+          'additionalProperties': {
+            'type': 'object',
+            'additionalProperties': {'type': 'boolean'}
+          }
         }
       };
       var expectedMethods = {
@@ -614,7 +642,7 @@ void main() {
   });
 
   group('api-common-method-wrong', () {
-    test('wrong-method-api', (){
+    test('wrong-method-api', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongMethodApi());
       expect(parser.isValid, isFalse);
@@ -640,7 +668,7 @@ void main() {
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-method-api-path-param', (){
+    test('wrong-method-api-path-param', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongMethodApiWithPathParam());
       expect(parser.isValid, isFalse);
@@ -660,11 +688,11 @@ void main() {
         new ApiConfigError(
             'WrongMethodApiWithPathParam.mismatchMethodParam: Path parameter '
             '\'aMessage\' must be of type int, String or bool.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-method-api-return-value', (){
+    test('wrong-method-api-return-value', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongMethodApiWithReturnValue());
       expect(parser.isValid, isFalse);
@@ -690,11 +718,11 @@ void main() {
         new ApiConfigError(
             'WrongMethodApiWithReturnValue.invalidResponseFutureDynamic: API '
             'Method return type has to be a instantiable class.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-method-api-list', (){
+    test('wrong-method-api-list', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongMethodApiList());
       expect(parser.isValid, isFalse);
@@ -707,11 +735,11 @@ void main() {
             'type: \'dynamic\'.'),
         new ApiConfigError('ListOfListOfdynamic: ListOfListOfdynamicProperty: '
             'Properties cannot be of type: \'dynamic\'.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-method-api-map', (){
+    test('wrong-method-api-map', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongMethodApiMap());
       expect(parser.isValid, isFalse);
@@ -732,17 +760,26 @@ void main() {
             'MapOfString: Maps must have keys of type \'String\'.'),
         new ApiConfigError(
             'MapOfMapOfdynamic: Maps must have keys of type \'String\'.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    List ambiguousPaths = [new WrongMethodApiAmbiguousPaths1(), 1,
-                           new WrongMethodApiAmbiguousPaths2(), 2,
-                           new WrongMethodApiAmbiguousPaths3(), 1,
-                           new WrongMethodApiAmbiguousPaths4(), 1,
-                           new WrongMethodApiAmbiguousPaths5(), 3,
-                           new WrongMethodApiAmbiguousPaths6(), 3,
-                           new WrongMethodApiAmbiguousPaths7(), 15];
+    List ambiguousPaths = [
+      new WrongMethodApiAmbiguousPaths1(),
+      1,
+      new WrongMethodApiAmbiguousPaths2(),
+      2,
+      new WrongMethodApiAmbiguousPaths3(),
+      1,
+      new WrongMethodApiAmbiguousPaths4(),
+      1,
+      new WrongMethodApiAmbiguousPaths5(),
+      3,
+      new WrongMethodApiAmbiguousPaths6(),
+      3,
+      new WrongMethodApiAmbiguousPaths7(),
+      15
+    ];
     for (int i = 0; i < ambiguousPaths.length; i += 2) {
       test(ambiguousPaths[i].toString(), () {
         var parser = new ApiParser();
@@ -750,10 +787,10 @@ void main() {
         expect(parser.isValid, isFalse);
         var config = apiConfig.generateDiscoveryDocument('baseUrl', '');
         expect(config.version, 'v1');
-        expect(parser.errors.length, ambiguousPaths[i+1]);
-        parser.errors.forEach((ApiConfigError error) =>
-            expect(error.toString().contains('conflicts with existing method'),
-                   isTrue));
+        expect(parser.errors.length, ambiguousPaths[i + 1]);
+        parser.errors.forEach((ApiConfigError error) => expect(
+            error.toString().contains('conflicts with existing method'),
+            isTrue));
       });
     }
   });

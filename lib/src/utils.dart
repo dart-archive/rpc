@@ -18,7 +18,7 @@ import 'discovery/config.dart' as discovery;
 
 // Global constants
 const List<String> bodyLessMethods = const ['GET', 'DELETE'];
-const Map<String, dynamic > defaultResponseHeaders = const {
+const Map<String, dynamic> defaultResponseHeaders = const {
   // We always return json in the response.
   HttpHeaders.CONTENT_TYPE: 'application/json; charset=utf-8',
   HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
@@ -38,10 +38,9 @@ final ApiConfigSchema discoveryDocSchema =
 
 // Utility method for creating an HTTP error response given an exception.
 // Optionally drains the request body.
-Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
-                                          Exception error,
-                                          {StackTrace stack,
-                                           bool drainRequest: true}) async {
+Future<HttpApiResponse> httpErrorResponse(
+    HttpApiRequest request, Exception error,
+    {StackTrace stack, bool drainRequest: true}) async {
   // TODO support more encodings.
   var response;
   if (error is RpcError) {
@@ -49,15 +48,14 @@ Future<HttpApiResponse> httpErrorResponse(HttpApiRequest request,
         error.statusCode, error.message, error, stack,
         errors: error.errors);
   } else {
-    response =
-        new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
-                                  'Unknown error occurred with API.', error, stack);
+    response = new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
+        'Unknown error occurred with API.', error, stack);
   }
   if (drainRequest) {
     // Drain the request before responding.
     try {
       await request.body.drain();
-    } catch(e) {
+    } catch (e) {
       rpcLogger.warning(
           'Failed to drain request body when creating error response.');
       // Ignore any errors and return the original response generated above.
@@ -74,14 +72,15 @@ void _logHeaders(StringBuffer msg, Map<String, dynamic> headers) {
 }
 
 void logRequest(ParsedHttpApiRequest request, dynamic jsonBody,
-                [Level level = Level.FINER]) {
+    [Level level = Level.FINER]) {
   if (!rpcLogger.isLoggable(level)) {
     return;
   }
   var msg = new StringBuffer();
-  msg..writeln('\nRequest for API ${request.apiKey}:')
-     ..writeln('  Method: ${request.httpMethod}')
-     ..writeln('  Path: ${request.path}');
+  msg
+    ..writeln('\nRequest for API ${request.apiKey}:')
+    ..writeln('  Method: ${request.httpMethod}')
+    ..writeln('  Path: ${request.path}');
   _logHeaders(msg, request.headers);
   if (jsonBody != null) {
     msg.writeln('  Body:\n    $jsonBody');
@@ -90,14 +89,15 @@ void logRequest(ParsedHttpApiRequest request, dynamic jsonBody,
 }
 
 void logResponse(HttpApiResponse response, dynamic jsonBody,
-                 [Level level = Level.FINER]) {
+    [Level level = Level.FINER]) {
   if (!rpcLogger.isLoggable(level)) {
     return;
   }
   var msg = new StringBuffer();
-  msg..writeln('\nResponse')
-     ..writeln('  Status Code: ${response.status}')
-     ..writeln('  Headers:');
+  msg
+    ..writeln('\nResponse')
+    ..writeln('  Status Code: ${response.status}')
+    ..writeln('  Headers:');
   _logHeaders(msg, response.headers);
   if (jsonBody != null) {
     msg.writeln('  Body:\n    $jsonBody');
@@ -110,17 +110,17 @@ void logResponse(HttpApiResponse response, dynamic jsonBody,
   }
 }
 
-void logMethodInvocation(Symbol symbol,
-                         List<dynamic> positionalParams,
-                         Map<Symbol, dynamic> namedParams) {
+void logMethodInvocation(Symbol symbol, List<dynamic> positionalParams,
+    Map<Symbol, dynamic> namedParams) {
   if (!rpcLogger.isLoggable(Level.FINE)) {
     return;
   }
   assert(positionalParams != null);
   assert(namedParams != null);
   var msg = new StringBuffer();
-  msg..writeln('\nInvoking method: ${MirrorSystem.getName(symbol)} with:')
-     ..writeln('  Positional Parameters:');
+  msg
+    ..writeln('\nInvoking method: ${MirrorSystem.getName(symbol)} with:')
+    ..writeln('  Positional Parameters:');
   positionalParams.forEach((value) => msg.writeln('    $value'));
   msg.writeln('  Named Parameters:');
   namedParams.forEach((symbol, value) =>

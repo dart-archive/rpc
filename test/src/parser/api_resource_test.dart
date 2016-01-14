@@ -12,21 +12,18 @@ import 'package:unittest/unittest.dart';
 
 @ApiClass(version: 'v1')
 class CorrectResourceApi1 {
-
   @ApiResource()
   TestResource aResource = new TestResource();
 }
 
 @ApiClass(version: 'v1')
 class CorrectResourceApi2 {
-
   @ApiResource(name: 'anotherResource')
   TestResource aResource = new TestResource();
 }
 
 @ApiClass(version: 'v1')
 class CorrectResourceApi3 {
-
   @ApiResource()
   TestResource aResource = new TestResource();
 
@@ -35,7 +32,6 @@ class CorrectResourceApi3 {
 
 @ApiClass(version: 'v1')
 class CorrectResourceApi4 {
-
   @ApiResource()
   TestResource aResource = new TestResource();
 
@@ -69,8 +65,9 @@ void main() {
       ApiConfigResource resource = apiCfg.resources['aResource'];
       expect(resource, isNotNull);
       expect(resource.name, 'aResource');
-      Map expectedResources =
-        {'aResource': {'methods': {}, 'resources': {}}};
+      Map expectedResources = {
+        'aResource': {'methods': {}, 'resources': {}}
+      };
       var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
       // Encode the discovery document for the Tester API as json.
       var json = discoveryDocSchema.toResponse(discoveryDoc);
@@ -86,8 +83,9 @@ void main() {
       expect(resource.name, 'anotherResource');
       // Make sure the default name is not used for the resource.
       expect(apiCfg.resources['aResource'], isNull);
-      Map expectedResources =
-        {'anotherResource': {'methods': {}, 'resources': {}}};
+      Map expectedResources = {
+        'anotherResource': {'methods': {}, 'resources': {}}
+      };
       var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
       // Encode the discovery document for the Tester API as json.
       var json = discoveryDocSchema.toResponse(discoveryDoc);
@@ -103,8 +101,9 @@ void main() {
       expect(resource.name, 'aResource');
       // Make sure the field with no annotation is not part of the api.
       expect(apiCfg.resources['notExposedResource'], isNull);
-      Map expectedResources =
-        {'aResource': {'methods': {}, 'resources': {}}};
+      Map expectedResources = {
+        'aResource': {'methods': {}, 'resources': {}}
+      };
       var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
       // Encode the discovery document for the Tester API as json.
       var json = discoveryDocSchema.toResponse(discoveryDoc);
@@ -122,8 +121,8 @@ void main() {
       expect(resource, isNotNull);
       expect(resource.name, 'anotherResource');
       Map expectedResources = {
-         'aResource': {'methods': {}, 'resources': {}},
-         'anotherResource': {'methods': {}, 'resources': {}}
+        'aResource': {'methods': {}, 'resources': {}},
+        'anotherResource': {'methods': {}, 'resources': {}}
       };
       var discoveryDoc = apiCfg.generateDiscoveryDocument('baseUrl', null);
       // Encode the discovery document for the Tester API as json.
@@ -133,7 +132,7 @@ void main() {
   });
 
   group('api-resource-wrong', () {
-    test('wrong-resource-api-1', (){
+    test('wrong-resource-api-1', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongResourceApi1());
       expect(apiCfg.resources['notAResource'], isNull);
@@ -143,11 +142,11 @@ void main() {
         new ApiConfigError(
             'WrongResourceApi1: @ApiResource annotation on non-field: '
             '\'notAResource\'')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-resource-api-2', (){
+    test('wrong-resource-api-2', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongResourceApi2());
       ApiConfigResource resource = apiCfg.resources['aResource'];
@@ -157,7 +156,7 @@ void main() {
       var expectedErrors = [
         new ApiConfigError(
             'WrongResourceApi2: Duplicate resource with name: aResource')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
   });
