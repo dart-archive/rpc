@@ -10,7 +10,7 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 class CorrectString {
   String aString;

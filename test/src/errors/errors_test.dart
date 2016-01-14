@@ -5,7 +5,7 @@
 library errors_tests;
 
 import 'package:rpc/rpc.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 main() {
   group('errors-rpc-error-detail-to-json', () {

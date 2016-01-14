@@ -9,9 +9,18 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:rpc/rpc.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:crypto/crypto.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as p;
+
+import '../../test_util.dart';
+
+File _blobFile() {
+  var blobPath =
+      p.join(getPackageDir(), 'test/src/test_api/blob_dart_logo.png');
+  return new File(blobPath);
+}
 
 // Tests for exercising the setting of default values
 class DefaultValueMessage {
@@ -41,7 +50,7 @@ class DefaultValueMessage {
   Type ignoredProperty;
 }
 
-var _expectedDefaultResult = {
+const _expectedDefaultResult = const {
   'anInt': 5,
   'aBool': true,
   'aDouble': 4.2,
@@ -154,8 +163,7 @@ class GetAPI {
 
   @ApiMethod(path: 'get/blob')
   Future<MediaMessage> getBlob() async {
-    final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
-    final file = new File.fromUri(path);
+    final file = _blobFile();
     return new MediaMessage()
       ..bytes = file.readAsBytesSync()
       ..contentType = 'image/png'
@@ -164,8 +172,7 @@ class GetAPI {
 
   @ApiMethod(path: 'get/blob/extra')
   Future<MediaMessage> getBlobExtra() async {
-    final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
-    final file = new File.fromUri(path);
+    final file = _blobFile();
     final bytes = file.readAsBytesSync();
     final md5 = new MD5();
     md5.add(bytes);
@@ -266,7 +273,7 @@ main() {
     if (body == null) return null;
     List<List<int>> content = await body.toList();
     assert(content.length == 1);
-    return JSON.decode(UTF8.decode(content.elementAt(0)));
+    return JSON.decode(UTF8.decode(content.single));
   }
 
   group('api-invoke-get', () {
@@ -424,8 +431,7 @@ main() {
       HttpApiResponse response = await _sendRequest('GET', 'get/blob');
       expect(response.status, HttpStatus.OK);
       expect(response.headers[HttpHeaders.CONTENT_TYPE], 'image/png');
-      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
-      final file = new File.fromUri(path);
+      final file = _blobFile();
       expect(response.headers[HttpHeaders.LAST_MODIFIED],
           formatHttpDate(file.lastModifiedSync()));
       final bytes = await response.body.toList();
@@ -437,8 +443,7 @@ main() {
       expect(response.status, HttpStatus.OK);
       expect(response.headers[HttpHeaders.CONTENT_TYPE],
           'application/json; charset=utf-8');
-      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
-      final file = new File.fromUri(path);
+      final file = _blobFile();
       final blob = await _decodeBody(response.body);
       expect(DateTime.parse(blob['updated']).toUtc(),
           file.lastModifiedSync().toUtc());
@@ -447,8 +452,7 @@ main() {
     });
 
     test('get-blob-media-unmodified', () async {
-      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
-      final file = new File.fromUri(path);
+      final file = _blobFile();
       HttpApiResponse response =
           await _sendRequest('GET', 'get/blob', extraHeaders: {
         HttpHeaders.IF_MODIFIED_SINCE: formatHttpDate(file.lastModifiedSync())
@@ -467,8 +471,7 @@ main() {
       expect(response.status, HttpStatus.OK);
       expect(response.headers[HttpHeaders.CONTENT_TYPE],
           'application/json; charset=utf-8');
-      final path = Platform.script.resolve('../test_api/blob_dart_logo.png');
-      final file = new File.fromUri(path);
+      final file = _blobFile();
       final blob = await _decodeBody(response.body);
       expect(DateTime.parse(blob['updated']).toUtc(),
           file.lastModifiedSync().toUtc());

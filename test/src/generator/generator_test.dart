@@ -6,32 +6,14 @@ library rpc_generator_tests;
 
 import 'dart:io';
 
-import 'package:discoveryapis_generator/src/utils.dart';
 import 'package:path/path.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
-class GeneratorTestConfiguration extends SimpleConfiguration {
-  Directory tmpDir;
-
-  GeneratorTestConfiguration() {
-    // We create our own tmp dir to make it easy to cleanup once the tests are
-    // done, independent of whether they failed or not.
-    tmpDir = Directory.systemTemp.createTempSync();
-  }
-
-  void onDone(bool success) {
-    tmpDir.deleteSync(recursive: true);
-    super.onDone(success);
-  }
-}
+import '../../test_util.dart';
 
 main() {
-  var config = new GeneratorTestConfiguration();
-  unittestConfiguration = config;
-  var rpcRootPath = findPackageRoot('.');
-  if (rpcRootPath == null && Platform.packageRoot != null) {
-    rpcRootPath = findPackageRoot(Platform.packageRoot);
-  }
+  var rpcRootPath = getPackageDir();
+
   // Common path to the necessary test data.
   var dataPath = join(rpcRootPath, 'test', 'src', 'generator', 'data');
 
@@ -43,16 +25,18 @@ main() {
         new File(join(srcPath, fileName)).copySync(join(dstPath, fileName)));
   }
 
+  String packagePath;
+
   // Creates a package directory with a lib directory and an optional pubspec
   // file.
-  String setupPackage({bool addPubSpec: true}) {
-    var packagePath = absolute(config.tmpDir.createTempSync().path);
+  void setupPackage({bool addPubSpec: true}) {
+    assert(packagePath == null);
+    packagePath = Directory.systemTemp.createTempSync().path;
     new Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
       new File(join(dataPath, 'pubspec.yamll'))
           .copySync(join(absolute(packagePath), 'pubspec.yaml'));
     }
-    return packagePath;
   }
 
   ProcessResult runPub(String workingDir, List<String> arguments) {
@@ -89,9 +73,23 @@ main() {
     expect(actualCode.readAsStringSync(), expectedCode.readAsStringSync());
   }
 
+  tearDown(() {
+    if (packagePath != null) {
+      var dir = new Directory(packagePath);
+      if (dir.existsSync()) {
+        try {
+          dir.deleteSync(recursive: true);
+        } catch (_) {
+          // noop
+        }
+      }
+      packagePath = null;
+    }
+  });
+
   group('rpc-generator-correct', () {
     test('multipleApis-discovery', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, [
         'multipleApis.dart',
@@ -100,14 +98,14 @@ main() {
       ]);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
-        logMessage('Could not find pub. Skipping $currentTestCase!');
+        print('Could not find pub.');
         return;
       }
       expect(result.exitCode, 0);
       result = runGenerator(
           packagePath, ['discovery', '-i', join(libPath, 'multipleApis.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       var expectedDiscovery =
@@ -116,7 +114,7 @@ main() {
     });
 
     test('multipleApis-client', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, [
         'multipleApis.dart',
@@ -125,14 +123,14 @@ main() {
       ]);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
-        logMessage('Could not find pub. Skipping $currentTestCase!');
+        print('Could not find pub.');
         return;
       }
       expect(result.exitCode, 0);
       result = runGenerator(
           packagePath, ['client', '-i', join(libPath, 'multipleApis.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
@@ -143,19 +141,19 @@ main() {
     });
 
     test('toyApi-discovery', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
-        logMessage('Could not find pub. Skipping $currentTestCase!');
+        print('Could not find pub.');
         return;
       }
       expect(result.exitCode, 0);
       result = runGenerator(
           packagePath, ['discovery', '-i', join(libPath, 'toyapi.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       var expectedDiscovery =
@@ -164,19 +162,19 @@ main() {
     });
 
     test('toyApi-client', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
-        logMessage('Could not find pub. Skipping $currentTestCase!');
+        print('Could not find pub.');
         return;
       }
       expect(result.exitCode, 0);
       result = runGenerator(
           packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect('[SUCCESS]'.allMatches(result.stdout).length, 1);
@@ -186,11 +184,11 @@ main() {
 
   group('rpc-generator-failing', () {
     test('wrong-api-file', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var fileName = join(packagePath, 'lib', 'toyapi.dart');
       var result = runGenerator(packagePath, ['discovery', '-i', fileName]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect(result.stdout.startsWith('Cannot find API file \'$fileName\''),
@@ -198,19 +196,19 @@ main() {
     });
 
     test('part-api-file', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['libraryWithPart.dart', 'partApi.dart']);
       var fileName = join(packagePath, 'lib', 'partApi.dart');
       var result = runPub(packagePath, ['get']);
       if (result == null) {
-        logMessage('Could not find pub. Skipping $currentTestCase!');
+        print('Could not find pub.');
         return;
       }
       expect(result.exitCode, 0);
       result = runGenerator(packagePath, ['discovery', '-i', fileName]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect(
@@ -220,26 +218,26 @@ main() {
     });
 
     test('no-pub-spec', () {
-      var packagePath = setupPackage(addPubSpec: false);
+      setupPackage(addPubSpec: false);
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runGenerator(
           packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect(result.stdout.contains('must be in a valid package.'), isTrue);
     });
 
     test('no-pub-get', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['toyapi.dart']);
       var result = runGenerator(
           packagePath, ['client', '-i', join(libPath, 'toyapi.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect(
@@ -249,19 +247,19 @@ main() {
     });
 
     test('no-default-constructor', () {
-      var packagePath = setupPackage();
+      setupPackage();
       var libPath = join(packagePath, 'lib');
       copyFiles(dataPath, libPath, ['noDefaultConstructorApi.dart']);
       var result = runPub(packagePath, ['get']);
       if (result == null) {
-        logMessage('Could not find pub. Skipping $currentTestCase!');
+        print('Could not find pub.');
         return;
       }
       expect(result.exitCode, 0);
       result = runGenerator(packagePath,
           ['client', '-i', join('lib', 'noDefaultConstructorApi.dart')]);
       if (result == null) {
-        logMessage('Could not find dart. Skipping $currentTestCase!');
+        print('Could not find dart.');
         return;
       }
       expect(
