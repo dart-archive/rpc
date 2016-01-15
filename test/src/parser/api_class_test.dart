@@ -8,15 +8,16 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/utils.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 @ApiClass(version: 'v1')
 class CorrectMinimum {}
 
-@ApiClass(name: 'testApi',
-          version: 'v1',
-          title: 'The Test API',
-          description: 'An API used to test the implementation')
+@ApiClass(
+    name: 'testApi',
+    version: 'v1',
+    title: 'The Test API',
+    description: 'An API used to test the implementation')
 class CorrectFull {}
 
 class WrongNoMetadata {}
@@ -24,9 +25,10 @@ class WrongNoMetadata {}
 @ApiClass()
 class WrongNoVersionMinimum {}
 
-@ApiClass(name: 'testApi',
-          title: 'The Test API',
-          description: 'An API used to test the implementation')
+@ApiClass(
+    name: 'testApi',
+    title: 'The Test API',
+    description: 'An API used to test the implementation')
 class WrongNoVersionFull {}
 
 class MessageWithArguments {
@@ -116,7 +118,7 @@ void main() {
       expect(json, expectedJson);
     });
 
-    test('minimum', (){
+    test('minimum', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new CorrectMinimum());
       expect(apiCfg.version, 'v1');
@@ -200,27 +202,27 @@ void main() {
   });
 
   group('api-class-wrong', () {
-    test('no-metadata', (){
+    test('no-metadata', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongNoMetadata());
+      parser.parse(new WrongNoMetadata());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
             'WrongNoMetadata: Missing required @ApiClass annotation.'),
         new ApiConfigError(
             'WrongNoMetadata: @ApiClass.version field is required.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('min-no-version', (){
+    test('min-no-version', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongNoVersionMinimum());
+      parser.parse(new WrongNoVersionMinimum());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
             'WrongNoVersionMinimum: @ApiClass.version field is required.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
@@ -235,13 +237,13 @@ void main() {
       var expectedErrors = [
         new ApiConfigError(
             'WrongNoVersionFull: @ApiClass.version field is required.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('request-with-args', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new InvalidMessageWithArgsApi());
+      parser.parse(new InvalidMessageWithArgsApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

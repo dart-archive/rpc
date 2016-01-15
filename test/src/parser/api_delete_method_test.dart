@@ -8,51 +8,69 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/utils.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 @ApiClass(version: 'v1')
 class CorrectDeleteApi {
   @ApiMethod(method: 'DELETE', path: 'minimumDelete')
-  VoidMessage minimumDelete() { return null; }
+  VoidMessage minimumDelete() {
+    return null;
+  }
 
   @ApiMethod(name: 'namedDelete', method: 'DELETE', path: 'namedDelete')
-  VoidMessage namedDelete() { return null; }
+  VoidMessage namedDelete() {
+    return null;
+  }
 
-  @ApiMethod(name: 'fullDelete',
-             method: 'DELETE',
-             path: 'fullDelete',
-             description: 'A method with all annotations set')
-  VoidMessage fullDelete() { return null; }
+  @ApiMethod(
+      name: 'fullDelete',
+      method: 'DELETE',
+      path: 'fullDelete',
+      description: 'A method with all annotations set')
+  VoidMessage fullDelete() {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1')
 class CorrectDeleteApiWithPath {
   @ApiMethod(method: 'DELETE', path: 'deleteWithString/{aString}')
-  VoidMessage deleteWithString(String aString) { return null; }
+  VoidMessage deleteWithString(String aString) {
+    return null;
+  }
 
   @ApiMethod(method: 'DELETE', path: 'deleteWithInt/{anInt}')
-  VoidMessage deleteWithInt(int anInt) { return null; }
+  VoidMessage deleteWithInt(int anInt) {
+    return null;
+  }
 
   @ApiMethod(method: 'DELETE', path: 'deleteWithStringInt/{aString}/{anInt}')
-  VoidMessage deleteWithStringInt(String aString, int anInt) { return null; }
+  VoidMessage deleteWithStringInt(String aString, int anInt) {
+    return null;
+  }
 
   @ApiMethod(method: 'DELETE', path: 'deleteWithIntString/{anInt}/{aString}')
-  VoidMessage deleteWithIntString(String anInt, int aString) { return null; }
+  VoidMessage deleteWithIntString(String anInt, int aString) {
+    return null;
+  }
 
   @ApiMethod(
-      method: 'DELETE',
-      path: 'deleteWithStringString/{aString1}/{aString2}')
+      method: 'DELETE', path: 'deleteWithStringString/{aString1}/{aString2}')
   VoidMessage deleteWithStringString(String aString1, String aString2) {
     return null;
   }
 
   @ApiMethod(method: 'DELETE', path: 'deleteWithIntInt/{anInt1}/{anInt2}')
-  VoidMessage deleteWithIntInt(int anInt1, int anInt2) { return null; }
+  VoidMessage deleteWithIntInt(int anInt1, int anInt2) {
+    return null;
+  }
 
   @ApiMethod(
       method: 'DELETE',
       path: 'deleteWithIntKeywordInt/{anInt1}/keyword/{anInt2}')
-  VoidMessage deleteWithIntKeywordInt(int anInt1, int anInt2) { return null; }
+  VoidMessage deleteWithIntKeywordInt(int anInt1, int anInt2) {
+    return null;
+  }
 
   @ApiMethod(
       method: 'DELETE',
@@ -63,8 +81,7 @@ class CorrectDeleteApiWithPath {
 }
 
 @ApiClass(version: 'v1')
-class CorrectDeleteApiWithQuery{
-
+class CorrectDeleteApiWithQuery {
   @ApiMethod(method: 'DELETE', path: 'query1')
   VoidMessage query1({String name}) {
     return null;
@@ -120,7 +137,9 @@ class CorrectDeleteApiWithQuery{
 // they are not specific to DELETE.
 class WrongDeleteApi {
   @ApiMethod(method: 'DELETE', path: 'deleteWithMessageArg')
-  VoidMessage deleteWithMessageArg(VoidMessage requestMessage) { return null;}
+  VoidMessage deleteWithMessageArg(VoidMessage requestMessage) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1test')
@@ -555,7 +574,7 @@ void main() {
   });
 
   group('api-delete-method-wrong', () {
-    test('wrong-delete-api', (){
+    test('wrong-delete-api', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongDeleteApi());
       expect(apiCfg.methods.length, 1);
@@ -575,7 +594,7 @@ void main() {
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-delete-with-path-query', (){
+    test('wrong-delete-with-path-query', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongDeleteApiWithPathQuery());
       expect(apiCfg.methods.length, 5);
@@ -597,7 +616,7 @@ void main() {
         new ApiConfigError(
             'WrongDeleteApiWithPathQuery.query5: Non-path parameter '
             '\'queryParam\' must be a named parameter.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
   });

@@ -8,7 +8,6 @@ import 'package:rpc/src/annotations.dart';
 import 'multipleApisMessages.dart';
 
 class ApiTwoResource {
-
   ApiTwoResource();
 
   @ApiMethod(path: 'apitwo/resource/{name}')
@@ -16,4 +15,3 @@ class ApiTwoResource {
     return new ApiTwoResponse()..result = 'Hello ${name}!';
   }
 }
-

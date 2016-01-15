@@ -26,12 +26,7 @@ class ApiClass {
   /// API description.
   final String description;
 
-  const ApiClass({
-      this.name,
-      this.version,
-      this.title,
-      this.description
-  });
+  const ApiClass({this.name, this.version, this.title, this.description});
 }
 
 /// Use as annotation for your API resources that should be added to a parent
@@ -47,7 +42,6 @@ class ApiResource {
 
 /// Use as annotation for your API methods inside of the API class.
 class ApiMethod {
-
   /// Name of the method.
   ///
   /// Defaults to the camel-case version of the class name if not.
@@ -70,12 +64,7 @@ class ApiMethod {
   /// Description of the method.
   final String description;
 
-  const ApiMethod({
-      this.name,
-      this.path,
-      this.method: 'GET',
-      this.description
-  }) ;
+  const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
 }
 
 /// Optional annotation for parameters inside of API request/response messages.
@@ -122,8 +111,8 @@ class ApiProperty {
   ///  Properties using this will have to be String.
   final Map<String, String> values;
 
-  const ApiProperty({
-      this.name,
+  const ApiProperty(
+      {this.name,
       this.description,
       this.format,
       this.required: false,
@@ -131,8 +120,7 @@ class ApiProperty {
       this.defaultValue,
       this.minValue,
       this.maxValue,
-      this.values}
-  );
+      this.values});
 }
 
 /// Special API Message to use when a method doesn't need a request or doesn't

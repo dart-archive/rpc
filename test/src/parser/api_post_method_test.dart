@@ -8,26 +8,35 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/utils.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 import '../test_api/messages2.dart';
 
 @ApiClass(version: 'v1')
 class CorrectPostApi {
   @ApiMethod(method: 'POST', path: 'minimumPost')
-  VoidMessage minimumPost(SimpleMessage msg) { return null; }
+  VoidMessage minimumPost(SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(name: 'namedPost', method: 'POST', path: 'namedPost')
-  VoidMessage namedPost(SimpleMessage msg) { return null; }
+  VoidMessage namedPost(SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(name: 'returningPost', method: 'POST', path: 'returningPost')
-  SimpleMessage returningPost(SimpleMessage msg) { return msg; }
+  SimpleMessage returningPost(SimpleMessage msg) {
+    return msg;
+  }
 
-  @ApiMethod(name: 'fullPost',
-             method: 'POST',
-             path: 'fullPost',
-             description: 'A method with all annotations set')
-  VoidMessage fullPost(SimpleMessage msg) { return null; }
+  @ApiMethod(
+      name: 'fullPost',
+      method: 'POST',
+      path: 'fullPost',
+      description: 'A method with all annotations set')
+  VoidMessage fullPost(SimpleMessage msg) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1')
@@ -38,10 +47,14 @@ class CorrectPostApiWithPath {
   }
 
   @ApiMethod(method: 'POST', path: 'postWithInt/{anInt}')
-  VoidMessage postWithInt(int anInt, SimpleMessage msg) { return null; }
+  VoidMessage postWithInt(int anInt, SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(method: 'POST', path: 'postWithBool/{aBool}')
-  VoidMessage postWithBool(bool aBool, SimpleMessage msg) { return null; }
+  VoidMessage postWithBool(bool aBool, SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(method: 'POST', path: 'postWithStringInt/{aString}/{anInt}')
   VoidMessage postWithStringInt(String aString, int anInt, SimpleMessage msg) {
@@ -53,12 +66,9 @@ class CorrectPostApiWithPath {
     return null;
   }
 
-  @ApiMethod(
-      method: 'POST',
-      path: 'postWithStringString/{aString1}/{aString2}')
-  VoidMessage postWithStringString(String aString1,
-                                   String aString2,
-                                   SimpleMessage msg) {
+  @ApiMethod(method: 'POST', path: 'postWithStringString/{aString1}/{aString2}')
+  VoidMessage postWithStringString(
+      String aString1, String aString2, SimpleMessage msg) {
     return null;
   }
 
@@ -73,8 +83,7 @@ class CorrectPostApiWithPath {
   }
 
   @ApiMethod(
-      method: 'POST',
-      path: 'postWithIntKeywordInt/{anInt1}/keyword/{anInt2}')
+      method: 'POST', path: 'postWithIntKeywordInt/{anInt1}/keyword/{anInt2}')
   VoidMessage postWithIntKeywordInt(int anInt1, int anInt2, SimpleMessage msg) {
     return null;
   }
@@ -82,9 +91,8 @@ class CorrectPostApiWithPath {
   @ApiMethod(
       method: 'POST',
       path: 'postWithStringKeywordString/{aString1}/keyword/{aString2}')
-  VoidMessage postWithStringKeywordString(String aString1,
-                                          String aString2,
-                                          SimpleMessage msg) {
+  VoidMessage postWithStringKeywordString(
+      String aString1, String aString2, SimpleMessage msg) {
     return null;
   }
 }
@@ -93,22 +101,30 @@ class CorrectPostApiWithPath {
 // they are not specific to POST.
 class WrongPostApi {
   @ApiMethod(method: 'POST', path: 'missingMessageParam')
-  VoidMessage missingMessageParam() { return null;}
+  VoidMessage missingMessageParam() {
+    return null;
+  }
 
   @ApiMethod(method: 'POST', path: 'invalidVoidResponse')
   void invalidVoidResponse(VoidMessage msg) {}
 
   @ApiMethod(method: 'POST', path: 'dynamicMessage')
-  VoidMessage dynamicMessage(message) { return null; }
+  VoidMessage dynamicMessage(message) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1test')
 class WrongPostApiWithPathQuery {
   @ApiMethod(method: 'POST', path: 'missingRequestParam/{id}')
-  VoidMessage missingRequestParam(String id) { return null; }
+  VoidMessage missingRequestParam(String id) {
+    return null;
+  }
 
   @ApiMethod(method: 'POST', path: 'missingPathParam/{id}')
-  VoidMessage missingPathParam(SimpleMessage msg) { return null; }
+  VoidMessage missingPathParam(SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(method: 'POST', path: 'missingPathRegExp')
   VoidMessage missingPathRegExp(String path, VoidMessage msg) {
@@ -116,16 +132,14 @@ class WrongPostApiWithPathQuery {
   }
 
   @ApiMethod(method: 'POST', path: 'withStringQueryParam/{pathParam}')
-  VoidMessage withStringQueryParam(String pathParam,
-                                   VoidMessage msg,
-                                   {String queryParam}) {
+  VoidMessage withStringQueryParam(String pathParam, VoidMessage msg,
+      {String queryParam}) {
     return null;
   }
 
   @ApiMethod(method: 'POST', path: 'withIntQueryParam/{pathParam}')
-  VoidMessage withIntQueryParam(String pathParam,
-                                VoidMessage msg,
-                                {int queryParam}) {
+  VoidMessage withIntQueryParam(String pathParam, VoidMessage msg,
+      {int queryParam}) {
     return null;
   }
 
@@ -425,7 +439,7 @@ void main() {
   });
 
   group('api-post-method-wrong', () {
-    test('wrong-post-api', (){
+    test('wrong-post-api', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongPostApi());
       expect(apiCfg.methods.length, 3);
@@ -449,7 +463,7 @@ void main() {
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-post-with-path-query', (){
+    test('wrong-post-with-path-query', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongPostApiWithPathQuery());
       expect(apiCfg.methods.length, 8);

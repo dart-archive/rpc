@@ -26,8 +26,9 @@ class ApiConfigResource {
 
   discovery.RestResource get asDiscovery {
     var resource = new discovery.RestResource();
-    resource..resources = _resourcesAsDiscovery
-            ..methods = _methodsAsDiscovery;
+    resource
+      ..resources = _resourcesAsDiscovery
+      ..methods = _methodsAsDiscovery;
     return resource;
   }
 }

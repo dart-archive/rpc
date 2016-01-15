@@ -8,36 +8,51 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/utils.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 @ApiClass(version: 'v1')
 class CorrectGetApi {
   @ApiMethod(path: 'minimumGet')
-  VoidMessage minimumGet() { return null; }
+  VoidMessage minimumGet() {
+    return null;
+  }
 
   @ApiMethod(name: 'namedGet', path: 'namedGet')
-  VoidMessage namedGet() { return null; }
+  VoidMessage namedGet() {
+    return null;
+  }
 
-  @ApiMethod(name: 'fullGet',
-             method: 'GET',
-             path: 'fullGet',
-             description: 'A method with all annotations set')
-  VoidMessage fullGet() { return null; }
+  @ApiMethod(
+      name: 'fullGet',
+      method: 'GET',
+      path: 'fullGet',
+      description: 'A method with all annotations set')
+  VoidMessage fullGet() {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1')
 class CorrectGetApiWithPath {
   @ApiMethod(path: 'getWithString/{aString}')
-  VoidMessage getWithString(String aString) { return null; }
+  VoidMessage getWithString(String aString) {
+    return null;
+  }
 
   @ApiMethod(path: 'getWithInt/{anInt}')
-  VoidMessage getWithInt(int anInt) { return null; }
+  VoidMessage getWithInt(int anInt) {
+    return null;
+  }
 
   @ApiMethod(path: 'getWithStringInt/{aString}/{anInt}')
-  VoidMessage getWithStringInt(String aString, int anInt) { return null; }
+  VoidMessage getWithStringInt(String aString, int anInt) {
+    return null;
+  }
 
   @ApiMethod(path: 'getWithIntString/{anInt}/{aString}')
-  VoidMessage getWithIntString(String anInt, int aString) { return null; }
+  VoidMessage getWithIntString(String anInt, int aString) {
+    return null;
+  }
 
   @ApiMethod(path: 'getWithStringString/{aString1}/{aString2}')
   VoidMessage getWithStringString(String aString1, String aString2) {
@@ -45,10 +60,14 @@ class CorrectGetApiWithPath {
   }
 
   @ApiMethod(path: 'getWithIntInt/{anInt1}/{anInt2}')
-  VoidMessage getWithIntInt(int anInt1, int anInt2) { return null; }
+  VoidMessage getWithIntInt(int anInt1, int anInt2) {
+    return null;
+  }
 
   @ApiMethod(path: 'getWithIntKeywordInt/{anInt1}/keyword/{anInt2}')
-  VoidMessage getWithIntKeywordInt(int anInt1, int anInt2) { return null; }
+  VoidMessage getWithIntKeywordInt(int anInt1, int anInt2) {
+    return null;
+  }
 
   @ApiMethod(path: 'getWithStringKeywordString/{aString1}/keyword/{aString2}')
   VoidMessage getWithStringKeywordString(String aString1, String aString2) {
@@ -57,8 +76,7 @@ class CorrectGetApiWithPath {
 }
 
 @ApiClass(version: 'v1')
-class CorrectGetApiWithQuery{
-
+class CorrectGetApiWithQuery {
   @ApiMethod(path: 'query1')
   VoidMessage query1({String name}) {
     return null;
@@ -114,7 +132,9 @@ class CorrectGetApiWithQuery{
 // they are not specific to GET.
 class WrongGetApi {
   @ApiMethod(path: 'getWithMessageArg')
-  VoidMessage getWithMessageArg(VoidMessage requestMessage) { return null;}
+  VoidMessage getWithMessageArg(VoidMessage requestMessage) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1test')
@@ -549,7 +569,7 @@ void main() {
   });
 
   group('api-get-method-wrong', () {
-    test('wrong-get-api', (){
+    test('wrong-get-api', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongGetApi());
       expect(apiCfg.methods.length, 1);
@@ -557,10 +577,8 @@ void main() {
       var expectedErrors = [
         new ApiConfigError(
             'WrongGetApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongGetApi: @ApiClass.version field is required.'),
-        new ApiConfigError(
-            'WrongGetApi.getWithMessageArg: Non-path parameter '
+        new ApiConfigError('WrongGetApi: @ApiClass.version field is required.'),
+        new ApiConfigError('WrongGetApi.getWithMessageArg: Non-path parameter '
             '\'requestMessage\' must be a named parameter.'),
         new ApiConfigError(
             'WrongGetApi.getWithMessageArg: Query parameter \'requestMessage\' '
@@ -569,7 +587,7 @@ void main() {
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-get-with-path-query', (){
+    test('wrong-get-with-path-query', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongGetApiWithPathQuery());
       expect(apiCfg.methods.length, 5);
@@ -591,7 +609,7 @@ void main() {
         new ApiConfigError(
             'WrongGetApiWithPathQuery.query5: Non-path parameter '
             '\'queryParam\' must be a named parameter.')
-        ];
+      ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
   });

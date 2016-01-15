@@ -22,10 +22,14 @@ class WrongMethods {
   void missingAnnotations3() {}
 
   @ApiMethod(name: 'test3', method: 'GET', path: 'test3')
-  VoidMessage wrongMethodParameter(VoidMessage _) { return null;}
+  VoidMessage wrongMethodParameter(VoidMessage _) {
+    return null;
+  }
 
   @ApiMethod(name: 'test4', method: 'GET', path: 'test4')
-  VoidMessage wrongPathAnnotation(String test) { return null; }
+  VoidMessage wrongPathAnnotation(String test) {
+    return null;
+  }
 
   @ApiMethod(name: 'test5', method: 'GET', path: 'test5')
   String wrongResponseType1() {
@@ -48,28 +52,42 @@ class WrongMethods {
   }
 
   @ApiMethod(name: 'test9', method: 'GET', path: 'test9/{id}')
-  VoidMessage missingPathParam1() { return null; }
+  VoidMessage missingPathParam1() {
+    return null;
+  }
 
   @ApiMethod(name: 'test10', method: 'POST', path: 'test10/{id}')
-  VoidMessage missingPathParam2(TestMessage1 request) { return null; }
+  VoidMessage missingPathParam2(TestMessage1 request) {
+    return null;
+  }
 
   @ApiMethod(name: 'test11', method: 'POST', path: 'test11')
   void voidResponse(VoidMessage _) {}
 
   @ApiMethod(name: 'test12', method: 'POST', path: 'test12')
-  VoidMessage noRequest1() { return null; }
+  VoidMessage noRequest1() {
+    return null;
+  }
 
   @ApiMethod(name: 'test13', method: 'POST', path: 'test13/{id}')
-  VoidMessage noRequest2(String id) { return null; }
+  VoidMessage noRequest2(String id) {
+    return null;
+  }
 
   @ApiMethod(name: 'test14', method: 'POST', path: 'test14')
-  VoidMessage genericRequest(request) { return null; }
+  VoidMessage genericRequest(request) {
+    return null;
+  }
 
   @ApiMethod(name: 'test15', method: 'GET', path: 'test15/{wrong')
-  VoidMessage invalidPath1() { return null; }
+  VoidMessage invalidPath1() {
+    return null;
+  }
 
   @ApiMethod(name: 'test16', method: 'GET', path: 'test16/wrong}')
-  VoidMessage invalidPath2() { return null; }
+  VoidMessage invalidPath2() {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1')
@@ -102,12 +120,18 @@ class CorrectSimple {
   TestMessage1 simple2(TestMessage1 request) {
     return null;
   }
+
+  // public method which uses private members
+  // eliminates analyzer warning about unused private members
+  throwAwayPrivateUsage() => [_foo, _cm, _cmNonFinal];
 }
 
 @ApiClass(name: 'correct', version: 'v1')
 class CorrectMethods {
   @ApiMethod(name: 'test1', path: 'test1')
-  VoidMessage method1() { return null; }
+  VoidMessage method1() {
+    return null;
+  }
 
   @ApiMethod(name: 'test2', path: 'test2')
   TestMessage1 method2() {
@@ -193,22 +217,19 @@ class CorrectMethods {
 class NoAnnotation {}
 
 @ApiClass()
-class NoVersion {
-}
+class NoVersion {}
 
 @ApiClass(name: 'Tester', version: 'v1test')
 class Tester {}
 
 @ApiClass(version: 'v1test')
 class TesterWithOneResource {
-
   @ApiResource()
   final SomeResource someResource = new SomeResource();
 }
 
 @ApiClass(version: 'v1test')
 class TesterWithTwoResources {
-
   @ApiResource()
   final SomeResource someResource = new SomeResource();
 
@@ -218,14 +239,12 @@ class TesterWithTwoResources {
 
 @ApiClass(version: 'v1test')
 class TesterWithNestedResources {
-
   @ApiResource()
   final ResourceWithNested resourceWithNested = new ResourceWithNested();
 }
 
 @ApiClass(version: 'v1test')
 class TesterWithDuplicateResourceNames {
-
   @ApiResource()
   final SomeResource someResource = new SomeResource();
 
@@ -235,7 +254,6 @@ class TesterWithDuplicateResourceNames {
 
 @ApiClass(version: 'v1test')
 class TesterWithMultipleResourceAnnotations {
-
   @ApiResource()
   @ApiResource()
   final SomeResource someResource = new SomeResource();
@@ -243,39 +261,41 @@ class TesterWithMultipleResourceAnnotations {
 
 @ApiClass(version: 'v1test')
 class MultipleMethodAnnotations {
-
   @ApiMethod(path: 'multi')
   @ApiMethod(path: 'multi2')
-  VoidMessage multiAnnotations() { return null; }
+  VoidMessage multiAnnotations() {
+    return null;
+  }
 }
 
 class SomeResource {
-
   @ApiMethod(path: 'someResourceMethod')
-  VoidMessage method1() { return null; }
+  VoidMessage method1() {
+    return null;
+  }
 }
 
 class NamedResource {
-
   @ApiMethod(path: 'namedResourceMethod')
-  VoidMessage method1() { return null; }
+  VoidMessage method1() {
+    return null;
+  }
 }
 
 class ResourceWithNested {
-
   @ApiResource()
   NestedResource nestedResource = new NestedResource();
 }
 
 class NestedResource {
-
   @ApiMethod(path: 'nestedResourceMethod')
-  VoidMessage method1() { return null; }
+  VoidMessage method1() {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1test')
 class CorrectQueryParameterTester {
-
   @ApiMethod(path: 'query1')
   VoidMessage query1({String name}) {
     return null;

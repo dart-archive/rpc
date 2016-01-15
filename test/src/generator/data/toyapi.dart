@@ -46,7 +46,6 @@ class ToyAgeRequest {
 
 @ApiClass(version: '0.1')
 class ToyApi {
-
   ToyApi();
 
   @ApiResource()
@@ -56,22 +55,28 @@ class ToyApi {
   final ToyStorage storage = new ToyStorage();
 
   @ApiMethod(path: 'noop')
-  VoidMessage noop() { return null; }
+  VoidMessage noop() {
+    return null;
+  }
 
   @ApiMethod(path: 'failing')
   VoidMessage failing() {
-    throw new RpcError(HttpStatus.NOT_IMPLEMENTED, 'Not Implemented',
-                       'I like to fail!');
+    throw new RpcError(
+        HttpStatus.NOT_IMPLEMENTED, 'Not Implemented', 'I like to fail!');
   }
 
   @ApiMethod(path: 'hello')
-  ToyResponse hello() { return new ToyResponse()..result = 'Hello there!'; }
+  ToyResponse hello() {
+    return new ToyResponse()..result = 'Hello there!';
+  }
 
   // Clients calling this method will all receive an Internal Server Error
   // as it is not allowed for a method to return null when its declared return
   // type is not VoidMessage.
   @ApiMethod(path: 'helloReturnNull')
-  ToyResponse helloReturnNull() { return null; }
+  ToyResponse helloReturnNull() {
+    return null;
+  }
 
   @ApiMethod(path: 'hello/{name}/age/{age}')
   ToyResponse helloNameAge(String name, int age) {
@@ -79,15 +84,16 @@ class ToyApi {
   }
 
   @ApiMethod(path: 'hero/{name}/{isHero}')
-  ToyResponse helloHeroWithBoolean(String name, bool isHero, {bool fromComics}) {
+  ToyResponse helloHeroWithBoolean(String name, bool isHero,
+      {bool fromComics}) {
     String isHeroString;
-    if(isHero){
+    if (isHero) {
       isHeroString = "you are a hero";
 
-      if(fromComics != null && fromComics){
+      if (fromComics != null && fromComics) {
         isHeroString = "${isHeroString} from comics";
       }
-    }else{
+    } else {
       isHeroString = "you are not a hero";
     }
     String response = "Hello ${name} ${isHeroString}";
@@ -97,15 +103,16 @@ class ToyApi {
   @ApiMethod(path: 'helloPost', method: 'POST')
   ToyResponse helloPost(ToyRequest request) {
     return new ToyResponse()
-        ..result = 'Hello ${request.name} of age ${request.age}!';
+      ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloPostWithAsync', method: 'POST')
-  Future<ToyResponse> helloPostWithAsync(ToyRequest request) async{
+  Future<ToyResponse> helloPostWithAsync(ToyRequest request) async {
     int delayInSeconds = 5;
-    await new Future.delayed(new Duration(seconds:delayInSeconds));
+    await new Future.delayed(new Duration(seconds: delayInSeconds));
     return new ToyResponse()
-      ..result = 'I waited ${delayInSeconds} seconds to say: Hello ${request.name} of age ${request.age}!';
+      ..result =
+          'I waited ${delayInSeconds} seconds to say: Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloVoid', method: 'POST')
@@ -129,8 +136,8 @@ class ToyApi {
       'var': new NestedResponse()..nestedResult = 'someotherNested'
     };
     return new ToyMapResponse()
-        ..result ='foo'
-        ..mapResult = map;
+      ..result = 'foo'
+      ..mapResult = map;
   }
 
   @ApiMethod(path: 'helloQuery/{name}')
@@ -156,8 +163,7 @@ class ToyApi {
   }
 
   @ApiMethod(path: 'helloNestedListList', method: 'POST')
-  List<List<String>> helloNestedListList(
-      List<List<int>> request) {
+  List<List<String>> helloNestedListList(List<List<int>> request) {
     return null;
   }
 
@@ -174,8 +180,7 @@ class ToyApi {
   }
 
   @ApiMethod(path: 'helloListOfClass', method: 'POST')
-  Map<String, ToyResponse> helloListOfClass (
-      List<ToyRequest> request) {
+  Map<String, ToyResponse> helloListOfClass(List<ToyRequest> request) {
     var key, value;
     if (request == null || request.isEmpty) {
       key = 'John Doe';
@@ -188,11 +193,13 @@ class ToyApi {
   }
 
   @ApiMethod(path: 'helloListOfListOfClass', method: 'POST')
-  Map<String, ToyResponse> helloListOfListOfClass (
+  Map<String, ToyResponse> helloListOfListOfClass(
       List<List<ToyRequest>> request) {
     var key, value;
-    if (request == null || request.isEmpty ||
-        request.first == null || request.first.isEmpty) {
+    if (request == null ||
+        request.isEmpty ||
+        request.first == null ||
+        request.first.isEmpty) {
       key = 'John Doe';
       value = 42;
     } else {
@@ -204,20 +211,17 @@ class ToyApi {
 }
 
 class ToyCompute {
-
   @ApiMethod(path: 'toyresource/{resource}/compute/{compute}')
   ToyResourceResponse get(String resource, String compute) {
     return new ToyResourceResponse()
-        ..result = 'I am the compute: $compute of resource: $resource';
+      ..result = 'I am the compute: $compute of resource: $resource';
   }
 }
 
 class ToyStorage {
-
   @ApiMethod(path: 'toyresource/{resource}/storage/{storage}')
   ToyResourceResponse get(String resource, String storage) {
     return new ToyResourceResponse()
-        ..result = 'I am the storage: $storage of resource: $resource';
+      ..result = 'I am the storage: $storage of resource: $resource';
   }
 }
-

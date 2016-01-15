@@ -5,7 +5,6 @@
 part of rpc.config;
 
 class ApiConfig extends ApiConfigResource {
-
   final String apiKey;
   final String version;
   final String title;
@@ -18,9 +17,16 @@ class ApiConfig extends ApiConfigResource {
   // avoid the list.
   final Map<String, List<ApiConfigMethod>> _methodMap;
 
-  ApiConfig(this.apiKey, String name, this.version, this.title,
-            this.description, Map<String, ApiConfigResource> resources,
-            List<ApiConfigMethod> methods, this._schemaMap, this._methodMap)
+  ApiConfig(
+      this.apiKey,
+      String name,
+      this.version,
+      this.title,
+      this.description,
+      Map<String, ApiConfigResource> resources,
+      List<ApiConfigMethod> methods,
+      this._schemaMap,
+      this._methodMap)
       : super(name, resources, methods);
 
   Future<HttpApiResponse> handleHttpRequest(ParsedHttpApiRequest request) {
@@ -33,9 +39,11 @@ class ApiConfig extends ApiConfigResource {
         }
       }
     }
-    return httpErrorResponse(request.originalRequest, new NotFoundError(
-        'No method found matching HTTP method: ${request.httpMethod} '
-        'and url: ${request.path}.'));
+    return httpErrorResponse(
+        request.originalRequest,
+        new NotFoundError(
+            'No method found matching HTTP method: ${request.httpMethod} '
+            'and url: ${request.path}.'));
   }
 
   Future<HttpApiResponse> handleHttpOptionsRequest(
@@ -60,7 +68,7 @@ class ApiConfig extends ApiConfigResource {
             if (method.matches(request)) {
               allowed.add(httpMethod);
               break;
-           }
+            }
           }
         }
       });
@@ -73,13 +81,13 @@ class ApiConfig extends ApiConfigResource {
       headers[HttpHeaders.ALLOW] = allowedMethods;
       headers['access-control-allow-methods'] = allowedMethods;
       headers['access-control-allow-headers'] =
-        'origin, x-requested-with, content-type, accept';
+          'origin, x-requested-with, content-type, accept';
     }
     return new HttpApiResponse(HttpStatus.OK, null, headers);
   }
 
-  discovery.RestDescription generateDiscoveryDocument(String baseUrl,
-                                                      String apiPrefix) {
+  discovery.RestDescription generateDiscoveryDocument(
+      String baseUrl, String apiPrefix) {
     String servicePath;
     if (!baseUrl.endsWith('/')) {
       baseUrl = '$baseUrl/';
@@ -93,21 +101,22 @@ class ApiConfig extends ApiConfigResource {
       servicePath = '${apiKey.substring(1)}/';
     }
     var doc = new discovery.RestDescription();
-    doc..kind = 'discovery#restDescription'
-       ..discoveryVersion = 'v1'
-       ..id = '$name:$version'
-       ..name = '$name'
-       ..version = version
-       ..revision = '0'
-       ..protocol = 'rest'
-       ..baseUrl = '$baseUrl$servicePath'
-       ..basePath = '/$servicePath'
-       ..rootUrl = baseUrl
-       ..servicePath = servicePath
-       ..parameters = {}
-       ..schemas = _schemasAsDiscovery
-       ..methods = _methodsAsDiscovery
-       ..resources = _resourcesAsDiscovery;
+    doc
+      ..kind = 'discovery#restDescription'
+      ..discoveryVersion = 'v1'
+      ..id = '$name:$version'
+      ..name = '$name'
+      ..version = version
+      ..revision = '0'
+      ..protocol = 'rest'
+      ..baseUrl = '$baseUrl$servicePath'
+      ..basePath = '/$servicePath'
+      ..rootUrl = baseUrl
+      ..servicePath = servicePath
+      ..parameters = {}
+      ..schemas = _schemasAsDiscovery
+      ..methods = _methodsAsDiscovery
+      ..resources = _resourcesAsDiscovery;
     if (title != null) {
       doc.title = title;
     }
@@ -137,11 +146,12 @@ class ApiConfig extends ApiConfigResource {
     var item = new discovery.DirectoryListItems();
     // TODO: Support preferred, icons, and documentation link as part
     // of metadata.
-    item..kind = 'discovery#directoryItem'
-        ..id = '$name:$version'
-        ..name = name
-        ..version = version
-        ..preferred = true;
+    item
+      ..kind = 'discovery#directoryItem'
+      ..id = '$name:$version'
+      ..name = name
+      ..version = version
+      ..preferred = true;
     if (title != null) {
       item.title = title;
     }

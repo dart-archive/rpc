@@ -8,26 +8,35 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/utils.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 import '../test_api/messages2.dart';
 
 @ApiClass(version: 'v1')
 class CorrectPutApi {
   @ApiMethod(method: 'PUT', path: 'minimumPut')
-  VoidMessage minimumPut(SimpleMessage msg) { return null; }
+  VoidMessage minimumPut(SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(name: 'namedPut', method: 'PUT', path: 'namedPut')
-  VoidMessage namedPut(SimpleMessage msg) { return null; }
+  VoidMessage namedPut(SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(name: 'returningPut', method: 'PUT', path: 'returningPut')
-  SimpleMessage returningPut(SimpleMessage msg) { return msg; }
+  SimpleMessage returningPut(SimpleMessage msg) {
+    return msg;
+  }
 
-  @ApiMethod(name: 'fullPut',
-             method: 'PUT',
-             path: 'fullPut',
-             description: 'A method with all annotations set')
-  VoidMessage fullPut(SimpleMessage msg) { return null; }
+  @ApiMethod(
+      name: 'fullPut',
+      method: 'PUT',
+      path: 'fullPut',
+      description: 'A method with all annotations set')
+  VoidMessage fullPut(SimpleMessage msg) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1')
@@ -38,7 +47,9 @@ class CorrectPutApiWithPath {
   }
 
   @ApiMethod(method: 'PUT', path: 'putWithInt/{anInt}')
-  VoidMessage putWithInt(int anInt, SimpleMessage msg) { return null; }
+  VoidMessage putWithInt(int anInt, SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(method: 'PUT', path: 'putWithStringInt/{aString}/{anInt}')
   VoidMessage putWithStringInt(String aString, int anInt, SimpleMessage msg) {
@@ -50,12 +61,9 @@ class CorrectPutApiWithPath {
     return null;
   }
 
-  @ApiMethod(
-      method: 'PUT',
-      path: 'putWithStringString/{aString1}/{aString2}')
-  VoidMessage putWithStringString(String aString1,
-                                   String aString2,
-                                   SimpleMessage msg) {
+  @ApiMethod(method: 'PUT', path: 'putWithStringString/{aString1}/{aString2}')
+  VoidMessage putWithStringString(
+      String aString1, String aString2, SimpleMessage msg) {
     return null;
   }
 
@@ -65,8 +73,7 @@ class CorrectPutApiWithPath {
   }
 
   @ApiMethod(
-      method: 'PUT',
-      path: 'putWithIntKeywordInt/{anInt1}/keyword/{anInt2}')
+      method: 'PUT', path: 'putWithIntKeywordInt/{anInt1}/keyword/{anInt2}')
   VoidMessage putWithIntKeywordInt(int anInt1, int anInt2, SimpleMessage msg) {
     return null;
   }
@@ -74,9 +81,8 @@ class CorrectPutApiWithPath {
   @ApiMethod(
       method: 'PUT',
       path: 'putWithStringKeywordString/{aString1}/keyword/{aString2}')
-  VoidMessage putWithStringKeywordString(String aString1,
-                                          String aString2,
-                                          SimpleMessage msg) {
+  VoidMessage putWithStringKeywordString(
+      String aString1, String aString2, SimpleMessage msg) {
     return null;
   }
 }
@@ -85,22 +91,30 @@ class CorrectPutApiWithPath {
 // they are not specific to PUT.
 class WrongPutApi {
   @ApiMethod(method: 'PUT', path: 'missingMessageParam')
-  VoidMessage missingMessageParam() { return null;}
+  VoidMessage missingMessageParam() {
+    return null;
+  }
 
   @ApiMethod(method: 'PUT', path: 'invalidVoidResponse')
   void invalidVoidResponse(VoidMessage msg) {}
 
   @ApiMethod(method: 'PUT', path: 'dynamicMessage')
-  VoidMessage dynamicMessage(message) { return null; }
+  VoidMessage dynamicMessage(message) {
+    return null;
+  }
 }
 
 @ApiClass(version: 'v1test')
 class WrongPutApiWithPathQuery {
   @ApiMethod(method: 'PUT', path: 'missingRequestParam/{id}')
-  VoidMessage missingRequestParam(String id) { return null; }
+  VoidMessage missingRequestParam(String id) {
+    return null;
+  }
 
   @ApiMethod(method: 'PUT', path: 'missingPathParam/{id}')
-  VoidMessage missingPathParam(SimpleMessage msg) { return null; }
+  VoidMessage missingPathParam(SimpleMessage msg) {
+    return null;
+  }
 
   @ApiMethod(method: 'PUT', path: 'missingPathRegExp')
   VoidMessage missingPathRegExp(String path, VoidMessage msg) {
@@ -108,16 +122,14 @@ class WrongPutApiWithPathQuery {
   }
 
   @ApiMethod(method: 'PUT', path: 'withStringQueryParam/{pathParam}')
-  VoidMessage withStringQueryParam(String pathParam,
-                                   VoidMessage msg,
-                                   {String queryParam}) {
+  VoidMessage withStringQueryParam(String pathParam, VoidMessage msg,
+      {String queryParam}) {
     return null;
   }
 
   @ApiMethod(method: 'PUT', path: 'withIntQueryParam/{pathParam}')
-  VoidMessage withIntQueryParam(String pathParam,
-                                VoidMessage msg,
-                                {int queryParam}) {
+  VoidMessage withIntQueryParam(String pathParam, VoidMessage msg,
+      {int queryParam}) {
     return null;
   }
 
@@ -381,7 +393,7 @@ void main() {
   });
 
   group('api-put-method-wrong', () {
-    test('wrong-put-api', (){
+    test('wrong-put-api', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongPutApi());
       expect(apiCfg.methods.length, 3);
@@ -389,8 +401,7 @@ void main() {
       var expectedErrors = [
         new ApiConfigError(
             'WrongPutApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongPutApi: @ApiClass.version field is required.'),
+        new ApiConfigError('WrongPutApi: @ApiClass.version field is required.'),
         new ApiConfigError(
             'WrongPutApi.missingMessageParam: API methods using PUT must '
             'have a signature of path parameters followed by one request '
@@ -405,7 +416,7 @@ void main() {
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
-    test('wrong-put-with-path-query', (){
+    test('wrong-put-with-path-query', () {
       var parser = new ApiParser();
       ApiConfig apiCfg = parser.parse(new WrongPutApiWithPathQuery());
       expect(apiCfg.methods.length, 8);

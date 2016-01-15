@@ -10,7 +10,7 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 // Simple class used as a property type in the below unit tests.
 class SomeClass {
@@ -70,7 +70,10 @@ void main() {
         'id': 'CorrectList',
         'type': 'object',
         'properties': {
-          'aList': {'type': 'array', 'items': {r'$ref': 'SomeClass'}},
+          'aList': {
+            'type': 'array',
+            'items': {r'$ref': 'SomeClass'}
+          },
           'anotherName': {
             'type': 'array',
             'description': 'Description of a List.',
@@ -81,7 +84,10 @@ void main() {
             'required': true,
             'items': {r'$ref': 'SomeClass'}
           },
-          'anOptionalList': {'type': 'array', 'items': {r'$ref': 'SomeClass'}},
+          'anOptionalList': {
+            'type': 'array',
+            'items': {r'$ref': 'SomeClass'}
+          },
           'aFullList': {
             'type': 'array',
             'description': 'Description of a List.',
@@ -97,8 +103,7 @@ void main() {
   group('api-list-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongList), true);
+      parser.parseSchema(reflectClass(WrongList), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

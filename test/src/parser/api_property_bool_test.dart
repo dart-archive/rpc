@@ -10,7 +10,7 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 class CorrectBool {
   bool aBool;
@@ -72,8 +72,8 @@ void main() {
   group('api-bool-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongBool), true);
+
+      parser.parseSchema(reflectClass(WrongBool), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

@@ -62,10 +62,13 @@ Future<PostData> _asFormData(ParsedHttpApiRequest request) {
     }
     return future.then((dynamic data) {
       final String filename =
-      multipart.contentDisposition.parameters['filename'];
+          multipart.contentDisposition.parameters['filename'];
       if (filename != null) {
         if (multipart.isText) data = (data as String).codeUnits;
-        data = new MediaMessage()..contentType = multipart.contentType.value ..bytes = data ..metadata = {'filename': filename};
+        data = new MediaMessage()
+          ..contentType = multipart.contentType.value
+          ..bytes = data
+          ..metadata = {'filename': filename};
       }
       return [multipart.contentDisposition.parameters['name'], data];
     });
@@ -174,8 +177,8 @@ class _HttpMultipartFormData extends Stream {
       Encoding defaultEncoding) {
     _stream = _mimeMultipart;
 
-    if (contentTransferEncoding != null) throw new HttpException(
-        "Unsupported contentTransferEncoding: "
+    if (contentTransferEncoding !=
+        null) throw new HttpException("Unsupported contentTransferEncoding: "
         "${contentTransferEncoding.value}");
 
     if (contentType == null ||

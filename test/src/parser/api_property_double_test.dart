@@ -11,7 +11,7 @@ import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/utils.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 class CorrectDouble {
   double aDouble;
@@ -124,8 +124,7 @@ void main() {
           'aFloatWithVeryLargeDefault': {
             'type': 'number',
             'default': '3.4e+38',
-            'format':
-              'float'
+            'format': 'float'
           },
           'aRequiredDouble': {
             'type': 'number',
@@ -142,8 +141,7 @@ void main() {
   group('api-double-property-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongDouble), true);
+      parser.parseSchema(reflectClass(WrongDouble), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(

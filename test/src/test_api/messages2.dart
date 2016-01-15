@@ -22,5 +22,5 @@ class TestMessage2 {
 // Specifically api_schema_tests.WrongConflictingWithOther in
 // test/src/parser/api_schema_test.dart.
 class WrongConflictingWithOther {
- int anInt;
+  int anInt;
 }

@@ -15,7 +15,8 @@ ArgParser discoveryCommandArgParser() {
     ..addOption('input-file',
         abbr: 'i', help: 'Dart file containing the top-level API class.')
     ..addOption('port',
-        abbr: 'p', help: 'Port by the ApiServer serving this API.',
+        abbr: 'p',
+        help: 'Port by the ApiServer serving this API.',
         defaultsTo: '8080')
     ..addOption('api-prefix',
         abbr: 'a', help: 'URL prefix used by the ApiServer serving this API.');
@@ -28,15 +29,16 @@ ArgParser clientCommandArgParser() {
     ..addOption('output-dir',
         abbr: 'o', help: 'Directory in which the client stubs are generated.')
     ..addOption('port',
-        abbr: 'p', help: 'Port by the ApiServer serving this API.',
+        abbr: 'p',
+        help: 'Port by the ApiServer serving this API.',
         defaultsTo: '8080')
     ..addOption('api-prefix',
         abbr: 'a', help: 'URL prefix used by the ApiServer serving this API.')
     ..addFlag('update-pubspec',
         abbr: 'u',
         help: 'Update the pubspec.yaml file with required dependencies. This '
-              'will remove comments and might change the layout of the '
-              'pubspec.yaml file.',
+            'will remove comments and might change the layout of the '
+            'pubspec.yaml file.',
         defaultsTo: false);
 }
 
@@ -123,7 +125,7 @@ main(List<String> arguments) async {
             _clientDirectory(apiFilePath, commandOptions['output-dir']);
         // Generate the client stub code.
         results = generateClientStubs(docsWithImports, clientDirectoryPath,
-                                      updatePubspec: updatePubspec);
+            updatePubspec: updatePubspec);
         break;
     }
     results.forEach(print);
@@ -156,7 +158,7 @@ class ClientApiGenerator {
   String _apiFilePath;
   String _packageDirectoryPath;
 
-  ClientApiGenerator(String dartFilePath, this._apiPort,  this._apiPrefix) {
+  ClientApiGenerator(String dartFilePath, this._apiPort, this._apiPrefix) {
     var apiFile = new File(dartFilePath);
     if (!apiFile.existsSync()) {
       throw new GeneratorException('Could not find file: $dartFilePath');
@@ -239,8 +241,8 @@ class ClientApiGenerator {
       } else if (path.contains('.packages')) {
         // Didn't find .packages so revert to /packages/.
         request.response
-            ..statusCode = HttpStatus.NOT_FOUND
-            ..close();
+          ..statusCode = HttpStatus.NOT_FOUND
+          ..close();
       } else {
         request.response
           ..add(UTF8.encode(generatorSource))

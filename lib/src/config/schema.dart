@@ -4,8 +4,6 @@
 
 part of rpc.config;
 
-String _capitalize(String string) => "${string.substring(0,1).toUpperCase()}${string.substring(1)}";
-
 class ApiConfigSchema {
   final String schemaName;
   final ClassMirror schemaClass;
@@ -31,9 +29,10 @@ class ApiConfigSchema {
 
   discovery.JsonSchema get asDiscovery {
     var schema = new discovery.JsonSchema();
-    schema..id = schemaName
-          ..type = 'object'
-          ..properties = new Map<String, discovery.JsonSchema>();
+    schema
+      ..id = schemaName
+      ..type = 'object'
+      ..properties = new Map<String, discovery.JsonSchema>();
     _properties.values.forEach((prop) {
       schema.properties[prop.name] = prop.asDiscovery;
     });
@@ -52,11 +51,17 @@ class ApiConfigSchema {
 
       if (request.containsKey(prop.name)) {
         // MediaMessage special case
-        if (request[prop.name] is MediaMessage || request[prop.name] is List<MediaMessage>) {
+        if (request[prop.name] is MediaMessage ||
+            request[prop.name] is List<MediaMessage>) {
           // If in form, there is an (input[type="file"] multiple) and the user
           // put only one file. It's not an error and it should be accept.
           // Maybe it cans be optimized.
-          if (schema.type.instanceMembers[sym].returnType.reflectedType.toString() == 'List<MediaMessage>' && request[prop.name] is MediaMessage) {
+          if (schema.type.instanceMembers[sym]
+                      .returnType
+                      .reflectedType
+                      .toString() ==
+                  'List<MediaMessage>' &&
+              request[prop.name] is MediaMessage) {
             schema.setField(sym, [request[prop.name]]);
           } else if (request[prop.name] is List) {
             schema.setField(sym, prop.fromRequest(request[prop.name]));
@@ -105,9 +110,10 @@ class NamedListSchema extends ApiConfigSchema {
 
   discovery.JsonSchema get asDiscovery {
     var schema = new discovery.JsonSchema();
-    schema..id = schemaName
-          ..type = 'array'
-          ..items = _itemsProperty.asDiscovery;
+    schema
+      ..id = schemaName
+      ..type = 'array'
+      ..items = _itemsProperty.asDiscovery;
     return schema;
   }
 
@@ -144,9 +150,10 @@ class NamedMapSchema extends ApiConfigSchema {
 
   discovery.JsonSchema get asDiscovery {
     var schema = new discovery.JsonSchema();
-    schema..id = schemaName
-          ..type = 'object'
-          ..additionalProperties = _additionalProperty.asDiscovery;
+    schema
+      ..id = schemaName
+      ..type = 'object'
+      ..additionalProperties = _additionalProperty.asDiscovery;
     return schema;
   }
 

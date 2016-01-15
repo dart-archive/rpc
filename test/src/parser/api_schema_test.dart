@@ -11,7 +11,7 @@ import 'package:rpc/rpc.dart';
 import 'package:rpc/src/config.dart';
 import 'package:rpc/src/parser.dart';
 import 'package:rpc/src/discovery/config.dart' as discovery;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 import '../test_api/messages2.dart' as messages2;
 
@@ -41,6 +41,10 @@ class CorrectModifiers {
   bool _aBool;
   double _aDouble;
   DateTime _aDate;
+
+  // public method which uses private members
+  // eliminates analyzer warning about unused private members
+  throwAwayPrivateUsage() => [_aString, _anInt, _aBool, _aDouble, _aDate];
 }
 
 class CorrectContainers {
@@ -197,12 +201,18 @@ void main() {
         'id': 'CorrectContainers',
         'type': 'object',
         'properties': {
-          'aStringList': {'type': 'array', 'items': {'type': 'string'}},
+          'aStringList': {
+            'type': 'array',
+            'items': {'type': 'string'}
+          },
           'anIntList': {
             'type': 'array',
             'items': {'type': 'integer', 'format': 'int32'}
           },
-          'aBoolList': {'type': 'array', 'items': {'type': 'boolean'}},
+          'aBoolList': {
+            'type': 'array',
+            'items': {'type': 'boolean'}
+          },
           'aDoubleList': {
             'type': 'array',
             'items': {'type': 'number', 'format': 'double'}
@@ -211,7 +221,10 @@ void main() {
             'type': 'array',
             'items': {'type': 'string', 'format': 'date-time'}
           },
-          'aNestedList': {'type': 'array', 'items': {r'$ref': 'Nested'}},
+          'aNestedList': {
+            'type': 'array',
+            'items': {r'$ref': 'Nested'}
+          },
           'aStringMap': {
             'type': 'object',
             'additionalProperties': {'type': 'string'}
@@ -265,7 +278,9 @@ void main() {
       expectedJson = {
         'id': 'Nested',
         'type': 'object',
-        'properties': {'aString': {'type': 'string'}}
+        'properties': {
+          'aString': {'type': 'string'}
+        }
       };
       expect(json, expectedJson);
     });
@@ -309,8 +324,7 @@ void main() {
   group('api-schema-wrong', () {
     test('simple', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongSimple), true);
+      parser.parseSchema(reflectClass(WrongSimple), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -330,8 +344,7 @@ void main() {
 
     test('containers', () {
       var parser = new ApiParser();
-      ApiConfigSchema apiSchema =
-          parser.parseSchema(reflectClass(WrongContainers), true);
+      parser.parseSchema(reflectClass(WrongContainers), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError(
@@ -383,7 +396,7 @@ void main() {
 
     test('conflicting-schemas', () {
       var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongConflictingApi());
+      parser.parse(new WrongConflictingApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
         new ApiConfigError('WrongConflictingWithOther: Schema '
