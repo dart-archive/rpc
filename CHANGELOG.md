@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.6
+- Fix an exception when run in checked mode.
+
 ## 0.5.5
 - Added support for MediaMessage, full upload/download support for blob data. 
 
