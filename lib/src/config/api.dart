@@ -125,10 +125,9 @@ class ApiConfig extends ApiConfigResource {
     }
 
     // Compute the etag.
-    var sha1 = new SHA1();
     var jsonDoc = discoveryDocSchema.toResponse(doc);
-    sha1.add(UTF8.encode(JSON.encode(jsonDoc)));
-    doc.etag = CryptoUtils.bytesToHex(sha1.close());
+    var sha1Digest = sha1.convert(UTF8.encode(JSON.encode(jsonDoc)));
+    doc.etag = hex.encode(sha1Digest.bytes);
     return doc;
   }
 

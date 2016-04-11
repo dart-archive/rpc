@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:mirrors';
 import 'package:crypto/crypto.dart';
+import 'package:convert/convert.dart';
 import 'package:gcloud/service_scope.dart' as ss;
 import 'package:uri/uri.dart';
 import 'package:http_parser/http_parser.dart';

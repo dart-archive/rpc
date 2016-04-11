@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:rpc/rpc.dart';
 import 'package:test/test.dart';
 import 'package:crypto/crypto.dart';
+import 'package:convert/convert.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:path/path.dart' as p;
 
@@ -174,9 +175,7 @@ class GetAPI {
   Future<MediaMessage> getBlobExtra() async {
     final file = _blobFile();
     final bytes = file.readAsBytesSync();
-    final md5 = new MD5();
-    md5.add(bytes);
-    final md5Hash = CryptoUtils.bytesToHex(md5.close());
+    final md5Hash = hex.encode(md5.convert(bytes).bytes);
 
     return new MediaMessage()
       ..bytes = bytes
