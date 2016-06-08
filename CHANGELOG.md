@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.6+1
+- Widen dependency constraints, update to crypto 1.0.0
+
 ## 0.5.6
 - Fix an exception when run in checked mode.
 
