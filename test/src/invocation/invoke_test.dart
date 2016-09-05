@@ -241,7 +241,7 @@ class PutAPI {
   }
 }
 
-main() {
+main() async {
   ApiServer _apiServer = new ApiServer(apiPrefix: '', prettyPrint: true);
   _apiServer.enableDiscoveryApi();
   _apiServer.addApi(new TestAPI());
@@ -268,7 +268,7 @@ main() {
     return _apiServer.handleHttpApiRequest(request);
   }
 
-  Future<Map> _decodeBody(Stream<List<int>> body) async {
+  Future _decodeBody(Stream<List<int>> body) async {
     if (body == null) return null;
     List<List<int>> content = await body.toList();
     assert(content.length == 1);
@@ -321,18 +321,41 @@ main() {
       expect(response.status, HttpStatus.OK);
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello Ghost'});
-      response = await _sendRequest('GET', 'get/hello', query: '?name=John');
+      response =
+          await _sendRequest('GET', 'get/hello', query: '?name=John');
       expect(response.status, HttpStatus.OK);
       result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
     });
 
+    test('hello-query-need-decode-uri', () async {
+      HttpApiResponse response = await _sendRequest('GET', 'get/hello');
+      expect(response.status, HttpStatus.OK);
+      var result = await _decodeBody(response.body);
+      expect(result, {'aString': 'Hello Ghost'});
+      response =
+          await _sendRequest('GET', 'get/hello', query: '?name=John%20Cena');
+      expect(response.status, HttpStatus.OK);
+      result = await _decodeBody(response.body);
+      expect(result, {'aString': 'Hello John Cena'});
+    });
+
     test('hello-path', () async {
-      HttpApiResponse response = await _sendRequest('GET', 'get/hello/John');
+      HttpApiResponse response =
+          await _sendRequest('GET', 'get/hello/John');
       expect(response.status, HttpStatus.OK);
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
     });
+
+    test('hello-path-need-decode-uri', () async {
+      HttpApiResponse response =
+          await _sendRequest('GET', 'get/hello/John%20Cena');
+      expect(response.status, HttpStatus.OK);
+      var result = await _decodeBody(response.body);
+      expect(result, {'aString': 'Hello John Cena'});
+    });
+
 
     test('minmax', () async {
       HttpApiResponse response = await _sendRequest('GET', 'get/minmax/7');
