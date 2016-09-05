@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.6+2
+
+- Widen dependency constraints for
+  convert/crypto/gcloud/http_parser/discoveryapis_generator
+- Merged pull-request for decoding percent-encoded parameters
+
 ## 0.5.6+1
 - Widen dependency constraints, update to crypto 1.0.0
 
