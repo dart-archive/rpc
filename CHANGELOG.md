@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.6+3
+
+- Ensure errors in the spawned isolate will be propagated to the main isolate.
+
 ## 0.5.6+2
 
 - Widen dependency constraints for

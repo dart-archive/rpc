@@ -195,18 +195,14 @@ class ClientApiGenerator {
 
   Future<List<String>> generateDiscovery() async {
     return _withServer((HttpServer server) async {
-      ReceivePort rp = await _execute(server.port, 'discovery');
-      var result = await rp.first;
-      rp.close();
-      return result;
+      return await _execute(server.port, 'discovery');
     });
   }
 
   Future<List<DescriptionImportPair>> generateDiscoveryWithImports() async {
     return _withServer((HttpServer server) async {
-      ReceivePort rp = await _execute(server.port, 'discoveryWithImports');
-      Map<String, Map<String, String>> result = await rp.first;
-      rp.close();
+      Map<String, Map<String, String>> result =
+          await _execute(server.port, 'discoveryWithImports');
       // Map the result from the isolate to a list of DescriptionImportPairs.
       var descriptions = [];
       result.forEach((description, importMap) {
@@ -217,17 +213,53 @@ class ClientApiGenerator {
     });
   }
 
-  Future<ReceivePort> _execute(int serverPort, String cmd) async {
+  Future<dynamic> _execute(int serverPort, String cmd) async {
     // In order to import the passed in Dart API file we spawn a new isolate
     // and load the code there with the passed in file imported.
     // NOTE: We do a double isolate spawn to workaround the spawnUri method
     // being blocking, meaning we will deadlock in the current isolate if
     // called directly.
-    ReceivePort rp = new ReceivePort();
+    ReceivePort messagePort = new ReceivePort();
+    ReceivePort errorPort = new ReceivePort();
+
+    closePorts() {
+      messagePort.close();
+      errorPort.close();
+    }
+
     var uri = 'http://127.0.0.1:$serverPort';
-    Isolate.spawn(_isolateTrampoline,
-        [uri, _apiFilePath, cmd, _apiPort, _apiPrefix, rp.sendPort]);
-    return rp;
+    try {
+      await Isolate.spawn(
+          _isolateTrampoline,
+          [uri, _apiFilePath, cmd, _apiPort, _apiPrefix,
+          messagePort.sendPort, errorPort.sendPort],
+          onError: errorPort.sendPort);
+    } catch (error) {
+      closePorts();
+      rethrow;
+    }
+
+    // If we successfully launched the isolate, we'll wait for either the
+    // message or an error and take whatever comes first.
+    var completer = new Completer();
+    var messageSubscription, errorSubscription;
+    finish(value, isError) {
+      messageSubscription.cancel();
+      errorSubscription.cancel();
+      closePorts();
+      if (isError) {
+        completer.completeError(value);
+      } else {
+        completer.complete(value);
+      }
+    }
+    messageSubscription = messagePort.listen((value) {
+      finish(value, false);
+    });
+    errorSubscription = errorPort.listen((error) {
+      finish(error, true);
+    });
+    return completer.future;
   }
 
   _withServer(f(HttpServer server)) async {
@@ -259,8 +291,15 @@ class ClientApiGenerator {
     }
   }
 
-  static Future _isolateTrampoline(List args) async => await Isolate.spawnUri(
-      Uri.parse(args[0]), [args[1], args[2], args[3], args[4]], args[5]);
+  static Future _isolateTrampoline(List args) async {
+    SendPort messagePort = args[5];
+    SendPort errorPort = args[6];
+    return await Isolate.spawnUri(
+      Uri.parse(args[0]),
+      [args[1], args[2], args[3], args[4]],
+      messagePort,
+      onError: errorPort);
+  }
 
   String get generatorSource {
     assert(_apiFilePath != null && _apiFilePath.isNotEmpty);

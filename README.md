@@ -25,7 +25,7 @@ class Cloud {
   @ApiMethod(method: 'GET', path: 'resource/{name}')
   ResourceMessage getResource(String name) {
     ... find resource of name {resourceName} ...
-    return new ResourceMessage
+    return new ResourceMessage()
         ..id = resource.id
         ..name = resource.name
         ..capacity = resource.capacity;
