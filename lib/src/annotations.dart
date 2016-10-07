@@ -123,6 +123,13 @@ class ApiProperty {
       this.values});
 }
 
+/// Optional annotation for API request/response messages.
+class ApiMessage {
+  final bool includeSuper;
+
+  const ApiMessage({this.includeSuper: false});
+}
+
 /// Special API Message to use when a method doesn't need a request or doesn't
 /// return a response.
 class VoidMessage {}
