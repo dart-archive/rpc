@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.7
+
+- Support for `ApiMessage` annotation on message classes which allows including
+  fields from base class hierarchy.
+
 ## 0.5.6+3
 
 - Ensure errors in the spawned isolate will be propagated to the main isolate.
