@@ -78,6 +78,19 @@ class StringMessage {
   String aString;
 }
 
+class InheritanceBaseClass {
+  String stringFromBase = 'default from base';
+}
+
+@ApiMessage(includeSuper: true)
+class InheritanceChildClassBaseIncluded extends InheritanceBaseClass {
+  String stringFromChild = 'default from child, base included';
+}
+
+class InheritanceChildClassBaseExcluded extends InheritanceBaseClass {
+  String stringFromChild = 'default from child, base excluded';
+}
+
 @ApiClass(version: 'v1')
 class TestAPI {
   @ApiResource()
@@ -184,6 +197,23 @@ class GetAPI {
       ..md5Hash = md5Hash
       ..metadata = {'description': 'logo'};
   }
+
+  @ApiMethod(path: 'get/inheritanceChildClassBaseIncluded')
+  Future<InheritanceChildClassBaseIncluded>
+      getInheritanceChildClassBaseIncluded() async {
+    return new InheritanceChildClassBaseIncluded()
+      ..stringFromBase = 'From base'
+      ..stringFromChild = 'From child';
+  }
+
+  @ApiMethod(path: 'get/inheritanceChildClassBaseExcluded')
+  Future<InheritanceChildClassBaseExcluded>
+      getInheritanceChildClassBaseExcluded() async {
+    return new InheritanceChildClassBaseExcluded()
+      ..stringFromBase = 'From base'
+      ..stringFromChild = 'From child';
+  }
+
 }
 
 class DeleteAPI {
@@ -230,6 +260,19 @@ class PostAPI {
     context.responseHeaders['Content-type'] = 'contentType1';
     context.responseHeaders['content-Type'] = 'contentType2';
     context.responseHeaders['my-Own-header'] = 'aHeaderValue';
+    return message;
+  }
+
+
+  @ApiMethod(method: 'POST', path: 'post/inheritanceChildClassBaseIncluded')
+  InheritanceChildClassBaseIncluded inheritanceChildClassBaseIncludedPost(
+      InheritanceChildClassBaseIncluded message) {
+    return message;
+  }
+
+  @ApiMethod(method: 'POST', path: 'post/inheritanceChildClassBaseExcluded')
+  InheritanceChildClassBaseExcluded inheritanceChildClassBaseExcludedPost(
+      InheritanceChildClassBaseExcluded message) {
     return message;
   }
 }
@@ -502,6 +545,28 @@ main() async {
       expect(blob['metadata'], {'description': 'logo'});
       expect(blob['md5Hash'], 'a675cb93b75d5f1656c920dceecdcb38');
     });
+
+    test('get-inherited-child-class-base-included', () async{
+      HttpApiResponse response =
+      await _sendRequest('GET', 'get/inheritanceChildClassBaseIncluded');
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers[HttpHeaders.CONTENT_TYPE],
+          'application/json; charset=utf-8');
+      var result = await _decodeBody(response.body);
+      expect(result,
+          {'stringFromBase': 'From base', 'stringFromChild': 'From child'});
+    });
+
+    test('get-inherited-child-class-base-excluded', () async{
+      HttpApiResponse response =
+      await _sendRequest('GET', 'get/inheritanceChildClassBaseExcluded');
+      expect(response.status, HttpStatus.OK);
+      expect(response.headers[HttpHeaders.CONTENT_TYPE],
+          'application/json; charset=utf-8');
+      var result = await _decodeBody(response.body);
+      expect(result, {'stringFromChild': 'From child'});
+    });
+
   });
 
   group('api-invoke-delete', () {
@@ -596,6 +661,28 @@ main() async {
       expect(response.headers['content-type'], 'contentType2');
       expect(response.headers['my-own-header'], 'aHeaderValue');
     });
+    test('add-inheritance-child-class-base-included', () async {
+      var objectFields = {
+        'stringFromBase': 'posted string from base',
+        'stringFromChild': 'posted string from child'
+      };
+      HttpApiResponse response = await _sendRequest('POST',
+          'post/inheritanceChildClassBaseIncluded', body: objectFields);
+      var resultBody = await _decodeBody(response.body);
+      expect(resultBody, objectFields);
+    });
+    test('add-inheritance-child-class-base-excluded', () async {
+      HttpApiResponse response = await _sendRequest('POST',
+          'post/inheritanceChildClassBaseExcluded',
+          body: {
+            // don't expect this in the result...
+            'stringFromBase': 'posted string from base',
+            // ...but do expect this one in the result.
+            'stringFromChild': 'posted string from child'
+          });
+      var resultBody = await _decodeBody(response.body);
+      expect(resultBody, {'stringFromChild': 'posted string from child'});
+    });
   });
 
   group('api-invoke-put', () {
@@ -650,7 +737,7 @@ main() async {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': '860729ad6fcbdf4a95a0d33ba9f9ed5714959928',
+        'etag': 'b84bbbc4efcd363eccdc86066621cc34bdb49e1c',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -715,6 +802,19 @@ main() async {
                 'additionalProperties': {'type': 'string'}
               }
             }
+          },
+          'InheritanceChildClassBaseIncluded': {
+            'id': 'InheritanceChildClassBaseIncluded',
+            'type': 'object',
+            'properties': {
+              'stringFromChild': {'type': 'string'},
+              'stringFromBase': {'type': 'string'}
+            }
+          },
+          'InheritanceChildClassBaseExcluded': {
+            'id': 'InheritanceChildClassBaseExcluded',
+            'type': 'object',
+            'properties': {'stringFromChild': {'type': 'string'}}
           },
           'DefaultValueMessage': {
             'id': 'DefaultValueMessage',
@@ -896,6 +996,22 @@ main() async {
                 'parameterOrder': [],
                 'response': {r'$ref': 'MediaMessage'},
                 'supportsMediaDownload': true
+              },
+              'getInheritanceChildClassBaseIncluded': {
+                'id': 'TestAPI.get.getInheritanceChildClassBaseIncluded',
+                'path': 'get/inheritanceChildClassBaseIncluded',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': [],
+                'response': {r'$ref': 'InheritanceChildClassBaseIncluded'}
+              },
+              'getInheritanceChildClassBaseExcluded': {
+                'id': 'TestAPI.get.getInheritanceChildClassBaseExcluded',
+                'path': 'get/inheritanceChildClassBaseExcluded',
+                'httpMethod': 'GET',
+                'parameters': {},
+                'parameterOrder': [],
+                'response': {r'$ref': 'InheritanceChildClassBaseExcluded'}
               }
             },
             'resources': {}
@@ -971,6 +1087,24 @@ main() async {
                 'parameterOrder': [],
                 'request': {r'$ref': 'DefaultValueMessage'},
                 'response': {r'$ref': 'DefaultValueMessage'}
+              },
+              'inheritanceChildClassBaseIncludedPost': {
+                'id': 'TestAPI.post.inheritanceChildClassBaseIncludedPost',
+                'path': 'post/inheritanceChildClassBaseIncluded',
+                'httpMethod': 'POST',
+                'parameters': {},
+                'parameterOrder': [],
+                'request': {r'$ref': 'InheritanceChildClassBaseIncluded'},
+                'response': {r'$ref': 'InheritanceChildClassBaseIncluded'}
+              },
+              'inheritanceChildClassBaseExcludedPost': {
+                'id': 'TestAPI.post.inheritanceChildClassBaseExcludedPost',
+                'path': 'post/inheritanceChildClassBaseExcluded',
+                'httpMethod': 'POST',
+                'parameters': {},
+                'parameterOrder': [],
+                'request': {r'$ref': 'InheritanceChildClassBaseExcluded'},
+                'response': {r'$ref': 'InheritanceChildClassBaseExcluded'}
               }
             },
             'resources': {}

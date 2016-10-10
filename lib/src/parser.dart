@@ -644,6 +644,15 @@ class ApiParser {
   // Runs through all fields on a schema class and parses them accordingly.
   Map<Symbol, ApiConfigSchemaProperty> _parseProperties(
       ClassMirror schemaClass, bool isRequest) {
+
+    // Figure out if we've got the annotation to include the parent class
+    bool includeSuperClass = false;
+    for (InstanceMirror im in schemaClass.metadata) {
+      if (im.reflectee is ApiMessage && im.reflectee.includeSuper) {
+        includeSuperClass = true;
+      }
+    }
+
     var properties = {};
     schemaClass.declarations.values.forEach((vm) {
       var metadata = _getMetadata(vm, ApiProperty);
@@ -664,6 +673,9 @@ class ApiParser {
         properties[vm.simpleName] = property;
       }
     });
+    if (includeSuperClass && schemaClass.superclass != null) {
+      properties.addAll(_parseProperties(schemaClass.superclass, isRequest));
+    }
     return properties;
   }
 
