@@ -526,18 +526,30 @@ class ApiParser {
       }
     }
 
+    bool initializeConstructorParameters = false;
+    for (InstanceMirror im in schemaClass.metadata) {
+      if (im.reflectee is ApiMessage
+          && im.reflectee.withConstructorParameters) {
+        initializeConstructorParameters = true;
+        break;
+      }
+    }
+
     // If the schema is used as a request check that it has an unnamed default
-    // constructor.
+    // constructor, or a single default constructor if they've specified that
+    // constructor parameters should be initialized.
     if (isRequest) {
       var methods = schemaClass.declarations.values
-          .where((mm) => mm is MethodMirror && mm.isConstructor);
-      if (!methods.isEmpty &&
-          methods
-              .where((mm) => (mm.simpleName == schemaClass.simpleName &&
-                  mm.parameters.isEmpty))
-              .isEmpty) {
-        addError('Schema \'$name\' must have an unnamed constructor taking no '
-            'arguments.');
+          .where((mm) => mm is MethodMirror && mm.isConstructor &&
+          mm.simpleName == schemaClass.simpleName);
+
+      if (initializeConstructorParameters) {
+        if (methods.isEmpty) {
+          addError('Schema \'$name\' must have exactly one unnamed constructor.');
+        }
+      } else if (methods.where((mm) => (mm.parameters.isEmpty)).isEmpty) {
+          addError('Schema \'$name\' must have an unnamed constructor taking no '
+              'arguments.');
       }
     }
     schemaConfig = new ApiConfigSchema(name, schemaClass, isRequest);

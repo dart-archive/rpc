@@ -91,6 +91,66 @@ class InheritanceChildClassBaseExcluded extends InheritanceBaseClass {
   String stringFromChild = 'default from child, base excluded';
 }
 
+@ApiMessage(withConstructorParameters: true)
+class ConstructorPositionalParametersMessage {
+  String aString;
+  int anInt;
+  DateTime aDateTime;
+  List<int> aList;
+  Map<String, int> aMap;
+  String anOptionalString;
+  int anOptionalInt;
+  DateTime anOptionalDateTime;
+  List<int> anOptionalList;
+  Map<String, int> anOptionalMap;
+
+  ConstructorPositionalParametersMessage(
+      this.aString,
+      this.anInt,
+      this.aDateTime,
+      this.aList,
+      this.aMap,
+      [this.anOptionalString = 'default',
+      this.anOptionalInt = -1,
+      this.anOptionalDateTime,
+      this.anOptionalList = const [1, 2, 3],
+      this.anOptionalMap = const {"one": 1, "two": 2, "three": 3}]) {
+    if (anOptionalDateTime == null) {
+      anOptionalDateTime = DateTime.parse('1969-07-20T20:18:00.000Z');
+    }
+  }
+}
+
+@ApiMessage(withConstructorParameters: true)
+class ConstructorNamedParametersMessage {
+  String aString;
+  int anInt;
+  DateTime aDateTime;
+  List<int> aList;
+  Map<String, int> aMap;
+  String anOptionalString;
+  int anOptionalInt;
+  DateTime anOptionalDateTime;
+  List<int> anOptionalList;
+  Map<String, int> anOptionalMap;
+
+  ConstructorNamedParametersMessage(
+      this.aString,
+      this.anInt,
+      this.aDateTime,
+      this.aList,
+      this.aMap,
+      {this.anOptionalString: 'default',
+      this.anOptionalInt: -1,
+      this.anOptionalDateTime,
+      this.anOptionalList: const [1, 2, 3],
+      this.anOptionalMap: const {"one": 1, "two": 2, "three": 3}}) {
+    if (anOptionalDateTime == null) {
+      anOptionalDateTime = DateTime.parse('1969-07-20T20:18:00.000Z');
+    }
+  }
+}
+
 @ApiClass(version: 'v1')
 class TestAPI {
   @ApiResource()
@@ -273,6 +333,18 @@ class PostAPI {
   @ApiMethod(method: 'POST', path: 'post/inheritanceChildClassBaseExcluded')
   InheritanceChildClassBaseExcluded inheritanceChildClassBaseExcludedPost(
       InheritanceChildClassBaseExcluded message) {
+    return message;
+  }
+
+  @ApiMethod(method: 'POST', path: 'post/constructorPositionalParametersMessage')
+  ConstructorPositionalParametersMessage constructorPositionalParametersMessagePost(
+      ConstructorPositionalParametersMessage message) {
+    return message;
+  }
+
+  @ApiMethod(method: 'POST', path: 'post/constructorNamedParametersMessage')
+  ConstructorNamedParametersMessage constructorNamedParametersMessagePost(
+      ConstructorNamedParametersMessage message) {
     return message;
   }
 }
@@ -683,6 +755,39 @@ main() async {
       var resultBody = await _decodeBody(response.body);
       expect(resultBody, {'stringFromChild': 'posted string from child'});
     });
+    test('add-constructor-positional-parameters-message', () async {
+
+      for (String route in ['post/constructorPositionalParametersMessage',
+          'post/constructorNamedParametersMessage']) {
+        var objectFields = {
+          'aString': 'posted string',
+          'anInt': 42,
+          'aDateTime': '1979-12-20T01:02:03.456Z',
+          'aList': [2, 3, 5, 7],
+          'aMap': {"two": 2, "three": 3, "five": 5, "seven": 7}
+        };
+
+        HttpApiResponse response = await _sendRequest('POST', route,
+            body: objectFields);
+        var resultBody = await _decodeBody(response.body);
+
+        objectFields['anOptionalString'] = 'default';
+        objectFields['anOptionalInt'] = -1;
+        objectFields['anOptionalDateTime'] = '1969-07-20T20:18:00.000Z';
+        objectFields['anOptionalList'] = [1, 2, 3];
+        objectFields['anOptionalMap'] = {"one": 1, "two": 2, "three": 3};
+        expect(resultBody, objectFields);
+
+        objectFields['anOptionalString'] = 'from test';
+        objectFields['anOptionalInt'] = -42;
+        objectFields['anOptionalDateTime'] = '1979-12-20T01:03:04.456Z';
+        objectFields['anOptionalList'] = [4, 5, 6];
+        objectFields['anOptionalMap'] = {"four": 4, "five": 5, "six": 6};
+        response = await _sendRequest('POST', route, body: objectFields);
+        resultBody = await _decodeBody(response.body);
+        expect(resultBody, objectFields);
+      }
+    });
   });
 
   group('api-invoke-put', () {
@@ -737,7 +842,7 @@ main() async {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'b84bbbc4efcd363eccdc86066621cc34bdb49e1c',
+        'etag': '073af250fc0f0d51ec66fe3b215801631140e489',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -854,6 +959,50 @@ main() async {
             'id': 'MapOfint',
             'type': 'object',
             'additionalProperties': {'type': 'integer', 'format': 'int32'}
+          },
+          'ConstructorPositionalParametersMessage': {
+            'id': 'ConstructorPositionalParametersMessage',
+            'type': 'object',
+            'properties': {
+              'aString': {'type': 'string'},
+              'anInt': {'type': 'integer', 'format': 'int32'},
+              'aDateTime': {'type': 'string', 'format': 'date-time'},
+              'aList': {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}},
+              'aMap': {
+                'type': 'object',
+                'additionalProperties': {'type': 'integer', 'format': 'int32'}
+              },
+              'anOptionalString': {'type': 'string'},
+              'anOptionalInt': {'type': 'integer', 'format': 'int32'},
+              'anOptionalDateTime': {'type': 'string', 'format': 'date-time'},
+              'anOptionalList': {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}},
+              'anOptionalMap': {
+                'type': 'object',
+                'additionalProperties': {'type': 'integer', 'format': 'int32'}
+              }
+            }
+          },
+          'ConstructorNamedParametersMessage': {
+            'id': 'ConstructorNamedParametersMessage',
+            'type': 'object',
+            'properties': {
+              'aString': {'type': 'string'},
+              'anInt': {'type': 'integer', 'format': 'int32'},
+              'aDateTime': {'type': 'string', 'format': 'date-time'},
+              'aList': {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}},
+              'aMap': {
+                'type': 'object',
+                'additionalProperties': {'type': 'integer', 'format': 'int32'}
+              },
+              'anOptionalString': {'type': 'string'},
+              'anOptionalInt': {'type': 'integer', 'format': 'int32'},
+              'anOptionalDateTime': {'type': 'string', 'format': 'date-time'},
+              'anOptionalList': {'type': 'array', 'items': {'type': 'integer', 'format': 'int32'}},
+              'anOptionalMap': {
+                'type': 'object',
+                'additionalProperties': {'type': 'integer', 'format': 'int32'}
+              }
+            }
           }
         },
         'methods': {},
@@ -1105,6 +1254,24 @@ main() async {
                 'parameterOrder': [],
                 'request': {r'$ref': 'InheritanceChildClassBaseExcluded'},
                 'response': {r'$ref': 'InheritanceChildClassBaseExcluded'}
+              },
+              'constructorPositionalParametersMessagePost': {
+                'id': 'TestAPI.post.constructorPositionalParametersMessagePost',
+                'path': 'post/constructorPositionalParametersMessage',
+                'httpMethod': 'POST',
+                'parameters': {},
+                'parameterOrder': [],
+                'request': {r'$ref': 'ConstructorPositionalParametersMessage'},
+                'response': {r'$ref': 'ConstructorPositionalParametersMessage'}
+              },
+              'constructorNamedParametersMessagePost': {
+                'id': 'TestAPI.post.constructorNamedParametersMessagePost',
+                'path': 'post/constructorNamedParametersMessage',
+                'httpMethod': 'POST',
+                'parameters': {},
+                'parameterOrder': [],
+                'request': {r'$ref': 'ConstructorNamedParametersMessage'},
+                'response': {r'$ref': 'ConstructorNamedParametersMessage'}
               }
             },
             'resources': {}

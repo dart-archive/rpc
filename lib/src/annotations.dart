@@ -127,7 +127,12 @@ class ApiProperty {
 class ApiMessage {
   final bool includeSuper;
 
-  const ApiMessage({this.includeSuper: false});
+  /// Whether to figure out constructor parameters upon instantiation
+  final bool withConstructorParameters;
+
+  const ApiMessage(
+      {this.withConstructorParameters: false,
+      this.includeSuper: false});
 }
 
 /// Special API Message to use when a method doesn't need a request or doesn't

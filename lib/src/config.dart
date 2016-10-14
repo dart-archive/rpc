@@ -21,6 +21,7 @@ import 'utils.dart';
 import 'discovery/config.dart' as discovery;
 import 'http_body_parser.dart';
 import 'media_message.dart';
+import 'annotations.dart';
 
 part 'config/api.dart';
 part 'config/method.dart';

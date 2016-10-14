@@ -45,7 +45,16 @@ class ApiConfigSchema {
           'Invalid parameter: \'$request\', should be an instance of type '
           '\'$schemaName\'.');
     }
-    InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
+    bool initializeConstructorParameters = false;
+    for (InstanceMirror im in schemaClass.metadata) {
+      if (im.reflectee is ApiMessage
+          && im.reflectee.withConstructorParameters) {
+        initializeConstructorParameters = true;
+        break;
+      }
+    }
+
+    Map objectFieldValues = new Map();
     for (Symbol sym in _properties.keys) {
       final prop = _properties[sym];
 
@@ -56,27 +65,64 @@ class ApiConfigSchema {
           // If in form, there is an (input[type="file"] multiple) and the user
           // put only one file. It's not an error and it should be accept.
           // Maybe it cans be optimized.
-          if (schema.type.instanceMembers[sym]
+          if (schemaClass.instanceMembers[sym]
                       .returnType
                       .reflectedType
                       .toString() ==
                   'List<MediaMessage>' &&
               request[prop.name] is MediaMessage) {
-            schema.setField(sym, [request[prop.name]]);
+            objectFieldValues[sym] = [request[prop.name]];
           } else if (request[prop.name] is List) {
-            schema.setField(sym, prop.fromRequest(request[prop.name]));
+            objectFieldValues[sym] = prop.fromRequest(request[prop.name]);
           } else {
-            schema.setField(sym, request[prop.name]);
+            objectFieldValues[sym] = request[prop.name];
           }
         } else {
-          schema.setField(sym, prop.fromRequest(request[prop.name]));
+          objectFieldValues[sym] = prop.fromRequest(request[prop.name]);
         }
       } else if (prop.hasDefault) {
-        schema.setField(sym, prop.fromRequest(prop.defaultValue));
+        objectFieldValues[sym] = prop.fromRequest(prop.defaultValue);
       } else if (prop.required) {
         throw new BadRequestError('Required field ${prop.name} is missing');
       }
     }
+
+    List positionalArguments = new List();
+    Map namedArguments = new Map();
+    var constructors;
+    if (initializeConstructorParameters && (constructors =
+        schemaClass.declarations.values.where((mm) => mm is MethodMirror &&
+            mm.isConstructor && mm.simpleName == schemaClass.simpleName &&
+            mm.parameters.isNotEmpty)).isNotEmpty) {
+
+      var constructor = constructors.first;
+      for (ParameterMirror pm in constructor.parameters) {
+
+        if (!objectFieldValues.containsKey(pm.simpleName)) {
+          if (pm.isOptional) {
+            continue;
+          } else {
+            String parameterName = MirrorSystem.getName(pm.simpleName);
+            throw new BadRequestError('Required field $parameterName is missing');
+          }
+        }
+
+        if (pm.isNamed) {
+          namedArguments[pm.simpleName] = objectFieldValues[pm.simpleName];
+        } else {
+          positionalArguments.add(objectFieldValues[pm.simpleName]);
+        }
+      }
+    }
+
+    InstanceMirror schema = schemaClass.newInstance(new Symbol(''),
+        positionalArguments, namedArguments);
+
+
+    objectFieldValues.forEach((Symbol sym, var value) {
+      schema.setField(sym, value);
+    });
+
     return schema.reflectee;
   }
 
