@@ -150,7 +150,9 @@ Future<MyResponse> myFutureMethod() {
 ```
 
 The `MyResponse` class must be a non-abstract class with an unnamed 
-constructor taking no required parameters. The RPC backend will automatically
+constructor. The constructor must either take no required parameters,
+or the class must be annotated with the `@ApiMessage` annotation with
+`withConstructorParameters` set to true. The RPC backend will automatically
 serialize all public fields of the the `MyResponse` instance into JSON
 corresponding to the generated Discovery Document schema.
 
@@ -189,10 +191,12 @@ the method would be:
 where the first parameter `name` would get the value `foo` and the `type`
 parameter would get the value `storage`.
 
-The `MyRequest` class must be a non-abstract class with an unnamed constructor
-taking no arguments. The RPC backend will automatically create an instance of 
-the `MyRequest` class, decode the JSON request body, and set the class
-instance's fields to the values found in the decoded request body.
+The `MyRequest` class must be a non-abstract class with an unnamed constructor.
+The constructor must either take no required parameters, or the class must be
+annotated with the `@ApiMessage` annotation with `withConstructorParameters` set
+to true. The RPC backend will automatically create an instance of the
+`MyRequest` class, decode the JSON request body, and set the class instance's
+fields to the values found in the decoded request body.
 
 If the request body is not needed it is possible to use the VoidMessage class or
 change it to use the GET HTTP method. If using GET the method signature would
@@ -428,7 +432,8 @@ pub global run rpc:generate discovery -i lib/server/cloudapi.dart > json/cloud.j
 ```
 
 In order for the rpc:generate script to work the API class (@ApiClass class)
-must have a default constructor taking no required arguments.
+and all message classes must have a default constructor taking no required
+arguments.
 
 The other way to retrive a Discovery Document if from a running server instance.
 This requires the Discovery Service to be enabled. This is done by calling the
