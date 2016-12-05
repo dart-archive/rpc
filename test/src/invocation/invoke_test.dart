@@ -322,6 +322,7 @@ main() async {
     test('simple', () async {
       HttpApiResponse response = await _sendRequest('GET', 'get/simple');
       expect(response.status, HttpStatus.NO_CONTENT);
+      expect(response.body, null);
     });
 
     test('throwing', () async {
@@ -523,11 +524,10 @@ main() async {
         HttpHeaders.IF_MODIFIED_SINCE: formatHttpDate(file.lastModifiedSync())
       });
       expect(response.status, HttpStatus.NOT_MODIFIED);
-      expect(response.headers[HttpHeaders.CONTENT_TYPE], 'image/png');
+      expect(response.headers[HttpHeaders.CONTENT_TYPE], null);
       expect(response.headers[HttpHeaders.LAST_MODIFIED],
           formatHttpDate(file.lastModifiedSync()));
-      final bytes = await response.body.toList();
-      expect(bytes.isEmpty, true);
+      expect(response.body, null);
     });
 
     test('get-blob-extra', () async {
@@ -573,6 +573,7 @@ main() async {
     test('simple', () async {
       HttpApiResponse response = await _sendRequest('DELETE', 'delete/simple');
       expect(response.status, HttpStatus.NO_CONTENT);
+      expect(response.body, null);
     });
   });
 
