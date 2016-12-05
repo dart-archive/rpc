@@ -250,8 +250,9 @@ class ApiConfigMethod {
                 context.requestHeaders[HttpHeaders.IF_MODIFIED_SINCE]);
             if (ifModifiedSince != null &&
                 !apiResult.updated.isAfter(ifModifiedSince)) {
+              context.responseHeaders.remove(HttpHeaders.CONTENT_TYPE);
               return new HttpApiResponse(HttpStatus.NOT_MODIFIED,
-                  new Stream.empty(), context.responseHeaders);
+                  null, context.responseHeaders);
             }
           }
         }
@@ -259,8 +260,7 @@ class ApiConfigMethod {
         resultBody = new Stream.fromIterable([resultAsBytes]);
         statusCode = HttpStatus.OK;
       } else {
-        // Return an empty stream.
-        resultBody = new Stream.fromIterable([]);
+        resultBody = null;
         statusCode = HttpStatus.NO_CONTENT;
       }
       // If the api method has set a specific response status code use that
