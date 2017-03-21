@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.7+1
+
+- Widen `package:gcloud` constraint in pubspec.yaml to include version `0.4.0`.
+
 ## 0.5.7
 
 - Support for `ApiMessage` annotation on message classes which allows including
