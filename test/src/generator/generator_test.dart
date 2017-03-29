@@ -31,7 +31,7 @@ main() {
   // file.
   void setupPackage({bool addPubSpec: true}) {
     assert(packagePath == null);
-    packagePath = Directory.systemTemp.createTempSync().path;
+    packagePath = Directory.systemTemp.createTempSync('rpc_generator_tests').path;
     new Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
       new File(join(dataPath, 'pubspec.yamll'))

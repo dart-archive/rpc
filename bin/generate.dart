@@ -173,7 +173,8 @@ class ClientApiGenerator {
           'File \'$dartFilePath\' must be in a valid package.');
     }
     var packageDir = new Directory(join(_packageDirectoryPath, 'packages'));
-    if (!packageDir.existsSync()) {
+    var packagesFile = new File(join(_packageDirectoryPath, '.packages'));
+    if (!packageDir.existsSync() && !packagesFile.existsSync()) {
       throw new GeneratorException(
           'Please run \'pub get\' in your API package before running the '
           'generator.');
