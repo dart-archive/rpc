@@ -23,6 +23,11 @@ File _blobFile() {
   return new File(blobPath);
 }
 
+identiy(x) {
+  print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx $x");
+  return x;
+}
+
 // Tests for exercising the setting of default values
 class DefaultValueMessage {
   @ApiProperty(defaultValue: 5)
@@ -212,6 +217,14 @@ class GetAPI {
     return new InheritanceChildClassBaseExcluded()
       ..stringFromBase = 'From base'
       ..stringFromChild = 'From child';
+  }
+
+  @ApiMethod(path: 'json/{name}/{value}', serializer: identiy)
+  Object getJson(String name, String value) {
+    var result = {};
+    result[name] = value;
+
+    return result;
   }
 }
 
@@ -540,7 +553,17 @@ main() async {
       expect(blob['metadata'], {'description': 'logo'});
       expect(blob['md5Hash'], 'a675cb93b75d5f1656c920dceecdcb38');
     });
-
+    test('json', () async {
+      print('hi');
+      HttpApiResponse response = await _sendRequest('GET', 'json/city/cannes');
+      expect(response.status, HttpStatus.OK);
+      var result = await _decodeBody(response.body);
+      expect(result, {'city': 'cannes'});
+      response = await _sendRequest('GET', 'json/name/david');
+      expect(response.status, HttpStatus.OK);
+      result = await _decodeBody(response.body);
+      expect(result, {'name': 'david'});
+    });
     test('get-inherited-child-class-base-included', () async {
       HttpApiResponse response =
           await _sendRequest('GET', 'get/inheritanceChildClassBaseIncluded');
@@ -732,7 +755,7 @@ main() async {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'b84bbbc4efcd363eccdc86066621cc34bdb49e1c',
+        'etag': 'c185c3643b8dfd3deb983628b0314c541b4c0d3c',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -993,6 +1016,26 @@ main() async {
                 'parameterOrder': [],
                 'response': {r'$ref': 'MediaMessage'},
                 'supportsMediaDownload': true
+              },
+              'getJson': {
+                'id': 'TestAPI.get.getJson',
+                'path': 'json/{name}/{value}',
+                'httpMethod': 'GET',
+                'parameters': {
+                  'name': {
+                    'type': 'string',
+                    'description': 'Path parameter: \'name\'.',
+                    'required': true,
+                    'location': 'path'
+                  },
+                  'value': {
+                    'type': 'string',
+                    'description': 'Path parameter: \'value\'.',
+                    'required': true,
+                    'location': 'path'
+                  }
+                },
+                'parameterOrder': ['name', 'value']
               },
               'getInheritanceChildClassBaseIncluded': {
                 'id': 'TestAPI.get.getInheritanceChildClassBaseIncluded',

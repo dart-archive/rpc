@@ -64,7 +64,16 @@ class ApiMethod {
   /// Description of the method.
   final String description;
 
-  const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
+  /// An optional serializer to use for encoding respose.
+  /// it avoid to have to fully describe the response
+  final dynamic serializer;
+
+  const ApiMethod(
+      {this.name,
+      this.path,
+      this.method: 'GET',
+      this.description,
+      this.serializer});
 }
 
 /// Optional annotation for parameters inside of API request/response messages.
@@ -107,6 +116,10 @@ class ApiProperty {
   /// For int properties: the maximal value.
   final int maxValue;
 
+  /// An optional serializer to use for encoding the response.
+  /// it avoid to have to fully describe the reponse
+  final dynamic serializer;
+
   /// Possible values for enum properties, as value - description pairs.
   ///  Properties using this will have to be String.
   final Map<String, String> values;
@@ -118,6 +131,7 @@ class ApiProperty {
       this.required: false,
       this.ignore: false,
       this.defaultValue,
+      this.serializer: null,
       this.minValue,
       this.maxValue,
       this.values});

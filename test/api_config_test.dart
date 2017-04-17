@@ -376,6 +376,14 @@ void main() {
           'parameterOrder': ['count'],
           'request': {'\$ref': 'TestMessage1'},
           'response': {'\$ref': 'TestMessage1'}
+        },
+        'customQuery': {
+          'id': 'CorrectMethods.customQuery',
+          'path': 'customQuery',
+          'httpMethod': 'GET',
+          'parameters': {},
+          'parameterOrder': [],
+          'response': {'\$ref': 'ListOfObject'}
         }
       };
       expect(json['methods'], expectedJsonMethods);

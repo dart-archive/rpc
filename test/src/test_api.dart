@@ -212,7 +212,18 @@ class CorrectMethods {
   TestMessage1 method17(int count, TestMessage1 request) {
     return new TestMessage1();
   }
+
+  @ApiMethod(path: 'customQuery', serializer: identity)
+  List<Object> customQuery() {
+    return [
+      1,
+      {"a": 1},
+      2
+    ];
+  }
 }
+
+identity(x) => x;
 
 class NoAnnotation {}
 

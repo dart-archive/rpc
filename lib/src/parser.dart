@@ -273,6 +273,7 @@ class ApiParser {
 
     // Parse method return type.
     var responseSchema = _parseMethodReturnType(mm);
+    var serializer = metadata.serializer;
 
     var methodConfig = new ApiConfigMethod(
         discoveryId,
@@ -286,7 +287,8 @@ class ApiParser {
         queryParams,
         requestSchema,
         responseSchema,
-        parser);
+        parser,
+        serializer);
 
     _setupApiMethod(methodConfig);
 
@@ -644,7 +646,6 @@ class ApiParser {
   // Runs through all fields on a schema class and parses them accordingly.
   Map<Symbol, ApiConfigSchemaProperty> _parseProperties(
       ClassMirror schemaClass, bool isRequest) {
-
     // Figure out if we've got the annotation to include the parent class
     bool includeSuperClass = false;
     for (InstanceMirror im in schemaClass.metadata) {
@@ -668,6 +669,7 @@ class ApiParser {
       if (propertyName == null) {
         propertyName = MirrorSystem.getName(vm.simpleName);
       }
+
       var property = parseProperty(vm.type, propertyName, metadata, isRequest);
       if (property != null) {
         properties[vm.simpleName] = property;
@@ -964,7 +966,7 @@ class ApiParser {
     var additionalProperty = parseProperty(
         mapTypeArguments[1], propertyName, new ApiProperty(), isRequest);
     return new MapProperty(propertyName, metadata.description,
-        metadata.required, additionalProperty);
+        metadata.required, additionalProperty, metadata.serializer);
   }
 
   // Helper method to check that a field annotated with an ApiProperty is using
@@ -976,7 +978,8 @@ class ApiParser {
       #name,
       #description,
       #required,
-      #ignore
+      #ignore,
+      #serializer
     ];
     InstanceMirror im = reflect(metadata);
     im.type.declarations.forEach((Symbol field, DeclarationMirror fieldMirror) {

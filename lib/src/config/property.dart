@@ -310,9 +310,10 @@ class ListProperty extends ApiConfigSchemaProperty {
 
 class MapProperty extends ApiConfigSchemaProperty {
   final ApiConfigSchemaProperty _additionalProperty;
+  final dynamic serializer;
 
-  MapProperty(
-      String name, String description, bool required, this._additionalProperty)
+  MapProperty(String name, String description, bool required,
+      this._additionalProperty, this.serializer)
       : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
@@ -325,6 +326,11 @@ class MapProperty extends ApiConfigSchemaProperty {
     if (mapObject is! Map) {
       throw new BadRequestError('Invalid property, should be of type \'Map\'');
     }
+
+    if (serializer != null) {
+      return serializer(mapObject);
+    }
+
     var result = {};
     (mapObject as Map).forEach((String key, object) {
       result[key] = _additionalProperty.toResponse(object);

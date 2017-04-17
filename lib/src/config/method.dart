@@ -20,6 +20,7 @@ class ApiConfigMethod {
   final ApiConfigSchema _requestSchema;
   final ApiConfigSchema _responseSchema;
   final UriParser _parser;
+  final dynamic serializer;
 
   ApiConfigMethod(
       this.id,
@@ -33,7 +34,8 @@ class ApiConfigMethod {
       this._queryParams,
       this._requestSchema,
       this._responseSchema,
-      this._parser);
+      this._parser,
+      this.serializer);
 
   bool matches(ParsedHttpApiRequest request) {
     UriMatch match = _parser.match(request.methodUri);
@@ -192,7 +194,8 @@ class ApiConfigMethod {
       var resultAsJson = {};
       var resultBody;
       var statusCode;
-      if (_responseSchema != null && _responseSchema.containsData) {
+      if (_responseSchema != null &&
+          (_responseSchema.containsData || serializer != null)) {
         if (apiResult == null) {
           // We don't allow for method to return null if they have specified a
           // response schema. Log the error and return internal server error to
@@ -207,8 +210,14 @@ class ApiConfigMethod {
         }
         var resultAsBytes;
         final alt = context.requestUri.queryParameters['alt'];
+
         if (apiResult is! MediaMessage || alt == 'json') {
-          resultAsJson = _responseSchema.toResponse(apiResult);
+          if (serializer != null) {
+            resultAsJson = serializer(apiResult);
+          } else {
+            resultAsJson = _responseSchema.toResponse(apiResult);
+          }
+
           rpcLogger
               .finest('Successfully encoded result as json: $resultAsJson');
           resultAsBytes = request.jsonToBytes.convert(resultAsJson);
@@ -223,12 +232,15 @@ class ApiConfigMethod {
             context.responseHeaders[HttpHeaders.CONTENT_TYPE] =
                 apiResult.contentType;
           }
-          if (apiResult.updated != null) context.responseHeaders[
-              HttpHeaders.LAST_MODIFIED] = formatHttpDate(apiResult.updated);
-          if (apiResult.contentEncoding != null) context.responseHeaders[
-              HttpHeaders.CONTENT_ENCODING] = apiResult.contentEncoding;
-          if (apiResult.contentLanguage != null) context.responseHeaders[
-              HttpHeaders.CONTENT_LANGUAGE] = apiResult.contentLanguage;
+          if (apiResult.updated != null)
+            context.responseHeaders[HttpHeaders.LAST_MODIFIED] =
+                formatHttpDate(apiResult.updated);
+          if (apiResult.contentEncoding != null)
+            context.responseHeaders[HttpHeaders.CONTENT_ENCODING] =
+                apiResult.contentEncoding;
+          if (apiResult.contentLanguage != null)
+            context.responseHeaders[HttpHeaders.CONTENT_LANGUAGE] =
+                apiResult.contentLanguage;
           if (apiResult.md5Hash != null) {
             context.responseHeaders[HttpHeaders.CONTENT_MD5] =
                 apiResult.md5Hash;
