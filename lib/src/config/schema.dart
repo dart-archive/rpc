@@ -56,9 +56,7 @@ class ApiConfigSchema {
           // If in form, there is an (input[type="file"] multiple) and the user
           // put only one file. It's not an error and it should be accept.
           // Maybe it cans be optimized.
-          if (schema.type.instanceMembers[sym]
-                      .returnType
-                      .reflectedType
+          if (schema.type.instanceMembers[sym].returnType.reflectedType
                       .toString() ==
                   'List<MediaMessage>' &&
               request[prop.name] is MediaMessage) {

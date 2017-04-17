@@ -213,7 +213,6 @@ class GetAPI {
       ..stringFromBase = 'From base'
       ..stringFromChild = 'From child';
   }
-
 }
 
 class DeleteAPI {
@@ -262,7 +261,6 @@ class PostAPI {
     context.responseHeaders['my-Own-header'] = 'aHeaderValue';
     return message;
   }
-
 
   @ApiMethod(method: 'POST', path: 'post/inheritanceChildClassBaseIncluded')
   InheritanceChildClassBaseIncluded inheritanceChildClassBaseIncludedPost(
@@ -364,8 +362,7 @@ main() async {
       expect(response.status, HttpStatus.OK);
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello Ghost'});
-      response =
-          await _sendRequest('GET', 'get/hello', query: '?name=John');
+      response = await _sendRequest('GET', 'get/hello', query: '?name=John');
       expect(response.status, HttpStatus.OK);
       result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
@@ -384,8 +381,7 @@ main() async {
     });
 
     test('hello-path', () async {
-      HttpApiResponse response =
-          await _sendRequest('GET', 'get/hello/John');
+      HttpApiResponse response = await _sendRequest('GET', 'get/hello/John');
       expect(response.status, HttpStatus.OK);
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
@@ -398,7 +394,6 @@ main() async {
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John Cena'});
     });
-
 
     test('minmax', () async {
       HttpApiResponse response = await _sendRequest('GET', 'get/minmax/7');
@@ -518,8 +513,8 @@ main() async {
 
     test('get-blob-media-unmodified', () async {
       final file = _blobFile();
-      HttpApiResponse response =
-          await _sendRequest('GET', 'get/blob', extraHeaders: {
+      HttpApiResponse response = await _sendRequest(
+          'GET', 'get/blob', extraHeaders: {
         HttpHeaders.IF_MODIFIED_SINCE: formatHttpDate(file.lastModifiedSync())
       });
       expect(response.status, HttpStatus.NOT_MODIFIED);
@@ -546,9 +541,9 @@ main() async {
       expect(blob['md5Hash'], 'a675cb93b75d5f1656c920dceecdcb38');
     });
 
-    test('get-inherited-child-class-base-included', () async{
+    test('get-inherited-child-class-base-included', () async {
       HttpApiResponse response =
-      await _sendRequest('GET', 'get/inheritanceChildClassBaseIncluded');
+          await _sendRequest('GET', 'get/inheritanceChildClassBaseIncluded');
       expect(response.status, HttpStatus.OK);
       expect(response.headers[HttpHeaders.CONTENT_TYPE],
           'application/json; charset=utf-8');
@@ -557,16 +552,15 @@ main() async {
           {'stringFromBase': 'From base', 'stringFromChild': 'From child'});
     });
 
-    test('get-inherited-child-class-base-excluded', () async{
+    test('get-inherited-child-class-base-excluded', () async {
       HttpApiResponse response =
-      await _sendRequest('GET', 'get/inheritanceChildClassBaseExcluded');
+          await _sendRequest('GET', 'get/inheritanceChildClassBaseExcluded');
       expect(response.status, HttpStatus.OK);
       expect(response.headers[HttpHeaders.CONTENT_TYPE],
           'application/json; charset=utf-8');
       var result = await _decodeBody(response.body);
       expect(result, {'stringFromChild': 'From child'});
     });
-
   });
 
   group('api-invoke-delete', () {
@@ -666,14 +660,15 @@ main() async {
         'stringFromBase': 'posted string from base',
         'stringFromChild': 'posted string from child'
       };
-      HttpApiResponse response = await _sendRequest('POST',
-          'post/inheritanceChildClassBaseIncluded', body: objectFields);
+      HttpApiResponse response = await _sendRequest(
+          'POST', 'post/inheritanceChildClassBaseIncluded',
+          body: objectFields);
       var resultBody = await _decodeBody(response.body);
       expect(resultBody, objectFields);
     });
     test('add-inheritance-child-class-base-excluded', () async {
-      HttpApiResponse response = await _sendRequest('POST',
-          'post/inheritanceChildClassBaseExcluded',
+      HttpApiResponse response = await _sendRequest(
+          'POST', 'post/inheritanceChildClassBaseExcluded',
           body: {
             // don't expect this in the result...
             'stringFromBase': 'posted string from base',
@@ -814,7 +809,9 @@ main() async {
           'InheritanceChildClassBaseExcluded': {
             'id': 'InheritanceChildClassBaseExcluded',
             'type': 'object',
-            'properties': {'stringFromChild': {'type': 'string'}}
+            'properties': {
+              'stringFromChild': {'type': 'string'}
+            }
           },
           'DefaultValueMessage': {
             'id': 'DefaultValueMessage',

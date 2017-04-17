@@ -99,8 +99,10 @@ class ParsedHttpApiRequest {
     if (request.headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
       final header = request.headers[HttpHeaders.CONTENT_TYPE];
 
-      if (header is List) contentType = ContentType.parse(header.join(' '));
-      else contentType = ContentType.parse(header);
+      if (header is List)
+        contentType = ContentType.parse(header.join(' '));
+      else
+        contentType = ContentType.parse(header);
     }
     return new ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
         methodUri, jsonToBytes, contentType);
