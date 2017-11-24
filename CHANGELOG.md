@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.8
+
+- Rfc7232 specs restrictions on 204, 304 statuses (#106)
+- Update generator to work with ".packages" files.
+- Widen several dependency constraints.
+
 ## 0.5.7+1
 
 - Widen `package:gcloud` constraint in pubspec.yaml to include version `0.4.0`.
