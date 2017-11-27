@@ -644,7 +644,6 @@ class ApiParser {
   // Runs through all fields on a schema class and parses them accordingly.
   Map<Symbol, ApiConfigSchemaProperty> _parseProperties(
       ClassMirror schemaClass, bool isRequest) {
-
     // Figure out if we've got the annotation to include the parent class
     bool includeSuperClass = false;
     for (InstanceMirror im in schemaClass.metadata) {
@@ -660,15 +659,22 @@ class ApiParser {
         // Generate a metadata with default values
         metadata = new ApiProperty();
       }
-      if (vm is! VariableMirror || vm.isConst || vm.isPrivate || vm.isStatic) {
-        // We only serialize non-const, non-static public fields.
+      if ((vm is! VariableMirror ||
+              vm.isConst ||
+              vm.isPrivate ||
+              vm.isStatic) &&
+          (vm is! MethodMirror || !vm.isGetter || vm.isPrivate)) {
+        // We only serialize non-const, non-static public fields
         return;
       }
       var propertyName = metadata.name;
       if (propertyName == null) {
         propertyName = MirrorSystem.getName(vm.simpleName);
       }
-      var property = parseProperty(vm.type, propertyName, metadata, isRequest);
+      TypeMirror type = vm is VariableMirror
+          ? vm.type
+          : vm is MethodMirror ? vm.returnType : throw Exception();
+      var property = parseProperty(type, propertyName, metadata, isRequest);
       if (property != null) {
         properties[vm.simpleName] = property;
       }
