@@ -421,10 +421,9 @@ Assuming your @ApiClass class is in a file 'lib/server/cloudapi.dart' you would
 write:
 
 ```
-pub global activate rpc
 cd <your package directory>
 mkdir json
-pub global run rpc:generate discovery -i lib/server/cloudapi.dart > json/cloud.json
+pub run rpc:generate discovery -i lib/server/cloudapi.dart > json/cloud.json
 ```
 
 In order for the rpc:generate script to work the API class (@ApiClass class)
