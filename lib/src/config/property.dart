@@ -152,7 +152,7 @@ class DoubleProperty extends ApiConfigSchemaProperty {
   _singleRequestValue(value) {
     assert(value != null);
     if (value is num) {
-      return value;
+      return value.toDouble();
     }
     try {
       return double.parse(value);
