@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.9
+
+- Fix issue with DoubleProperty.
+
 ## 0.5.8
 
 - Rfc7232 specs restrictions on 204, 304 statuses (#106)
