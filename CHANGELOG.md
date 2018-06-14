@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.10
+
+- Widen constraints on `package:gcloud` dependency.
+- Widen constraints on `package:_discoveryapis_generator` dependency.
+
 ## 0.5.9
 
 - Fix issue with DoubleProperty.
