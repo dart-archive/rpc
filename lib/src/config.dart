@@ -96,8 +96,8 @@ class ParsedHttpApiRequest {
     var methodUri = Uri.parse(methodPathSegments.join('/'));
 
     ContentType contentType;
-    if (request.headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
-      final header = request.headers[HttpHeaders.CONTENT_TYPE];
+    if (request.headers.containsKey(HttpHeaders.contentTypeHeader)) {
+      final header = request.headers[HttpHeaders.contentTypeHeader];
 
       if (header is List) contentType = ContentType.parse(header.join(' '));
       else contentType = ContentType.parse(header);

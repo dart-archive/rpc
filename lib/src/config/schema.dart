@@ -177,7 +177,7 @@ class NamedMapSchema extends ApiConfigSchema {
     var encodedResult = {};
     // TODO: Performance optimization, we don't need to encode a map from
     // <String, primitive-type> since it is already the correct map.
-    (result as Map).forEach((String key, value) {
+    (result as Map<String, dynamic>).forEach((String key, value) {
       encodedResult[key] = _additionalProperty.toResponse(value);
     });
     return encodedResult;

@@ -30,8 +30,8 @@ class ApiServer {
   ApiServer({String apiPrefix, bool prettyPrint: false})
       : _apiPrefix = apiPrefix != null ? apiPrefix : '' {
     _jsonToBytes = prettyPrint
-        ? new JsonEncoder.withIndent(' ').fuse(UTF8.encoder)
-        : JSON.encoder.fuse(UTF8.encoder);
+        ? new JsonEncoder.withIndent(' ').fuse(utf8.encoder)
+        : json.encoder.fuse(utf8.encoder);
   }
 
   /// Getter for a simple dart:io HttpRequest handler.
@@ -41,7 +41,7 @@ class ApiServer {
           if (!request.uri.path.startsWith(_apiPrefix)) {
             await request.drain();
             apiResponse = new HttpApiResponse.error(
-                io.HttpStatus.NOT_IMPLEMENTED,
+                io.HttpStatus.notImplemented,
                 'Invalid request for path: ${request.uri.path}',
                 null,
                 null);
@@ -55,7 +55,7 @@ class ApiServer {
             exception = new Exception(exception.toString());
           }
           apiResponse = new HttpApiResponse.error(
-              io.HttpStatus.INTERNAL_SERVER_ERROR,
+              io.HttpStatus.internalServerError,
               exception.toString(),
               exception,
               stack);

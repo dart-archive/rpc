@@ -187,11 +187,11 @@ class ApiParser {
     var methods = [];
     // Parse all methods annotated with the @ApiMethod annotation on this class
     // instance.
-    classInstance.type.declarations.values.forEach((dm) {
+    classInstance.type.declarations.values.whereType<MethodMirror>().forEach((dm) {
       var metadata = _getMetadata(dm, ApiMethod);
       if (metadata == null) return null;
 
-      if (dm is! MethodMirror || !dm.isRegularMethod) {
+      if  (!dm.isRegularMethod) {
         // The @ApiMethod annotation is only supported on regular methods.
         var name = MirrorSystem.getName(dm.simpleName);
         addError('@ApiMethod annotation on non-method declaration: \'$name\'');
@@ -375,7 +375,7 @@ class ApiParser {
     if (requestParam.isNamed || requestParam.isOptional) {
       addError('Request parameter cannot be optional or named.');
     }
-    var requestType = requestParam.type;
+    var requestType = requestParam.type as ClassMirror;
 
     // Check if the request type is a List or Map and handle that explicitly.
     if (requestType.originalDeclaration == reflectClass(List)) {
@@ -395,7 +395,7 @@ class ApiParser {
 
   // Parses a method's return type and returns the equivalent ApiConfigSchema.
   ApiConfigSchema _parseMethodReturnType(MethodMirror mm) {
-    var returnType = mm.returnType;
+    var returnType = mm.returnType as ClassMirror;
     if (returnType.isSubtypeOf(reflectType(Future))) {
       var types = returnType.typeArguments;
       if (types.length == 1) {
@@ -529,8 +529,8 @@ class ApiParser {
     // If the schema is used as a request check that it has an unnamed default
     // constructor.
     if (isRequest) {
-      var methods = schemaClass.declarations.values
-          .where((mm) => mm is MethodMirror && mm.isConstructor);
+      var methods = schemaClass.declarations.values.whereType<MethodMirror>()
+          .where((mm) => mm.isConstructor);
       if (!methods.isEmpty &&
           methods
               .where((mm) => (mm.simpleName == schemaClass.simpleName &&
@@ -654,13 +654,13 @@ class ApiParser {
     }
 
     var properties = {};
-    schemaClass.declarations.values.forEach((vm) {
+    schemaClass.declarations.values.whereType<VariableMirror>().forEach((vm) {
       var metadata = _getMetadata(vm, ApiProperty);
       if (metadata == null) {
         // Generate a metadata with default values
         metadata = new ApiProperty();
       }
-      if (vm is! VariableMirror || vm.isConst || vm.isPrivate || vm.isStatic) {
+      if (vm.isConst || vm.isPrivate || vm.isStatic) {
         // We only serialize non-const, non-static public fields.
         return;
       }
@@ -831,11 +831,11 @@ class ApiParser {
               'with format: \'float\', must be in the range: '
               '[$SMALLEST_FLOAT, $LARGEST_FLOAT]');
         } else if (apiFormat == 'double' &&
-            (metadata.defaultValue < -double.MAX_FINITE ||
-                metadata.defaultValue > double.MAX_FINITE)) {
+            (metadata.defaultValue < -double.maxFinite ||
+                metadata.defaultValue > double.maxFinite)) {
           addError('$propertyName: Default value of: ${metadata.defaultValue} '
               'with format: \'double\', must be in the range: '
-              '[${-double.MAX_FINITE}, ${double.MAX_FINITE}]');
+              '[${-double.maxFinite}, ${double.maxFinite}]');
         }
       }
     }

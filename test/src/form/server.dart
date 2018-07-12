@@ -71,7 +71,7 @@ Future main() async {
   _apiServer.enableDiscoveryApi();
   _apiServer.addApi(new TestAPI());
 
-  final server = await HttpServer.bind(InternetAddress.ANY_IP_V4, 4242);
+  final server = await HttpServer.bind(InternetAddress.anyIPv4, 4242);
   server.listen((HttpRequest request) {
     _apiServer.httpRequestHandler(request);
   });

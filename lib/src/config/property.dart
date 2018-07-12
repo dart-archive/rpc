@@ -4,7 +4,7 @@
 
 part of rpc.config;
 
-class ApiConfigSchemaProperty {
+class ApiConfigSchemaProperty<T> {
   final String name;
   final String description;
   final bool required;
@@ -40,26 +40,26 @@ class ApiConfigSchemaProperty {
 
   bool get isSimple => true;
 
-  _singleRequestValue(value) {
+  _singleRequestValue(T value) {
     return value;
   }
 
-  fromRequest(value) {
+  fromRequest(T value) {
     if (value == null) return null;
     return _singleRequestValue(value);
   }
 
-  _singleResponseValue(value) {
+  _singleResponseValue(T value) {
     return value;
   }
 
-  toResponse(value) {
+  toResponse(T value) {
     if (value == null) return null;
     return _singleResponseValue(value);
   }
 }
 
-class IntegerProperty extends ApiConfigSchemaProperty {
+class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
   final int minValue;
   final int maxValue;
 
@@ -138,7 +138,7 @@ class IntegerProperty extends ApiConfigSchemaProperty {
   }
 }
 
-class DoubleProperty extends ApiConfigSchemaProperty {
+class DoubleProperty extends ApiConfigSchemaProperty<dynamic> {
   DoubleProperty(String name, String description, bool required,
       double defaultValue, String apiFormat)
       : super(
@@ -172,13 +172,13 @@ class DoubleProperty extends ApiConfigSchemaProperty {
   }
 }
 
-class StringProperty extends ApiConfigSchemaProperty {
+class StringProperty extends ApiConfigSchemaProperty<String> {
   StringProperty(
       String name, String description, bool required, String defaultValue)
       : super(name, description, required, defaultValue, 'string', null);
 }
 
-class EnumProperty extends ApiConfigSchemaProperty {
+class EnumProperty extends ApiConfigSchemaProperty<String> {
   final Map<String, String> _values;
 
   EnumProperty(String name, String description, bool required,
@@ -200,7 +200,7 @@ class EnumProperty extends ApiConfigSchemaProperty {
   }
 }
 
-class BooleanProperty extends ApiConfigSchemaProperty {
+class BooleanProperty extends ApiConfigSchemaProperty<dynamic> {
   BooleanProperty(
       String name, String description, bool required, bool defaultValue)
       : super(
@@ -227,7 +227,7 @@ class BooleanProperty extends ApiConfigSchemaProperty {
   }
 }
 
-class DateTimeProperty extends ApiConfigSchemaProperty {
+class DateTimeProperty extends ApiConfigSchemaProperty<dynamic> {
   DateTimeProperty(
       String name, String description, bool required, DateTime defaultValue)
       : super(
@@ -255,7 +255,7 @@ class DateTimeProperty extends ApiConfigSchemaProperty {
   }
 }
 
-class SchemaProperty extends ApiConfigSchemaProperty {
+class SchemaProperty extends ApiConfigSchemaProperty<Map> {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
@@ -280,7 +280,7 @@ class SchemaProperty extends ApiConfigSchemaProperty {
   bool get isSimple => false;
 }
 
-class ListProperty extends ApiConfigSchemaProperty {
+class ListProperty extends ApiConfigSchemaProperty<List> {
   final ApiConfigSchemaProperty _itemsProperty;
 
   ListProperty(
@@ -297,18 +297,18 @@ class ListProperty extends ApiConfigSchemaProperty {
     if (listObject is! List) {
       throw new BadRequestError('Invalid property, should be of type \'List\'');
     }
-    return (listObject as List).map(_itemsProperty.toResponse).toList();
+    return listObject.map(_itemsProperty.toResponse).toList();
   }
 
   _singleRequestValue(encodedList) {
     if (encodedList is! List) {
       throw new BadRequestError('Invalid list request value');
     }
-    return (encodedList as List).map(_itemsProperty.fromRequest).toList();
+    return encodedList.map(_itemsProperty.fromRequest).toList();
   }
 }
 
-class MapProperty extends ApiConfigSchemaProperty {
+class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>> {
   final ApiConfigSchemaProperty _additionalProperty;
 
   MapProperty(
@@ -322,23 +322,17 @@ class MapProperty extends ApiConfigSchemaProperty {
       super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
 
   _singleResponseValue(mapObject) {
-    if (mapObject is! Map) {
-      throw new BadRequestError('Invalid property, should be of type \'Map\'');
-    }
     var result = {};
-    (mapObject as Map).forEach((String key, object) {
+    mapObject.forEach((String key, object) {
       result[key] = _additionalProperty.toResponse(object);
     });
     return result;
   }
 
   _singleRequestValue(encodedMap) {
-    if (encodedMap is! Map) {
-      throw new BadRequestError('Invalid map request value');
-    }
     // Map from String to the type of the additional property.
     var result = {};
-    (encodedMap as Map).forEach((String key, encodedObject) {
+    encodedMap.forEach((String key, encodedObject) {
       result[key] = _additionalProperty.fromRequest(encodedObject);
     });
     return result;

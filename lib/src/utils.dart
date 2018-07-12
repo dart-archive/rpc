@@ -20,10 +20,10 @@ import 'discovery/config.dart' as discovery;
 const List<String> bodyLessMethods = const ['GET', 'DELETE'];
 const Map<String, dynamic> defaultResponseHeaders = const {
   // We always return json in the response.
-  HttpHeaders.CONTENT_TYPE: 'application/json; charset=utf-8',
-  HttpHeaders.CACHE_CONTROL: 'no-cache, no-store, must-revalidate',
-  HttpHeaders.PRAGMA: 'no-cache',
-  HttpHeaders.EXPIRES: '0',
+  HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
+  HttpHeaders.cacheControlHeader: 'no-cache, no-store, must-revalidate',
+  HttpHeaders.pragmaHeader: 'no-cache',
+  HttpHeaders.expiresHeader: '0',
   'access-control-allow-credentials': 'true',
   'access-control-allow-origin': '*',
 };
@@ -48,7 +48,7 @@ Future<HttpApiResponse> httpErrorResponse(
         error.statusCode, error.message, error, stack,
         errors: error.errors);
   } else {
-    response = new HttpApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
+    response = new HttpApiResponse.error(HttpStatus.internalServerError,
         'Unknown error occurred with API.', error, stack);
   }
   if (drainRequest) {

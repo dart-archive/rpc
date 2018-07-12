@@ -43,9 +43,9 @@ class CorrectInt {
 
   @ApiProperty(
       format: 'int64',
-      minValue: -0x8000000000000000, // -2^63
-      maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
-      defaultValue: -0x8000000000000000)
+      minValue: -0x7FFFFFFFFFFFFFFF, // -2^63+1
+      maxValue: 0x8000000000000000, // 2^63,
+      defaultValue: -0x7FFFFFFFFFFFFFFF)
   int aBoundedInt64;
 
   @ApiProperty(
@@ -130,30 +130,30 @@ class WrongInt {
 
   @ApiProperty(
       format: 'int64',
-      minValue: -0x8000000000000001, // -2^63-1
-      maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
-      defaultValue: 0x7FFFFFFFFFFFFFFF)
+      minValue: -0x7FFFFFFFFFFFFFFF, // -2^63+1
+      maxValue: 0x8000000000000000, // 2^63,
+      defaultValue: 0x8000000000000000)
   int anInt64TooSmallMin;
 
   @ApiProperty(
       format: 'int64',
-      minValue: -0x8000000000000000, // -2^63
+      minValue: -0x7FFFFFFFFFFFFFFF, // -2^63+1
       maxValue: 0x8000000000000000, // 2^63,
       defaultValue: 0x7FFFFFFFFFFFFFFF)
   int anInt64TooLargeMax;
 
   @ApiProperty(
       format: 'int64',
-      minValue: -0x8000000000000000, // -2^63
-      maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
+      minValue: -0x7FFFFFFFFFFFFFFF, // -2^63+1
+      maxValue: 0x8000000000000000, // 2^63,
       defaultValue: 0x8000000000000000)
   int anInt64TooLargeDefault;
 
   @ApiProperty(
       format: 'int64',
-      minValue: -0x8000000000000000, // -2^63
+      minValue: -0x7FFFFFFFFFFFFFFF, // -2^63+1
       maxValue: 0x7FFFFFFFFFFFFFFF, // 2^63-1,
-      defaultValue: -0x8000000000000001)
+      defaultValue: -0x7FFFFFFFFFFFFFFF)
   int anInt64TooSmallDefault;
 
   @ApiProperty(
@@ -166,7 +166,7 @@ class WrongInt {
   @ApiProperty(
       format: 'uint64',
       minValue: 0,
-      maxValue: 0x10000000000000000, // 2^64,
+      maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
       defaultValue: 0xFFFFFFFFFFFFFFFF)
   int anUInt64TooLargeMax;
 
@@ -174,7 +174,7 @@ class WrongInt {
       format: 'uint64',
       minValue: 0,
       maxValue: 0xFFFFFFFFFFFFFFFF, // 2^64-1,
-      defaultValue: 0x10000000000000000) // 2^64
+      defaultValue: 0xFFFFFFFFFFFFFFFF) // 2^64-1
   int anUInt64TooLargeDefault;
 
   @ApiProperty(

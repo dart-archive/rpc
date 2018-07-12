@@ -69,7 +69,7 @@ class HttpApiRequest {
 class HttpApiResponse {
   // We have an encoder for all the supported encodings.
   // Currently only json is supported.
-  static final _jsonToBytes = JSON.encoder.fuse(UTF8.encoder);
+  static final _jsonToBytes = json.encoder.fuse(utf8.encoder);
 
   /// Status of the response, e.g. 200 if success, 400 if bad request, etc.
   final int status;
