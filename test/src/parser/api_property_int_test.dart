@@ -43,9 +43,12 @@ class CorrectInt {
 
   @ApiProperty(
       format: 'int64',
-      minValue: -0x7FFFFFFFFFFFFFFF, // -2^63+1
-      maxValue: 0x8000000000000000, // 2^63,
-      defaultValue: -0x7FFFFFFFFFFFFFFF)
+      // These aren't actually out of range, but analyzer thinks they are?
+      // ignore: integer_literal_out_of_range
+      minValue: -0x8000000000000000, // -2^63
+      maxValue:  0x7FFFFFFFFFFFFFFF, // 2^63-1,
+      // ignore: integer_literal_out_of_range
+      defaultValue: -0x8000000000000000)
   int aBoundedInt64;
 
   @ApiProperty(
@@ -194,6 +197,7 @@ void main() {
       var parser = new ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectInt), true);
+      expect(parser.errors, isEmpty);
       expect(parser.isValid, isTrue);
       expect(parser.apiSchemas.length, 1);
       expect(parser.apiSchemas['CorrectInt'], apiSchema);
@@ -301,26 +305,15 @@ void main() {
         new ApiConfigError(
             'WrongInt: anUInt32TooSmallDefault: Default value: \'-1\' not in '
             'the range of an \'uint32\''),
-        new ApiConfigError(
-            'WrongInt: anInt64TooSmallMin: Min value: \'-9223372036854775809\' '
-            'not in the range of an \'int64\''),
-        new ApiConfigError(
-            'WrongInt: anInt64TooLargeMax: Max value: \'9223372036854775808\' '
-            'not in the range of an \'int64\''),
-        new ApiConfigError('WrongInt: anInt64TooLargeDefault: Default value: '
-            '\'9223372036854775808\' not in the range of an \'int64\''),
-        new ApiConfigError('WrongInt: anInt64TooSmallDefault: Default value: '
-            '\'-9223372036854775809\' not in the range of an \'int64\''),
-        new ApiConfigError(
-            'WrongInt: anUInt64TooSmallMin: Min value: \'-1\' not in the range '
-            'of an \'uint64\''),
-        new ApiConfigError('WrongInt: anUInt64TooLargeMax: Max value: '
-            '\'18446744073709551616\' not in the range of an \'uint64\''),
-        new ApiConfigError('WrongInt: anUInt64TooLargeDefault: Default value: '
-            '\'18446744073709551616\' not in the range of an \'uint64\''),
-        new ApiConfigError(
-            'WrongInt: anUInt64TooSmallDefault: Default value: \'-1\' not in '
-            'the range of an \'uint64\'')
+        // Because we're not using BigInts, it's actually impossible for the
+        // user to specify something outside the range of an int64 in Dart 2.
+        // Just make sure some sort of error is raised.
+        new ApiConfigError('WrongInt: anInt64TooSmallMin: Invalid min/max range: [-9223372036854775807, -9223372036854775808]. Min must be less than max.'),
+        new ApiConfigError('WrongInt: anInt64TooSmallMin: Default value must be >= -9223372036854775807.'),
+        new ApiConfigError('WrongInt: anInt64TooLargeMax: Invalid min/max range: [-9223372036854775807, -9223372036854775808]. Min must be less than max.'),
+        new ApiConfigError('WrongInt: anInt64TooLargeMax: Default value must be <= -9223372036854775808.'),
+        new ApiConfigError('WrongInt: anInt64TooLargeDefault: Invalid min/max range: [-9223372036854775807, -9223372036854775808]. Min must be less than max.'),
+        new ApiConfigError('WrongInt: anInt64TooLargeDefault: Default value must be >= -9223372036854775807.'),
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });

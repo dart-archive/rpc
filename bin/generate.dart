@@ -195,7 +195,7 @@ class ClientApiGenerator {
     });
   }
 
-  Future<List<String>> generateDiscovery() async {
+  Future<dynamic> generateDiscovery() async {
     return _withServer((HttpServer server) async {
       return await _execute(server.port, 'discovery');
     });
@@ -293,12 +293,12 @@ class ClientApiGenerator {
     }
   }
 
-  static Future _isolateTrampoline(List args) async {
+  static Future _isolateTrampoline(List<dynamic> args) async {
     SendPort messagePort = args[5];
     SendPort errorPort = args[6];
     return await Isolate.spawnUri(
       Uri.parse(args[0]),
-      [args[1], args[2], args[3], args[4]],
+      <String>[args[1].toString(), args[2].toString(), args[3].toString(), args[4].toString()],
       messagePort,
       onError: errorPort);
   }

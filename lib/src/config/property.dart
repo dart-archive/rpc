@@ -40,34 +40,34 @@ class ApiConfigSchemaProperty<T> {
 
   bool get isSimple => true;
 
-  _singleRequestValue(T value) {
+  T _singleRequestValue(T value) {
     return value;
   }
 
-  fromRequest(T value) {
+  T fromRequest(T value) {
     if (value == null) return null;
     return _singleRequestValue(value);
   }
 
-  _singleResponseValue(T value) {
+  T _singleResponseValue(T value) {
     return value;
   }
 
-  toResponse(T value) {
+  T toResponse(T value) {
     if (value == null) return null;
     return _singleResponseValue(value);
   }
 }
 
 class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
-  final int minValue;
-  final int maxValue;
+  final BigInt minValue;
+  final BigInt maxValue;
 
   IntegerProperty(
       String name,
       String description,
       bool required,
-      int defaultValue,
+      BigInt defaultValue,
       String apiType,
       String apiFormat,
       this.minValue,
@@ -117,10 +117,11 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
         throw new BadRequestError('Invalid integer format: $e');
       }
     }
-    if (minValue != null && value < minValue) {
+    var bigValue = BigInt.from(value);
+    if (minValue != null && bigValue < minValue) {
       throw new BadRequestError('$name needs to be >= $minValue');
     }
-    if (maxValue != null && value > maxValue) {
+    if (maxValue != null && bigValue > maxValue) {
       throw new BadRequestError('$name needs to be <= $maxValue');
     }
     return value;
@@ -255,7 +256,7 @@ class DateTimeProperty extends ApiConfigSchemaProperty<dynamic> {
   }
 }
 
-class SchemaProperty extends ApiConfigSchemaProperty<Map> {
+class SchemaProperty extends ApiConfigSchemaProperty<dynamic> {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
@@ -309,7 +310,7 @@ class ListProperty extends ApiConfigSchemaProperty<List> {
 }
 
 class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>> {
-  final ApiConfigSchemaProperty _additionalProperty;
+  final dynamic _additionalProperty;
 
   MapProperty(
       String name, String description, bool required, this._additionalProperty)
@@ -322,7 +323,7 @@ class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>> {
       super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
 
   _singleResponseValue(mapObject) {
-    var result = {};
+    var result = <String, dynamic>{};
     mapObject.forEach((String key, object) {
       result[key] = _additionalProperty.toResponse(object);
     });
@@ -331,7 +332,7 @@ class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>> {
 
   _singleRequestValue(encodedMap) {
     // Map from String to the type of the additional property.
-    var result = {};
+    var result = <String, dynamic>{};
     encodedMap.forEach((String key, encodedObject) {
       result[key] = _additionalProperty.fromRequest(encodedObject);
     });

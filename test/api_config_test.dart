@@ -667,7 +667,7 @@ void main() {
     test('request-parsing', () {
       var parser = new ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
-      var instance = m1.fromRequest({'requiredValue': 10});
+      TestMessage1 instance = m1.fromRequest({'requiredValue': 10});
       expect(instance, TypeMatcher<TestMessage1>());
       instance = m1.fromRequest({
         'count': 1,
@@ -685,7 +685,6 @@ void main() {
         'enumValue': 'test1',
         'limit': 50,
       });
-      expect(instance, TypeMatcher<TestMessage1>());
       expect(instance.count, 1);
       expect(instance.message, 'message');
       expect(instance.value, 12.3);
@@ -698,9 +697,7 @@ void main() {
       expect(instance.date.minute, 12);
       expect(instance.date.second, 13);
       expect(instance.date.millisecond, 456);
-      expect(instance.submessage, TypeMatcher<TestMessage2>());
       expect(instance.submessage.count, 4);
-      expect(instance.submessages, TypeMatcher<List<TestMessage2>>());
       expect(instance.submessages.length, 3);
       expect(instance.submessages[0].count, 5);
       expect(instance.submessages[1].count, 6);

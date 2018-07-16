@@ -131,7 +131,7 @@ class ApiParser {
   // Scan through all class instance fields and parse the ones annotated
   // with @ApiResource.
   Map<String, ApiConfigResource> _parseResources(InstanceMirror classInstance) {
-    var resources = {};
+    var resources = <String, ApiConfigResource>{};
 
     // Scan through the class instance's declarations and parse fields annotated
     // with the @ApiResource annotation.
@@ -184,7 +184,7 @@ class ApiParser {
   // Parse a specific instance's methods and return a list of ApiConfigMethod's
   // corresponding to each of the method's annotated with @ApiMethod.
   List<ApiConfigMethod> _parseMethods(InstanceMirror classInstance) {
-    var methods = [];
+    var methods = <ApiConfigMethod>[];
     // Parse all methods annotated with the @ApiMethod annotation on this class
     // instance.
     classInstance.type.declarations.values.whereType<MethodMirror>().forEach((dm) {
@@ -297,7 +297,7 @@ class ApiParser {
   // Parses a method's url path parameters and validates them against the
   // method signature.
   List<ApiParameter> _parsePathParameters(MethodMirror mm, String path) {
-    var pathParams = [];
+    var pathParams = <ApiParameter>[];
     if (path == null) return pathParams;
 
     // Parse the path to get the number and order of the path parameters
@@ -341,7 +341,7 @@ class ApiParser {
   // invocation.
   List<ApiParameter> _parseQueryParameters(
       MethodMirror mm, int queryParamIndex) {
-    var queryParams = [];
+    var queryParams = <ApiParameter>[];
     for (int i = queryParamIndex; i < mm.parameters.length; ++i) {
       var pm = mm.parameters[i];
       var paramName = MirrorSystem.getName(pm.simpleName);
@@ -375,7 +375,7 @@ class ApiParser {
     if (requestParam.isNamed || requestParam.isOptional) {
       addError('Request parameter cannot be optional or named.');
     }
-    var requestType = requestParam.type as ClassMirror;
+    var requestType = requestParam.type;
 
     // Check if the request type is a List or Map and handle that explicitly.
     if (requestType.originalDeclaration == reflectClass(List)) {
@@ -386,7 +386,7 @@ class ApiParser {
     }
     if (requestType is! ClassMirror ||
         requestType.simpleName == #dynamic ||
-        requestType.isAbstract) {
+        (requestType as ClassMirror).isAbstract) {
       addError('API Method parameter has to be an instantiable class.');
       return null;
     }
@@ -395,7 +395,7 @@ class ApiParser {
 
   // Parses a method's return type and returns the equivalent ApiConfigSchema.
   ApiConfigSchema _parseMethodReturnType(MethodMirror mm) {
-    var returnType = mm.returnType as ClassMirror;
+    var returnType = mm.returnType;
     if (returnType.isSubtypeOf(reflectType(Future))) {
       var types = returnType.typeArguments;
       if (types.length == 1) {
@@ -432,7 +432,7 @@ class ApiParser {
     }
     if (returnType is! ClassMirror ||
         returnType.simpleName == #dynamic ||
-        returnType.isAbstract) {
+        (returnType as ClassMirror).isAbstract) {
       addError('API Method return type has to be a instantiable class.');
       return null;
     }
@@ -653,7 +653,7 @@ class ApiParser {
       }
     }
 
-    var properties = {};
+    var properties = <Symbol, ApiConfigSchemaProperty>{};
     schemaClass.declarations.values.whereType<VariableMirror>().forEach((vm) {
       var metadata = _getMetadata(vm, ApiProperty);
       if (metadata == null) {
@@ -696,6 +696,8 @@ class ApiParser {
     }
     switch (propertyType.reflectedType) {
       case int:
+        return parseIntegerProperty(propertyName, metadata);
+      case BigInt:
         return parseIntegerProperty(propertyName, metadata);
       case double:
         return parseDoubleProperty(propertyName, metadata);
@@ -752,8 +754,8 @@ class ApiParser {
     if (_parseInt(metadata.minValue, apiFormat, propertyName, 'Min') &&
         _parseInt(metadata.maxValue, apiFormat, propertyName, 'Max')) {
       // Check that min is less than max.
-      var min = metadata.minValue;
-      var max = metadata.maxValue;
+      var min = metadata.minValueBigInt;
+      var max = metadata.maxValueBigInt;
       if (min > max) {
         addError('$propertyName: Invalid min/max range: [$min, $max]. Min must '
             'be less than max.');
@@ -766,11 +768,11 @@ class ApiParser {
         propertyName,
         metadata.description,
         metadata.required,
-        metadata.defaultValue,
+        metadata.defaultValueBigInt,
         apiType,
         apiFormat,
-        metadata.minValue,
-        metadata.maxValue);
+        metadata.minValueBigInt,
+        metadata.maxValueBigInt);
   }
 
   // Parses a value to determine if it is a valid integer value.
@@ -793,16 +795,16 @@ class ApiParser {
   }
 
   _parseIntDefault(ApiProperty metadata, String format, String name) {
-    var defaultValue = metadata.defaultValue;
+    var defaultValue = metadata.defaultValueBigInt;
     if (!_parseInt(metadata.defaultValue, format, name, 'Default')) {
       // If no defaultValue, just return.
       return;
     }
-    if (metadata.minValue != null && defaultValue < metadata.minValue) {
-      addError('$name: Default value must be >= ${metadata.minValue}.');
+    if (metadata.minValue != null && defaultValue < metadata.minValueBigInt) {
+      addError('$name: Default value must be >= ${metadata.minValueBigInt}.');
     }
-    if (metadata.maxValue != null && defaultValue > metadata.maxValue) {
-      addError('$name: Default value must be <= ${metadata.maxValue}.');
+    if (metadata.maxValue != null && defaultValue > metadata.maxValueBigInt) {
+      addError('$name: Default value must be <= ${metadata.maxValueBigInt}.');
     }
   }
 

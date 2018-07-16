@@ -291,17 +291,17 @@ main() async {
 
   Future<HttpApiResponse> _sendRequest(String method, String path,
       {String api: 'testAPI/v1/',
-      extraHeaders: const {},
+      extraHeaders: const <String, dynamic>{},
       String query: '',
       body,
       List<Cookie> cookies}) {
-    var headers = {'content-type': 'application/json'};
+    var headers = <String, dynamic>{'content-type': 'application/json'};
     headers.addAll(extraHeaders);
     var bodyStream;
     if ((method == 'POST' || method == 'PUT') && body != 'empty') {
-      bodyStream = new Stream.fromIterable([utf8.encode(jsonEncode(body))]);
+      bodyStream = new Stream<List<int>>.fromIterable([utf8.encode(jsonEncode(body))]);
     } else {
-      bodyStream = new Stream.fromIterable([]);
+      bodyStream = new Stream<List<int>>.fromIterable([]);
     }
     assert(query.isEmpty || query.startsWith('?'));
     Uri uri = Uri.parse('http://server/$api$path$query');
@@ -1131,7 +1131,7 @@ main() async {
   });
 
   group('api-invoke-options', () {
-    Map extraHeaders(List<String> methods, {bool asString: false}) => {
+    Map<String, dynamic> extraHeaders(dynamic methods, {bool asString: false}) => {
           'access-control-request-method':
               asString ? methods.join(',') : methods,
           'access-control-request-headers': 'content-type'

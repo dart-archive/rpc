@@ -100,12 +100,24 @@ class ApiProperty {
 
   /// Default value for this property if it's not supplied.
   final defaultValue;
+  BigInt get defaultValueBigInt {
+    if (defaultValue == null) return null;
+    return this.format == 'uint64' ? BigInt.from(defaultValue).toUnsigned(64) : BigInt.from(defaultValue);
+  }
 
   /// For int properties: the minimal value.
   final int minValue;
+  BigInt get minValueBigInt {
+    if (minValue == null) return null;
+    return BigInt.from(minValue);
+  }
 
   /// For int properties: the maximal value.
   final int maxValue;
+  BigInt get maxValueBigInt {
+    if (maxValue == null) return null;
+    return this.format == 'uint64' ? BigInt.from(maxValue).toUnsigned(64) : BigInt.from(maxValue);
+  }
 
   /// Possible values for enum properties, as value - description pairs.
   ///  Properties using this will have to be String.

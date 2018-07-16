@@ -47,34 +47,37 @@ class ApiConfigSchema {
     }
     InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
     for (Symbol sym in _properties.keys) {
-      final prop = _properties[sym];
-
-      if (request.containsKey(prop.name)) {
-        // MediaMessage special case
-        if (request[prop.name] is MediaMessage ||
-            request[prop.name] is List<MediaMessage>) {
-          // If in form, there is an (input[type="file"] multiple) and the user
-          // put only one file. It's not an error and it should be accept.
-          // Maybe it cans be optimized.
-          if (schema.type.instanceMembers[sym]
-                      .returnType
-                      .reflectedType
-                      .toString() ==
-                  'List<MediaMessage>' &&
-              request[prop.name] is MediaMessage) {
-            schema.setField(sym, [request[prop.name]]);
-          } else if (request[prop.name] is List) {
-            schema.setField(sym, prop.fromRequest(request[prop.name]));
+      final ApiConfigSchemaProperty prop = _properties[sym];
+      try {
+        if (request.containsKey(prop.name)) {
+          // MediaMessage special case
+          if (request[prop.name] is MediaMessage ||
+              request[prop.name] is List<MediaMessage>) {
+            // If in form, there is an (input[type="file"] multiple) and the user
+            // put only one file. It's not an error and it should be accept.
+            // Maybe it cans be optimized.
+            if (schema.type.instanceMembers[sym]
+                .returnType
+                .reflectedType
+                .toString() ==
+                'List<MediaMessage>' &&
+                request[prop.name] is MediaMessage) {
+              schema.setField(sym, [request[prop.name]]);
+            } else if (request[prop.name] is List) {
+              schema.setField(sym, prop.fromRequest(request[prop.name]));
+            } else {
+              schema.setField(sym, request[prop.name]);
+            }
           } else {
-            schema.setField(sym, request[prop.name]);
+            schema.setField(sym, prop.fromRequest(request[prop.name]));
           }
-        } else {
-          schema.setField(sym, prop.fromRequest(request[prop.name]));
+        } else if (prop.hasDefault) {
+          schema.setField(sym, prop.fromRequest(prop.defaultValue));
+        } else if (prop.required) {
+          throw new BadRequestError('Required field ${prop.name} is missing');
         }
-      } else if (prop.hasDefault) {
-        schema.setField(sym, prop.fromRequest(prop.defaultValue));
-      } else if (prop.required) {
-        throw new BadRequestError('Required field ${prop.name} is missing');
+      } catch (TypeError, e) {
+        throw BadRequestError('Field ${prop.name} has wrong type:  ${e}');
       }
     }
     return schema.reflectee;
