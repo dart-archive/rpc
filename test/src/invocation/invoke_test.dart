@@ -341,7 +341,7 @@ main() async {
       // Now check that the returned JSON contains the list of errors
       var body = await _decodeBody(response.body);
       expect(body['error'].containsKey('errors'), isTrue);
-      List<RpcErrorDetail> errors = body['error']['errors'];
+      List errors = body['error']['errors'];
       expect(errors.length, 2);
       expect(errors.first, {
         'reason': 'FailureByDesign',

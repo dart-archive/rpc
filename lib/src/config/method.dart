@@ -255,7 +255,7 @@ class ApiConfigMethod {
           }
         }
 
-        resultBody = new Stream.fromIterable([resultAsBytes]);
+        resultBody = new Stream<List<int>>.fromIterable([resultAsBytes]);
         statusCode = HttpStatus.ok;
       } else {
         resultBody = null;
