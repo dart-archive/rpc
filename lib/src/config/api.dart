@@ -75,7 +75,7 @@ class ApiConfig extends ApiConfigResource {
     }
 
     // Create OPTIONS response.
-    var headers = new Map.from(defaultResponseHeaders);
+    var headers = new Map<String, dynamic>.from(defaultResponseHeaders);
     if (allowed.isNotEmpty) {
       var allowedMethods = valueAsString ? allowed.join(',') : allowed;
       headers[HttpHeaders.allowHeader] = allowedMethods;

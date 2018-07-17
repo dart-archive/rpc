@@ -48,10 +48,10 @@ class TestMessage2 {
 
 class TestMessage3 {
   @ApiProperty(format: 'int64')
-  int count64;
+  BigInt count64;
 
   @ApiProperty(format: 'uint64')
-  int count64u;
+  BigInt count64u;
 
   @ApiProperty(format: 'int32')
   int count32;

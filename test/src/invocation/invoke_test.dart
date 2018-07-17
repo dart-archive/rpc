@@ -71,7 +71,7 @@ class Int32Message {
 
 class Int64Message {
   @ApiProperty(format: 'int64')
-  int anInt;
+  BigInt anInt;
 }
 
 class StringMessage {
@@ -155,8 +155,8 @@ class GetAPI {
   }
 
   @ApiMethod(path: 'get/int64/{value}')
-  Int64Message getInt64(int value) {
-    return new Int64Message()..anInt = value;
+  Int64Message getInt64(String value) {
+    return new Int64Message()..anInt = BigInt.parse(value);
   }
 
   @ApiMethod(path: 'get/response')
@@ -633,7 +633,7 @@ main() async {
           '\'null\', should be an instance of type \'MinMaxIntMessage\'.');
     });
     test('reverse-list', () async {
-      var body = [1, 2, 3];
+      var body = ['1', '2', '3'];
       HttpApiResponse response =
           await _sendRequest('POST', 'post/reverseList', body: body);
       expect(response.status, HttpStatus.ok);
@@ -738,7 +738,7 @@ main() async {
       var result = await _decodeBody(response.body);
       var expectedResult = {
         'kind': 'discovery#restDescription',
-        'etag': 'b84bbbc4efcd363eccdc86066621cc34bdb49e1c',
+        'etag': 'd3394f493f7d47219e75f0449614c673bb2fd045',
         'discoveryVersion': 'v1',
         'id': 'testAPI:v1',
         'name': 'testAPI',
@@ -956,7 +956,7 @@ main() async {
                 'httpMethod': 'GET',
                 'parameters': {
                   'value': {
-                    'type': 'integer',
+                    'type': 'string',
                     'description': 'Path parameter: \'value\'.',
                     'required': true,
                     'location': 'path'

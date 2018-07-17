@@ -696,7 +696,13 @@ class ApiParser {
     }
     switch (propertyType.reflectedType) {
       case int:
-        return parseIntegerProperty(propertyName, metadata);
+        if (metadata.format == null || metadata.format.endsWith('32')) {
+          return parseIntegerProperty(propertyName, metadata);
+        } else {
+          addError('$propertyName: 64 bit integers must be of type BigInt');
+          return null;
+        }
+        break;
       case BigInt:
         return parseIntegerProperty(propertyName, metadata);
       case double:
@@ -749,30 +755,48 @@ class ApiParser {
       apiType = 'string';
     } else {
       addError('$propertyName: Invalid integer variant: $apiFormat. Supported '
-          'variants are: int32, uint32, int64, uint64.');
+          'variants are: int32, uint32, int64, uint64');
     }
-    if (_parseInt(metadata.minValue, apiFormat, propertyName, 'Min') &&
-        _parseInt(metadata.maxValue, apiFormat, propertyName, 'Max')) {
+    var min;
+    var max;
+    dynamic defaultValue;
+    if (apiFormat.endsWith('64')) {
+      min = metadata.minValue == null ? null : BigInt.parse(metadata.minValue);
+      max = metadata.maxValue == null ? null : BigInt.parse(metadata.maxValue);
+      defaultValue = metadata.defaultValue == null ? null : BigInt.parse(metadata.defaultValue);
+    } else {
+      min = metadata.minValue;
+      max = metadata.maxValue;
+      defaultValue = metadata.defaultValue;
+    }
+    if (_parseInt(min, apiFormat, propertyName, 'Min') &&
+        _parseInt(max, apiFormat, propertyName, 'Max')) {
       // Check that min is less than max.
-      var min = metadata.minValueBigInt;
-      var max = metadata.maxValueBigInt;
       if (min > max) {
         addError('$propertyName: Invalid min/max range: [$min, $max]. Min must '
             'be less than max.');
       }
       // We only parse the default if min/max are valid since we need them to
       // do the range checking.
-      _parseIntDefault(metadata, apiFormat, propertyName);
+
+      if (_parseInt(defaultValue, apiFormat, propertyName, 'Default')) {
+        if (defaultValue < min) {
+          addError('$propertyName: Default value must be >= ${min}.');
+        }
+        if (defaultValue > max) {
+          addError('$propertyName: Default value must be <= ${max}.');
+        }
+      }
     }
     return new IntegerProperty(
         propertyName,
         metadata.description,
         metadata.required,
-        metadata.defaultValueBigInt,
+        defaultValue,
         apiType,
         apiFormat,
-        metadata.minValueBigInt,
-        metadata.maxValueBigInt);
+        min,
+        max);
   }
 
   // Parses a value to determine if it is a valid integer value.
@@ -780,8 +804,11 @@ class ApiParser {
   bool _parseInt(
       dynamic value, String format, String name, String messagePrefix) {
     if (value == null) return false;
-    if (value is! int) {
-      addError('$name: $messagePrefix value must be of type: int.');
+    if (format.endsWith('64') && value is! BigInt) {
+      addError('$name: $messagePrefix value must be of type: BigInt');
+      return false;
+    } else if (value is! int && value is! BigInt) {
+      addError('$name: $messagePrefix value must be of type: int or BigInt');
       return false;
     } else if (format == 'int32' && value != value.toSigned(32) ||
         format == 'uint32' && value != value.toUnsigned(32) ||
@@ -792,20 +819,6 @@ class ApiParser {
       return false;
     }
     return true;
-  }
-
-  _parseIntDefault(ApiProperty metadata, String format, String name) {
-    var defaultValue = metadata.defaultValueBigInt;
-    if (!_parseInt(metadata.defaultValue, format, name, 'Default')) {
-      // If no defaultValue, just return.
-      return;
-    }
-    if (metadata.minValue != null && defaultValue < metadata.minValueBigInt) {
-      addError('$name: Default value must be >= ${metadata.minValueBigInt}.');
-    }
-    if (metadata.maxValue != null && defaultValue > metadata.maxValueBigInt) {
-      addError('$name: Default value must be <= ${metadata.maxValueBigInt}.');
-    }
   }
 
   // Parses a 'double' property.

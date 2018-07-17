@@ -34,8 +34,9 @@ main() {
     packagePath = Directory.systemTemp.createTempSync('rpc_generator_tests').path;
     new Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
-      new File(join(dataPath, 'pubspec.yamll'))
-          .copySync(join(absolute(packagePath), 'pubspec.yaml'));
+      var source = new File(join(dataPath, 'pubspec.yamll')).readAsStringSync();
+      var destFile = new File(join(absolute(packagePath), 'pubspec.yaml'));
+      destFile.writeAsStringSync(source.replaceAll('_path_to_rpc_', rpcRootPath));
     }
   }
 

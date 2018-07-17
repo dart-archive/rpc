@@ -158,7 +158,7 @@ class ApiServer {
       // The Discovery API has not been enabled for this ApiServer.
       throw new BadRequestError('Discovery API not enabled.');
     }
-    var apiDirectory = [];
+    var apiDirectory = <DirectoryListItems>[];
     _apis.values.forEach((api) => apiDirectory.add(api.asDirectoryListItem));
     return apiDirectory;
   }

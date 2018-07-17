@@ -60,14 +60,14 @@ class ApiConfigSchemaProperty<T> {
 }
 
 class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
-  final BigInt minValue;
-  final BigInt maxValue;
+  final dynamic minValue;
+  final dynamic maxValue;
 
   IntegerProperty(
       String name,
       String description,
       bool required,
-      BigInt defaultValue,
+      dynamic defaultValue,
       String apiType,
       String apiFormat,
       this.minValue,
@@ -80,12 +80,16 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
             apiType,
             apiFormat);
 
-  _singleResponseValue(value) {
+  _singleResponseValue(dynamic value) {
     assert(value != null);
-    if (value is! int) {
+    if (_apiFormat.endsWith('64') && value is! String && value is! BigInt) {
+      throw new InternalServerError(
+          'Trying to return non-BigInt: \'$value\' in 64-bit integer property');
+    } else if (value is! int && value is! BigInt) {
       throw new InternalServerError(
           'Trying to return non-integer: \'$value\' in integer property');
     }
+    if (value is String) value = BigInt.parse(value);
     if (minValue != null && value < minValue) {
       throw new InternalServerError(
           'Return value \'$value\' smaller than minimum value \'$minValue\'');
@@ -108,20 +112,23 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
         'property range.');
   }
 
-  _singleRequestValue(value) {
+  _singleRequestValue(dynamic value) {
     assert(value != null);
-    if (value is! int) {
+    if (value is! int && value is! BigInt) {
       try {
-        value = int.parse(value);
+        if (_apiFormat.endsWith('32')) {
+          value = int.parse(value);
+        } else {
+          value = BigInt.parse(value);
+        }
       } on FormatException catch (e) {
         throw new BadRequestError('Invalid integer format: $e');
       }
     }
-    var bigValue = BigInt.from(value);
-    if (minValue != null && bigValue < minValue) {
+    if (minValue != null && value < minValue) {
       throw new BadRequestError('$name needs to be >= $minValue');
     }
-    if (maxValue != null && bigValue > maxValue) {
+    if (maxValue != null && value > maxValue) {
       throw new BadRequestError('$name needs to be <= $maxValue');
     }
     return value;

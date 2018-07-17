@@ -651,12 +651,12 @@ void main() {
     test('variants', () {
       var parser = new ApiParser();
       var message = parser.parseSchema(reflectClass(TestMessage3), true);
-      var instance = message.fromRequest(
+      TestMessage3 instance = message.fromRequest(
           {'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
       expect(instance.count32, 1);
       expect(instance.count32u, 2);
-      expect(instance.count64, 3);
-      expect(instance.count64u, 4);
+      expect(instance.count64, BigInt.from(3));
+      expect(instance.count64u, BigInt.from(4));
       var json = message.toResponse(instance);
       expect(json['count32'], 1);
       expect(json['count32u'], 2);

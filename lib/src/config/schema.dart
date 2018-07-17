@@ -76,7 +76,7 @@ class ApiConfigSchema {
         } else if (prop.required) {
           throw new BadRequestError('Required field ${prop.name} is missing');
         }
-      } catch (TypeError, e) {
+      } on TypeError catch (e) {
         throw BadRequestError('Field ${prop.name} has wrong type:  ${e}');
       }
     }
@@ -180,7 +180,7 @@ class NamedMapSchema extends ApiConfigSchema {
     var encodedResult = {};
     // TODO: Performance optimization, we don't need to encode a map from
     // <String, primitive-type> since it is already the correct map.
-    (result as Map<String, dynamic>).forEach((String key, value) {
+    (result as Map<dynamic, dynamic>).forEach((key, value) {
       encodedResult[key] = _additionalProperty.toResponse(value);
     });
     return encodedResult;

@@ -206,7 +206,7 @@ class ClientApiGenerator {
       Map<String, Map<String, String>> result =
           await _execute(server.port, 'discoveryWithImports');
       // Map the result from the isolate to a list of DescriptionImportPairs.
-      var descriptions = [];
+      var descriptions = <DescriptionImportPair>[];
       result.forEach((description, importMap) {
         var diPair = new DescriptionImportPair(description, importMap);
         descriptions.add(diPair);
@@ -264,7 +264,7 @@ class ClientApiGenerator {
     return completer.future;
   }
 
-  _withServer(f(HttpServer server)) async {
+  Future<T> _withServer<T>(f(HttpServer server)) async {
     Future _httpSourceLoader(HttpRequest request) async {
       var path = request.uri.path;
       if (path.contains('/packages/')) {
@@ -333,19 +333,19 @@ class ClientApiGenerator {
       // Document and call the respective generator method.
       var result;
       String cmd = args[1];
-      int apiPort = args[2];
+      int apiPort = int.parse(args[2]);
       String apiPrefix = args[3] == null ? '' : args[3];
-      try {
+      //try {
         if (cmd == 'discoveryWithImports') {
           result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
         } else {
           assert(cmd == 'discovery');
           result = await generateDiscovery(lm, apiPort, apiPrefix);
         }
-      } catch (error) {
-        print('Failed executing command \\'\$cmd\\' with error:\\n\\n\$error');
-        exit(1);
-      }
+      //} catch (error) {
+      //  print('Failed executing command \\'\$cmd\\' with error:\\n\\n\$error');
+      //  exit(1);
+      //}
       sendPort.send(result);
     }
 
@@ -353,7 +353,7 @@ class ClientApiGenerator {
     // given Library.
     Future<Map<String, Map<String, String>>> generateDiscoveryWithImports(
         LibraryMirror lm, int apiPort, String apiPrefix) async {
-      var result = {};
+      var result = <String, Map<String, String>>{};
       for (var dm in lm.declarations.values) {
         var api = _validateAndCreateApiInstance(dm);
         if (api == null) continue;
@@ -387,7 +387,7 @@ class ClientApiGenerator {
     Future<List<String>> generateDiscovery(LibraryMirror lm,
                                            int apiPort,
                                            String apiPrefix) async {
-      var result = [];
+      var result = <String>[];
       for (var dm in lm.declarations.values) {
         var api = _validateAndCreateApiInstance(dm);
         if (api == null) continue;
