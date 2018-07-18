@@ -761,9 +761,21 @@ class ApiParser {
     var max;
     dynamic defaultValue;
     if (apiFormat.endsWith('64')) {
-      min = metadata.minValue == null ? null : BigInt.parse(metadata.minValue);
-      max = metadata.maxValue == null ? null : BigInt.parse(metadata.maxValue);
-      defaultValue = metadata.defaultValue == null ? null : BigInt.parse(metadata.defaultValue);
+      if (metadata.minValue is String) {
+        min = metadata.minValue == null ? null : BigInt.parse(metadata.minValue);
+      } else {
+        addError('$propertyName: minValue for 64 bit integers must be specified as String');
+      }
+      if (metadata.maxValue is String) {
+        max = metadata.maxValue == null ? null : BigInt.parse(metadata.maxValue);
+      } else {
+        addError('$propertyName: maxValue for 64 bit integers must be specified as String');
+      }
+      if (metadata.defaultValue is String) {
+        defaultValue = metadata.defaultValue == null ? null : BigInt.parse(metadata.defaultValue);
+      } else {
+        addError('$propertyName: defaultValue for 64 bit integers must be specified as String');
+      }
     } else {
       min = metadata.minValue;
       max = metadata.maxValue;
