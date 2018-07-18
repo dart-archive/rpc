@@ -55,6 +55,12 @@ class CorrectInt {
       defaultValue: '0xFFFFFFFFFFFFFFFF')
   BigInt aBoundedUInt64;
 
+  @ApiProperty(format: 'int64')
+  BigInt unBoundedInt64;
+
+  @ApiProperty(format: 'uint64')
+  BigInt unBoundedUInt64;
+
   @ApiProperty(ignore: true)
   int ignored;
 }
@@ -264,6 +270,14 @@ void main() {
             'format': 'uint64',
             'minimum': '0',
             'maximum': '18446744073709551615'
+          },
+          'unBoundedInt64': {
+            'type': 'string',
+            'format': 'int64',
+          },
+          'unBoundedUInt64': {
+            'type': 'string',
+            'format': 'uint64',
           }
         }
       };

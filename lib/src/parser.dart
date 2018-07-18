@@ -760,27 +760,26 @@ class ApiParser {
     var min;
     var max;
     dynamic defaultValue;
-    if (apiFormat.endsWith('64')) {
-      if (metadata.minValue is String) {
-        min = metadata.minValue == null ? null : BigInt.parse(metadata.minValue);
-      } else {
-        addError('$propertyName: minValue for 64 bit integers must be specified as String');
+
+    /// Return v as it was, or via parsing a String if this is a 64 bit
+    /// property.
+    dynamic _convertMetadataValue(dynamic v, String name) {
+      if (apiFormat.endsWith('64')) {
+        if (v is String) {
+          return BigInt.parse(v);
+        } else {
+          if (v != null) {
+            addError('$propertyName: $name for 64 bit integers must be specified as String');
+          }
+          return null;
+        }
       }
-      if (metadata.maxValue is String) {
-        max = metadata.maxValue == null ? null : BigInt.parse(metadata.maxValue);
-      } else {
-        addError('$propertyName: maxValue for 64 bit integers must be specified as String');
-      }
-      if (metadata.defaultValue is String) {
-        defaultValue = metadata.defaultValue == null ? null : BigInt.parse(metadata.defaultValue);
-      } else {
-        addError('$propertyName: defaultValue for 64 bit integers must be specified as String');
-      }
-    } else {
-      min = metadata.minValue;
-      max = metadata.maxValue;
-      defaultValue = metadata.defaultValue;
+      return v;
     }
+    min = _convertMetadataValue(metadata.minValue, 'minValue');
+    max = _convertMetadataValue(metadata.maxValue, 'maxValue');
+    defaultValue = _convertMetadataValue(metadata.defaultValue, 'defaultValue');
+
     if (_parseInt(min, apiFormat, propertyName, 'Min') &&
         _parseInt(max, apiFormat, propertyName, 'Max')) {
       // Check that min is less than max.

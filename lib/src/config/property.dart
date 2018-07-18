@@ -116,10 +116,10 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
     assert(value != null);
     if (value is! int && value is! BigInt) {
       try {
-        if (_apiFormat.endsWith('32')) {
-          value = int.parse(value);
-        } else {
+        if (_apiFormat.endsWith('64')) {
           value = BigInt.parse(value);
+        } else {
+          value = int.parse(value);
         }
       } on FormatException catch (e) {
         throw new BadRequestError('Invalid integer format: $e');
