@@ -187,7 +187,7 @@ class ApiConfigMethod {
             stack: stack, drainRequest: false);
       }
       rpcLogger.fine('Method returned result: $apiResult');
-      var resultAsJson;
+      dynamic resultAsJson = {};
       var resultBody;
       var statusCode;
       if (_responseSchema != null && _responseSchema.containsData) {
@@ -287,7 +287,7 @@ class ApiConfigMethod {
     assert(_requestSchema != null);
     // Decode request body parameters to json.
     // TODO: support other encodings
-    var decodedRequest;
+    dynamic decodedRequest = {};
     try {
       if (_requestSchema.containsData) {
         decodedRequest = (await parseRequestBody(request)).body;

@@ -49,13 +49,14 @@ ArgParser globalArgParser() {
     ..addFlag('help', abbr: 'h', help: 'Displays usage information.');
 }
 
-// ignore: missing_return
 ArgResults parseArguments(ArgParser parser, List<String> arguments) {
+  ArgResults parsedArguments;
   try {
-    return parser.parse(arguments);
+    parsedArguments = parser.parse(arguments);
   } on FormatException catch (e) {
     dieWithUsage('Error parsing arguments:\n${e.message}\n');
   }
+  return parsedArguments;
 }
 
 void dieWithUsage([String message]) {
@@ -335,17 +336,12 @@ class ClientApiGenerator {
       String cmd = args[1];
       int apiPort = int.parse(args[2]);
       String apiPrefix = args[3] == null ? '' : args[3];
-      //try {
-        if (cmd == 'discoveryWithImports') {
-          result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
-        } else {
-          assert(cmd == 'discovery');
-          result = await generateDiscovery(lm, apiPort, apiPrefix);
-        }
-      //} catch (error) {
-      //  print('Failed executing command \\'\$cmd\\' with error:\\n\\n\$error');
-      //  exit(1);
-      //}
+      if (cmd == 'discoveryWithImports') {
+        result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
+      } else {
+        assert(cmd == 'discovery');
+        result = await generateDiscovery(lm, apiPort, apiPrefix);
+      }
       sendPort.send(result);
     }
 

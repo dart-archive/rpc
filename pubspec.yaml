@@ -15,8 +15,6 @@ dependencies:
   logging: '>=0.9.3 <0.12.0'
   mime: '>=0.9.3 <1.0.0'
   path: '>=1.3.4 <2.0.0'
-  #uri: '>=0.9.3 <0.12.0'
-  uri:
-    path: '../uri.dart'
+  uri: '^0.11.3'
 dev_dependencies:
   test: '^1.2.0'

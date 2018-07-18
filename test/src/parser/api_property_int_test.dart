@@ -43,10 +43,8 @@ class CorrectInt {
 
   @ApiProperty(
       format: 'int64',
-      // ignore: integer_literal_out_of_range
       minValue: "-0x8000000000000000", // -2^63
       maxValue: "0x7FFFFFFFFFFFFFFF", // 2^63-1,
-      // ignore: integer_literal_out_of_range
       defaultValue: "-0x8000000000000000")
   BigInt aBoundedInt64;
 
