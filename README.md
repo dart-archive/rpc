@@ -1,5 +1,7 @@
 # RPC
 
+[![Build Status](https://travis-ci.org/dart-lang/rpc.svg?branch=master)](https://travis-ci.org/dart-lang/rpc)
+
 ### Description
 
 Light-weight RPC package for creating RESTful server-side Dart APIs. The package

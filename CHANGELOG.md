@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0.dev.0
+
+- Many internal changes for Dart 2.0.  This version will no longer run on Dart 1.x.
+- ApiProperty declarations for 64 bit integers now require BigInt type, and clients must use
+  Strings for minValue, maxValue, and defaultValue.
+
 ## 0.5.10
 
 - Widen constraints on `package:gcloud` dependency.
