@@ -4,11 +4,13 @@
 
 part of rpc.config;
 
-class ApiConfigSchemaProperty<T> {
+/// [D] is the type used in Dart code.  [J] is the type used in JSON.
+class ApiConfigSchemaProperty<D, J> {
   final String name;
   final String description;
   final bool required;
 
+  // TODO(jcollins-g): This would be better as [J] rather than [String].
   final String defaultValue;
   bool get hasDefault => (defaultValue != null);
 
@@ -40,26 +42,30 @@ class ApiConfigSchemaProperty<T> {
 
   bool get isSimple => true;
 
-  T _singleRequestValue(T value) {
-    return value;
+  /// Convert JSON value to the underlying Dart type.  Default implementation
+  /// requires that [J] can be casted to [D].
+  D _fromRequest(J value) {
+    return value as D;
   }
 
-  T fromRequest(T value) {
+  D fromRequest(J value) {
     if (value == null) return null;
-    return _singleRequestValue(value);
+    return _fromRequest(value);
   }
 
-  T _singleResponseValue(T value) {
-    return value;
+  /// Convert Dart type to the corresponding JSON value.  Default implementation
+  /// requires that [D] can be casted to [J].
+  J _toResponse(D value) {
+    return value as J;
   }
 
-  T toResponse(T value) {
+  J toResponse(D value) {
     if (value == null) return null;
-    return _singleResponseValue(value);
+    return _toResponse(value);
   }
 }
 
-class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
+class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
   final dynamic minValue;
   final dynamic maxValue;
 
@@ -80,7 +86,7 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
             apiType,
             apiFormat);
 
-  _singleResponseValue(dynamic value) {
+  _toResponse(value) {
     assert(value != null);
     if (_apiFormat.endsWith('64') && value is! String && value is! BigInt) {
       throw new InternalServerError(
@@ -112,7 +118,7 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
         'property range.');
   }
 
-  _singleRequestValue(dynamic value) {
+  _fromRequest(value) {
     assert(value != null);
     if (value is! int && value is! BigInt) {
       try {
@@ -146,7 +152,7 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic> {
   }
 }
 
-class DoubleProperty extends ApiConfigSchemaProperty<dynamic> {
+class DoubleProperty extends ApiConfigSchemaProperty<double, dynamic> {
   DoubleProperty(String name, String description, bool required,
       double defaultValue, String apiFormat)
       : super(
@@ -157,7 +163,7 @@ class DoubleProperty extends ApiConfigSchemaProperty<dynamic> {
             'number',
             apiFormat);
 
-  _singleRequestValue(value) {
+  _fromRequest(value) {
     assert(value != null);
     if (value is num) {
       return value.toDouble();
@@ -169,7 +175,7 @@ class DoubleProperty extends ApiConfigSchemaProperty<dynamic> {
     }
   }
 
-  _singleResponseValue(value) {
+  _toResponse(value) {
     if (_apiFormat == 'float' &&
         (value < SMALLEST_FLOAT || value > LARGEST_FLOAT)) {
       throw new InternalServerError(
@@ -180,13 +186,13 @@ class DoubleProperty extends ApiConfigSchemaProperty<dynamic> {
   }
 }
 
-class StringProperty extends ApiConfigSchemaProperty<String> {
+class StringProperty extends ApiConfigSchemaProperty<String, String> {
   StringProperty(
       String name, String description, bool required, String defaultValue)
       : super(name, description, required, defaultValue, 'string', null);
 }
 
-class EnumProperty extends ApiConfigSchemaProperty<String> {
+class EnumProperty extends ApiConfigSchemaProperty<String, String> {
   final Map<String, String> _values;
 
   EnumProperty(String name, String description, bool required,
@@ -199,7 +205,7 @@ class EnumProperty extends ApiConfigSchemaProperty<String> {
       ..enumDescriptions = _values.values.toList();
   }
 
-  _singleRequestValue(value) {
+  _fromRequest(value) {
     assert(value != null);
     if (_values.containsKey(value)) {
       return value;
@@ -208,7 +214,7 @@ class EnumProperty extends ApiConfigSchemaProperty<String> {
   }
 }
 
-class BooleanProperty extends ApiConfigSchemaProperty<dynamic> {
+class BooleanProperty extends ApiConfigSchemaProperty<bool, dynamic> {
   BooleanProperty(
       String name, String description, bool required, bool defaultValue)
       : super(
@@ -219,7 +225,7 @@ class BooleanProperty extends ApiConfigSchemaProperty<dynamic> {
             'boolean',
             null);
 
-  _singleRequestValue(value) {
+  _fromRequest(value) {
     assert(value != null);
     if (value is bool) {
       return value;
@@ -235,7 +241,7 @@ class BooleanProperty extends ApiConfigSchemaProperty<dynamic> {
   }
 }
 
-class DateTimeProperty extends ApiConfigSchemaProperty<dynamic> {
+class DateTimeProperty extends ApiConfigSchemaProperty<DateTime, String> {
   DateTimeProperty(
       String name, String description, bool required, DateTime defaultValue)
       : super(
@@ -248,12 +254,12 @@ class DateTimeProperty extends ApiConfigSchemaProperty<dynamic> {
             'string',
             'date-time');
 
-  _singleResponseValue(value) {
+  _toResponse(value) {
     assert(value != null);
-    return (value as DateTime).toUtc().toIso8601String();
+    return value.toUtc().toIso8601String();
   }
 
-  _singleRequestValue(value) {
+  _fromRequest(value) {
     assert(value != null);
     try {
       return DateTime.parse(value);
@@ -263,18 +269,18 @@ class DateTimeProperty extends ApiConfigSchemaProperty<dynamic> {
   }
 }
 
-class SchemaProperty extends ApiConfigSchemaProperty<dynamic> {
+class SchemaProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
       : super(name, description, required, null, null, null);
 
-  _singleResponseValue(value) {
+  _toResponse(value) {
     assert(value != null);
     return _ref.toResponse(value);
   }
 
-  _singleRequestValue(value) {
+  _fromRequest(value) {
     assert(value != null);
     if (value is! Map && value is! MediaMessage) {
       throw new BadRequestError('Invalid request message');
@@ -288,7 +294,7 @@ class SchemaProperty extends ApiConfigSchemaProperty<dynamic> {
   bool get isSimple => false;
 }
 
-class ListProperty extends ApiConfigSchemaProperty<List> {
+class ListProperty extends ApiConfigSchemaProperty<List, List> {
   final ApiConfigSchemaProperty _itemsProperty;
 
   ListProperty(
@@ -301,22 +307,22 @@ class ListProperty extends ApiConfigSchemaProperty<List> {
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..items = _itemsProperty.asDiscovery;
 
-  _singleResponseValue(listObject) {
+  _toResponse(listObject) {
     if (listObject is! List) {
       throw new BadRequestError('Invalid property, should be of type \'List\'');
     }
-    return listObject.map(_itemsProperty.toResponse).toList();
+    return listObject.map(_itemsProperty._toResponse).toList();
   }
 
-  _singleRequestValue(encodedList) {
+  _fromRequest(encodedList) {
     if (encodedList is! List) {
       throw new BadRequestError('Invalid list request value');
     }
-    return encodedList.map(_itemsProperty.fromRequest).toList();
+    return encodedList.map(_itemsProperty._fromRequest).toList();
   }
 }
 
-class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>> {
+class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>, Map<String, dynamic>> {
   final dynamic _additionalProperty;
 
   MapProperty(
@@ -329,19 +335,19 @@ class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>> {
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
 
-  _singleResponseValue(mapObject) {
+  _toResponse(mapObject) {
     var result = <String, dynamic>{};
     mapObject.forEach((String key, object) {
-      result[key] = _additionalProperty.toResponse(object);
+      result[key] = _additionalProperty._toResponse(object);
     });
     return result;
   }
 
-  _singleRequestValue(encodedMap) {
+  _fromRequest(encodedMap) {
     // Map from String to the type of the additional property.
     var result = <String, dynamic>{};
     encodedMap.forEach((String key, encodedObject) {
-      result[key] = _additionalProperty.fromRequest(encodedObject);
+      result[key] = _additionalProperty._fromRequest(encodedObject);
     });
     return result;
   }

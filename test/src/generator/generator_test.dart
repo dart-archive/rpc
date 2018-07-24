@@ -111,6 +111,7 @@ main() {
       }
       var expectedDiscovery =
           new File(join(dataPath, 'expected_multiple_discovery.json'));
+      expect(result.stderr, '');
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
 
@@ -134,6 +135,7 @@ main() {
         print('Could not find dart.');
         return;
       }
+      expect(result.stderr, '');
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
       checkFilesIdentical(
           libPath, 'apioneapi.dart', 'expected_apioneapi.dartt');
@@ -159,6 +161,7 @@ main() {
       }
       var expectedDiscovery =
           new File(join(dataPath, 'expected_toy_discovery.json'));
+      expect(result.stderr, '');
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
 
@@ -178,6 +181,7 @@ main() {
         print('Could not find dart.');
         return;
       }
+      expect(result.stderr, '');
       expect('[SUCCESS]'.allMatches(result.stdout).length, 1);
       checkFilesIdentical(libPath, 'toyapi.dart', 'expected_toyapi.dartt');
     });

@@ -1,7 +1,6 @@
 language: dart
-sudo: false
 dart:
-  - "dev/raw/latest"
+  - dev
 script: ./tool/travis.sh
 cache:
   directories:

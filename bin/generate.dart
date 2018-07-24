@@ -408,7 +408,7 @@ class ClientApiGenerator {
       var request =
           new HttpApiRequest('GET', uri, {}, new Stream.fromIterable([]));
       HttpApiResponse response = await server.handleHttpApiRequest(request);
-      return response.body.transform(UTF8.decoder).join('');
+      return response.body.transform(utf8.decoder).join('');
     }
 
     // Checks if the DeclarationMirror is a class and annotated with @ApiClass.
