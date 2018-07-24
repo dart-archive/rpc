@@ -88,14 +88,13 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
 
   _toResponse(value) {
     assert(value != null);
-    if (_apiFormat.endsWith('64') && value is! String && value is! BigInt) {
+    if (_apiFormat.endsWith('64') && value is! BigInt) {
       throw new InternalServerError(
           'Trying to return non-BigInt: \'$value\' in 64-bit integer property');
     } else if (value is! int && value is! BigInt) {
       throw new InternalServerError(
           'Trying to return non-integer: \'$value\' in integer property');
     }
-    if (value is String) value = BigInt.parse(value);
     if (minValue != null && value < minValue) {
       throw new InternalServerError(
           'Return value \'$value\' smaller than minimum value \'$minValue\'');

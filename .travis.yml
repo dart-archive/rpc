@@ -1,7 +1,8 @@
 language: dart
 dart:
   - dev
-script: ./tool/travis.sh
+dart_task:
+  - test: --platform vm
 cache:
   directories:
   - $HOME/.pub-cache
