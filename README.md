@@ -1,5 +1,7 @@
 # RPC
 
+[![Build Status](https://travis-ci.org/dart-lang/rpc.svg?branch=master)](https://travis-ci.org/dart-lang/rpc)
+
 ### Description
 
 Light-weight RPC package for creating RESTful server-side Dart APIs. The package
@@ -234,16 +236,21 @@ types for the public fields are `int`, `double`, `bool`, `String`,
 `DateTime`, List<SomeType>, Map<String, SomeType>, and another message class.
 
 A field can be further annotated using the `@ApiProperty` annotation to
-specify default values, format of an `int` or `double` specifying how to
+specify default values, format of an `int`, `BigInt`, or `double` specifying how to
 handle it in the backend, min/max value of an `int` property, and whether a
 property is required.
 
 For `int` properties the `format` field is used to specify the size of the
-integer. It can take the values `int32`, `uint32`, `int64` or `uint64`.
-The 64-bit variants will be represented as `String` in the JSON objects.
+integer. It can take the values `int32`, or `uint32`. `BigInt` properties can
+be specified as `int64` or `uint64`. The 64-bit variants will be represented as
+`String` in the JSON objects.
 
-For `int` properties the `minValue` and `maxValue` fields can be used to
-specify the min and max value of the integer.
+For `int` and `BigInt` properties the `minValue` and `maxValue` fields can be used to
+specify the min and max value of the integer.  For 64-bit variants these
+fields must be specified as Strings to reduce ambiguity and to allow
+specifying the full range of values for `uint64` given the limitations of
+[Dart 2 integers](https://www.dartlang.org/guides/language/language-tour#numbers).
+See also [dart-lang/sdk#33893](https://github.com/dart-lang/sdk/issues/33893).
 
 For `double` properties the `format` parameter can take the value
 `double` or `float`.
@@ -264,6 +271,12 @@ class MyRequest {
 
    @ApiProperty(format: 'float')
    double averageAge;
+
+   @ApiProperty(
+     format: 'uint64',
+     minValue: '18446744073709551116', // 2^64 - 500
+     maxValue: '18446744073709551216') // 2^64 - 400
+   BigInt numberOfNeutrons;
 }
 ```
 

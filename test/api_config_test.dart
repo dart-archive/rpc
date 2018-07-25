@@ -651,12 +651,12 @@ void main() {
     test('variants', () {
       var parser = new ApiParser();
       var message = parser.parseSchema(reflectClass(TestMessage3), true);
-      var instance = message.fromRequest(
+      TestMessage3 instance = message.fromRequest(
           {'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
       expect(instance.count32, 1);
       expect(instance.count32u, 2);
-      expect(instance.count64, 3);
-      expect(instance.count64u, 4);
+      expect(instance.count64, BigInt.from(3));
+      expect(instance.count64u, BigInt.from(4));
       var json = message.toResponse(instance);
       expect(json['count32'], 1);
       expect(json['count32u'], 2);
@@ -667,8 +667,8 @@ void main() {
     test('request-parsing', () {
       var parser = new ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
-      var instance = m1.fromRequest({'requiredValue': 10});
-      expect(instance, new isInstanceOf<TestMessage1>());
+      TestMessage1 instance = m1.fromRequest({'requiredValue': 10});
+      expect(instance, TypeMatcher<TestMessage1>());
       instance = m1.fromRequest({
         'count': 1,
         'message': 'message',
@@ -685,7 +685,6 @@ void main() {
         'enumValue': 'test1',
         'limit': 50,
       });
-      expect(instance, new isInstanceOf<TestMessage1>());
       expect(instance.count, 1);
       expect(instance.message, 'message');
       expect(instance.value, 12.3);
@@ -698,9 +697,7 @@ void main() {
       expect(instance.date.minute, 12);
       expect(instance.date.second, 13);
       expect(instance.date.millisecond, 456);
-      expect(instance.submessage, new isInstanceOf<TestMessage2>());
       expect(instance.submessage.count, 4);
-      expect(instance.submessages, new isInstanceOf<List<TestMessage2>>());
       expect(instance.submessages.length, 3);
       expect(instance.submessages[0].count, 5);
       expect(instance.submessages[1].count, 6);
@@ -761,7 +758,7 @@ void main() {
       ];
       requests.forEach((request) {
         expect(() => m1.fromRequest(request),
-            throwsA(new isInstanceOf<BadRequestError>()));
+            throwsA(TypeMatcher<BadRequestError>()));
       });
     });
 
@@ -774,7 +771,7 @@ void main() {
       ];
       requests.forEach((request) {
         expect(() => m1.fromRequest(request),
-            throwsA(new isInstanceOf<BadRequestError>()));
+            throwsA(TypeMatcher<BadRequestError>()));
       });
     });
 
@@ -803,16 +800,16 @@ void main() {
       instance.submessages = [instance3, instance4, instance5];
 
       var response = m1.toResponse(instance);
-      expect(response, new isInstanceOf<Map>());
+      expect(response, TypeMatcher<Map>());
       expect(response['count'], 1);
       expect(response['message'], 'message');
       expect(response['value'], 12.3);
       expect(response['check'], true);
       expect(response['messages'], ['1', '2', '3']);
       expect(response['date'], utcDate.toIso8601String());
-      expect(response['submessage'], new isInstanceOf<Map>());
+      expect(response['submessage'], TypeMatcher<Map>());
       expect(response['submessage']['count'], 4);
-      expect(response['submessages'], new isInstanceOf<List>());
+      expect(response['submessages'], TypeMatcher<List>());
       expect(response['submessages'].length, 3);
       expect(response['submessages'][0]['count'], 5);
       expect(response['submessages'][1]['count'], 6);

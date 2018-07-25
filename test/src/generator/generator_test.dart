@@ -34,8 +34,9 @@ main() {
     packagePath = Directory.systemTemp.createTempSync('rpc_generator_tests').path;
     new Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
-      new File(join(dataPath, 'pubspec.yamll'))
-          .copySync(join(absolute(packagePath), 'pubspec.yaml'));
+      var source = new File(join(dataPath, 'pubspec.yamll')).readAsStringSync();
+      var destFile = new File(join(absolute(packagePath), 'pubspec.yaml'));
+      destFile.writeAsStringSync(source.replaceAll('_path_to_rpc_', rpcRootPath));
     }
   }
 
@@ -110,6 +111,7 @@ main() {
       }
       var expectedDiscovery =
           new File(join(dataPath, 'expected_multiple_discovery.json'));
+      expect(result.stderr, '');
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
 
@@ -133,6 +135,7 @@ main() {
         print('Could not find dart.');
         return;
       }
+      expect(result.stderr, '');
       expect('[SUCCESS]'.allMatches(result.stdout).length, 2);
       checkFilesIdentical(
           libPath, 'apioneapi.dart', 'expected_apioneapi.dartt');
@@ -158,6 +161,7 @@ main() {
       }
       var expectedDiscovery =
           new File(join(dataPath, 'expected_toy_discovery.json'));
+      expect(result.stderr, '');
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
 
@@ -177,6 +181,7 @@ main() {
         print('Could not find dart.');
         return;
       }
+      expect(result.stderr, '');
       expect('[SUCCESS]'.allMatches(result.stdout).length, 1);
       checkFilesIdentical(libPath, 'toyapi.dart', 'expected_toyapi.dartt');
     });

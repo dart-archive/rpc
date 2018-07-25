@@ -20,7 +20,7 @@ void main() {
           'http://localhost:4242/testAPI/v1/post/simple',
           method: 'POST',
           sendData: form);
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
       expect('hello', equals(result['field1']));
       expect('world', equals(result['field2']));
     });
@@ -36,7 +36,7 @@ void main() {
           'http://localhost:4242/testAPI/v1/post/simple-mix',
           method: 'POST',
           sendData: form);
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
 
       expect('hello', equals(result['field1']));
       expect(blobString.codeUnits, equals(result['field2']['bytes']));
@@ -54,7 +54,7 @@ void main() {
           'http://localhost:4242/testAPI/v1/post/mega-mix',
           method: 'POST',
           sendData: form);
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
 
       expect('John', equals(result['name']));
       expect(42, equals(result['age']));
@@ -68,9 +68,9 @@ void main() {
       final response = await HttpRequest.request(
           'http://localhost:4242/testAPI/v1/post/simple',
           method: 'POST',
-          sendData: JSON.encode(request),
+          sendData: jsonEncode(request),
           requestHeaders: {'content-type': 'application/json;charset=UTF-8'});
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
       expect('hello', equals(result['field1']));
       expect('world', equals(result['field2']));
     });
@@ -83,9 +83,9 @@ void main() {
       final response = await HttpRequest.request(
           'http://localhost:4242/testAPI/v1/post/simple-mix',
           method: 'POST',
-          sendData: JSON.encode(request),
+          sendData: jsonEncode(request),
           requestHeaders: {'content-type': 'application/json;charset=UTF-8'});
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
 
       expect('hello', equals(result['field1']));
       expect(blobString.codeUnits, equals(result['field2']['bytes']));
@@ -100,9 +100,9 @@ void main() {
       final response = await HttpRequest.request(
           'http://localhost:4242/testAPI/v1/post/mega-mix',
           method: 'POST',
-          sendData: JSON.encode(request),
+          sendData: jsonEncode(request),
           requestHeaders: {'content-type': 'application/json;charset=UTF-8'});
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
 
       expect('John', equals(result['name']));
       expect(42, equals(result['age']));
@@ -120,9 +120,9 @@ void main() {
       final response = await HttpRequest.request(
           'http://localhost:4242/testAPI/v1/post/collection/list',
           method: 'POST',
-          sendData: JSON.encode(request),
+          sendData: jsonEncode(request),
           requestHeaders: {'content-type': 'application/json;charset=UTF-8'});
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
 
       expect(3, equals(result['files'].length));
       expect(blobString.codeUnits, equals(result['files'][1]['bytes']));
@@ -139,9 +139,9 @@ void main() {
       final response = await HttpRequest.request(
           'http://localhost:4242/testAPI/v1/post/collection/map',
           method: 'POST',
-          sendData: JSON.encode(request),
+          sendData: jsonEncode(request),
           requestHeaders: {'content-type': 'application/json;charset=UTF-8'});
-      final result = JSON.decode(response.responseText);
+      final result = jsonDecode(response.responseText);
 
       expect(3, equals(result['files'].length));
       expect(blobString.codeUnits, equals(result['files']['file2']['bytes']));

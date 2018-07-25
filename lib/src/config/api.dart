@@ -75,15 +75,15 @@ class ApiConfig extends ApiConfigResource {
     }
 
     // Create OPTIONS response.
-    var headers = new Map.from(defaultResponseHeaders);
+    var headers = new Map<String, dynamic>.from(defaultResponseHeaders);
     if (allowed.isNotEmpty) {
       var allowedMethods = valueAsString ? allowed.join(',') : allowed;
-      headers[HttpHeaders.ALLOW] = allowedMethods;
+      headers[HttpHeaders.allowHeader] = allowedMethods;
       headers['access-control-allow-methods'] = allowedMethods;
       headers['access-control-allow-headers'] =
           'origin, x-requested-with, content-type, accept';
     }
-    return new HttpApiResponse(HttpStatus.OK, null, headers);
+    return new HttpApiResponse(HttpStatus.ok, null, headers);
   }
 
   discovery.RestDescription generateDiscoveryDocument(
@@ -126,7 +126,7 @@ class ApiConfig extends ApiConfigResource {
 
     // Compute the etag.
     var jsonDoc = discoveryDocSchema.toResponse(doc);
-    var sha1Digest = sha1.convert(UTF8.encode(JSON.encode(jsonDoc)));
+    var sha1Digest = sha1.convert(utf8.encode(jsonEncode(jsonDoc)));
     doc.etag = hex.encode(sha1Digest.bytes);
     return doc;
   }

@@ -99,13 +99,13 @@ class ApiProperty {
   final bool ignore;
 
   /// Default value for this property if it's not supplied.
-  final defaultValue;
+  final dynamic defaultValue;
 
-  /// For int properties: the minimal value.
-  final int minValue;
+  /// For int properties: the minimal value.  Must be int or String (if format == 'uint64' or 'int64')
+  final dynamic minValue;
 
-  /// For int properties: the maximal value.
-  final int maxValue;
+  /// For int properties: the maximal value.  Must be int or String (if format == 'uint64' or 'int64')
+  final dynamic maxValue;
 
   /// Possible values for enum properties, as value - description pairs.
   ///  Properties using this will have to be String.

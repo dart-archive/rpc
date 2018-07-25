@@ -50,11 +50,13 @@ ArgParser globalArgParser() {
 }
 
 ArgResults parseArguments(ArgParser parser, List<String> arguments) {
+  ArgResults parsedArguments;
   try {
-    return parser.parse(arguments);
+    parsedArguments = parser.parse(arguments);
   } on FormatException catch (e) {
     dieWithUsage('Error parsing arguments:\n${e.message}\n');
   }
+  return parsedArguments;
 }
 
 void dieWithUsage([String message]) {
@@ -194,7 +196,7 @@ class ClientApiGenerator {
     });
   }
 
-  Future<List<String>> generateDiscovery() async {
+  Future<dynamic> generateDiscovery() async {
     return _withServer((HttpServer server) async {
       return await _execute(server.port, 'discovery');
     });
@@ -205,7 +207,7 @@ class ClientApiGenerator {
       Map<String, Map<String, String>> result =
           await _execute(server.port, 'discoveryWithImports');
       // Map the result from the isolate to a list of DescriptionImportPairs.
-      var descriptions = [];
+      var descriptions = <DescriptionImportPair>[];
       result.forEach((description, importMap) {
         var diPair = new DescriptionImportPair(description, importMap);
         descriptions.add(diPair);
@@ -263,7 +265,7 @@ class ClientApiGenerator {
     return completer.future;
   }
 
-  _withServer(f(HttpServer server)) async {
+  Future<T> _withServer<T>(f(HttpServer server)) async {
     Future _httpSourceLoader(HttpRequest request) async {
       var path = request.uri.path;
       if (path.contains('/packages/')) {
@@ -274,11 +276,11 @@ class ClientApiGenerator {
       } else if (path.contains('.packages')) {
         // Didn't find .packages so revert to /packages/.
         request.response
-          ..statusCode = HttpStatus.NOT_FOUND
+          ..statusCode = HttpStatus.notFound
           ..close();
       } else {
         request.response
-          ..add(UTF8.encode(generatorSource))
+          ..add(utf8.encode(generatorSource))
           ..close();
       }
     }
@@ -292,12 +294,12 @@ class ClientApiGenerator {
     }
   }
 
-  static Future _isolateTrampoline(List args) async {
+  static Future _isolateTrampoline(List<dynamic> args) async {
     SendPort messagePort = args[5];
     SendPort errorPort = args[6];
     return await Isolate.spawnUri(
       Uri.parse(args[0]),
-      [args[1], args[2], args[3], args[4]],
+      <String>[args[1].toString(), args[2].toString(), args[3].toString(), args[4].toString()],
       messagePort,
       onError: errorPort);
   }
@@ -332,18 +334,13 @@ class ClientApiGenerator {
       // Document and call the respective generator method.
       var result;
       String cmd = args[1];
-      int apiPort = args[2];
+      int apiPort = int.parse(args[2]);
       String apiPrefix = args[3] == null ? '' : args[3];
-      try {
-        if (cmd == 'discoveryWithImports') {
-          result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
-        } else {
-          assert(cmd == 'discovery');
-          result = await generateDiscovery(lm, apiPort, apiPrefix);
-        }
-      } catch (error) {
-        print('Failed executing command \\'\$cmd\\' with error:\\n\\n\$error');
-        exit(1);
+      if (cmd == 'discoveryWithImports') {
+        result = await generateDiscoveryWithImports(lm, apiPort, apiPrefix);
+      } else {
+        assert(cmd == 'discovery');
+        result = await generateDiscovery(lm, apiPort, apiPrefix);
       }
       sendPort.send(result);
     }
@@ -352,7 +349,7 @@ class ClientApiGenerator {
     // given Library.
     Future<Map<String, Map<String, String>>> generateDiscoveryWithImports(
         LibraryMirror lm, int apiPort, String apiPrefix) async {
-      var result = {};
+      var result = <String, Map<String, String>>{};
       for (var dm in lm.declarations.values) {
         var api = _validateAndCreateApiInstance(dm);
         if (api == null) continue;
@@ -386,7 +383,7 @@ class ClientApiGenerator {
     Future<List<String>> generateDiscovery(LibraryMirror lm,
                                            int apiPort,
                                            String apiPrefix) async {
-      var result = [];
+      var result = <String>[];
       for (var dm in lm.declarations.values) {
         var api = _validateAndCreateApiInstance(dm);
         if (api == null) continue;
@@ -411,7 +408,7 @@ class ClientApiGenerator {
       var request =
           new HttpApiRequest('GET', uri, {}, new Stream.fromIterable([]));
       HttpApiResponse response = await server.handleHttpApiRequest(request);
-      return response.body.transform(UTF8.decoder).join('');
+      return response.body.transform(utf8.decoder).join('');
     }
 
     // Checks if the DeclarationMirror is a class and annotated with @ApiClass.

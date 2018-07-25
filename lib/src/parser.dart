@@ -131,7 +131,7 @@ class ApiParser {
   // Scan through all class instance fields and parse the ones annotated
   // with @ApiResource.
   Map<String, ApiConfigResource> _parseResources(InstanceMirror classInstance) {
-    var resources = {};
+    var resources = <String, ApiConfigResource>{};
 
     // Scan through the class instance's declarations and parse fields annotated
     // with the @ApiResource annotation.
@@ -184,14 +184,14 @@ class ApiParser {
   // Parse a specific instance's methods and return a list of ApiConfigMethod's
   // corresponding to each of the method's annotated with @ApiMethod.
   List<ApiConfigMethod> _parseMethods(InstanceMirror classInstance) {
-    var methods = [];
+    var methods = <ApiConfigMethod>[];
     // Parse all methods annotated with the @ApiMethod annotation on this class
     // instance.
-    classInstance.type.declarations.values.forEach((dm) {
+    classInstance.type.declarations.values.whereType<MethodMirror>().forEach((dm) {
       var metadata = _getMetadata(dm, ApiMethod);
       if (metadata == null) return null;
 
-      if (dm is! MethodMirror || !dm.isRegularMethod) {
+      if  (!dm.isRegularMethod) {
         // The @ApiMethod annotation is only supported on regular methods.
         var name = MirrorSystem.getName(dm.simpleName);
         addError('@ApiMethod annotation on non-method declaration: \'$name\'');
@@ -297,7 +297,7 @@ class ApiParser {
   // Parses a method's url path parameters and validates them against the
   // method signature.
   List<ApiParameter> _parsePathParameters(MethodMirror mm, String path) {
-    var pathParams = [];
+    var pathParams = <ApiParameter>[];
     if (path == null) return pathParams;
 
     // Parse the path to get the number and order of the path parameters
@@ -341,7 +341,7 @@ class ApiParser {
   // invocation.
   List<ApiParameter> _parseQueryParameters(
       MethodMirror mm, int queryParamIndex) {
-    var queryParams = [];
+    var queryParams = <ApiParameter>[];
     for (int i = queryParamIndex; i < mm.parameters.length; ++i) {
       var pm = mm.parameters[i];
       var paramName = MirrorSystem.getName(pm.simpleName);
@@ -386,7 +386,7 @@ class ApiParser {
     }
     if (requestType is! ClassMirror ||
         requestType.simpleName == #dynamic ||
-        requestType.isAbstract) {
+        (requestType as ClassMirror).isAbstract) {
       addError('API Method parameter has to be an instantiable class.');
       return null;
     }
@@ -432,7 +432,7 @@ class ApiParser {
     }
     if (returnType is! ClassMirror ||
         returnType.simpleName == #dynamic ||
-        returnType.isAbstract) {
+        (returnType as ClassMirror).isAbstract) {
       addError('API Method return type has to be a instantiable class.');
       return null;
     }
@@ -529,8 +529,8 @@ class ApiParser {
     // If the schema is used as a request check that it has an unnamed default
     // constructor.
     if (isRequest) {
-      var methods = schemaClass.declarations.values
-          .where((mm) => mm is MethodMirror && mm.isConstructor);
+      var methods = schemaClass.declarations.values.whereType<MethodMirror>()
+          .where((mm) => mm.isConstructor);
       if (!methods.isEmpty &&
           methods
               .where((mm) => (mm.simpleName == schemaClass.simpleName &&
@@ -653,14 +653,14 @@ class ApiParser {
       }
     }
 
-    var properties = {};
-    schemaClass.declarations.values.forEach((vm) {
+    var properties = <Symbol, ApiConfigSchemaProperty>{};
+    schemaClass.declarations.values.whereType<VariableMirror>().forEach((vm) {
       var metadata = _getMetadata(vm, ApiProperty);
       if (metadata == null) {
         // Generate a metadata with default values
         metadata = new ApiProperty();
       }
-      if (vm is! VariableMirror || vm.isConst || vm.isPrivate || vm.isStatic) {
+      if (vm.isConst || vm.isPrivate || vm.isStatic) {
         // We only serialize non-const, non-static public fields.
         return;
       }
@@ -696,6 +696,14 @@ class ApiParser {
     }
     switch (propertyType.reflectedType) {
       case int:
+        if (metadata.format == null || metadata.format.endsWith('32')) {
+          return parseIntegerProperty(propertyName, metadata);
+        } else {
+          addError('$propertyName: 64 bit integers must be of type BigInt');
+          return null;
+        }
+        break;
+      case BigInt:
         return parseIntegerProperty(propertyName, metadata);
       case double:
         return parseDoubleProperty(propertyName, metadata);
@@ -747,30 +755,59 @@ class ApiParser {
       apiType = 'string';
     } else {
       addError('$propertyName: Invalid integer variant: $apiFormat. Supported '
-          'variants are: int32, uint32, int64, uint64.');
+          'variants are: int32, uint32, int64, uint64');
     }
-    if (_parseInt(metadata.minValue, apiFormat, propertyName, 'Min') &&
-        _parseInt(metadata.maxValue, apiFormat, propertyName, 'Max')) {
+    var min;
+    var max;
+    dynamic defaultValue;
+
+    /// Return v as it was, or via parsing a String if this is a 64 bit
+    /// property.
+    dynamic _convertMetadataValue(dynamic v, String name) {
+      if (apiFormat.endsWith('64')) {
+        if (v is String) {
+          return BigInt.parse(v);
+        } else {
+          if (v != null) {
+            addError('$propertyName: $name for 64 bit integers must be specified as String');
+          }
+          return null;
+        }
+      }
+      return v;
+    }
+    min = _convertMetadataValue(metadata.minValue, 'minValue');
+    max = _convertMetadataValue(metadata.maxValue, 'maxValue');
+    defaultValue = _convertMetadataValue(metadata.defaultValue, 'defaultValue');
+
+    if (_parseInt(min, apiFormat, propertyName, 'Min') &&
+        _parseInt(max, apiFormat, propertyName, 'Max')) {
       // Check that min is less than max.
-      var min = metadata.minValue;
-      var max = metadata.maxValue;
       if (min > max) {
         addError('$propertyName: Invalid min/max range: [$min, $max]. Min must '
             'be less than max.');
       }
       // We only parse the default if min/max are valid since we need them to
       // do the range checking.
-      _parseIntDefault(metadata, apiFormat, propertyName);
+
+      if (_parseInt(defaultValue, apiFormat, propertyName, 'Default')) {
+        if (defaultValue < min) {
+          addError('$propertyName: Default value must be >= ${min}.');
+        }
+        if (defaultValue > max) {
+          addError('$propertyName: Default value must be <= ${max}.');
+        }
+      }
     }
     return new IntegerProperty(
         propertyName,
         metadata.description,
         metadata.required,
-        metadata.defaultValue,
+        defaultValue,
         apiType,
         apiFormat,
-        metadata.minValue,
-        metadata.maxValue);
+        min,
+        max);
   }
 
   // Parses a value to determine if it is a valid integer value.
@@ -778,8 +815,11 @@ class ApiParser {
   bool _parseInt(
       dynamic value, String format, String name, String messagePrefix) {
     if (value == null) return false;
-    if (value is! int) {
-      addError('$name: $messagePrefix value must be of type: int.');
+    if (format.endsWith('64') && value is! BigInt) {
+      addError('$name: $messagePrefix value must be of type: BigInt');
+      return false;
+    } else if (value is! int && value is! BigInt) {
+      addError('$name: $messagePrefix value must be of type: int or BigInt');
       return false;
     } else if (format == 'int32' && value != value.toSigned(32) ||
         format == 'uint32' && value != value.toUnsigned(32) ||
@@ -790,20 +830,6 @@ class ApiParser {
       return false;
     }
     return true;
-  }
-
-  _parseIntDefault(ApiProperty metadata, String format, String name) {
-    var defaultValue = metadata.defaultValue;
-    if (!_parseInt(metadata.defaultValue, format, name, 'Default')) {
-      // If no defaultValue, just return.
-      return;
-    }
-    if (metadata.minValue != null && defaultValue < metadata.minValue) {
-      addError('$name: Default value must be >= ${metadata.minValue}.');
-    }
-    if (metadata.maxValue != null && defaultValue > metadata.maxValue) {
-      addError('$name: Default value must be <= ${metadata.maxValue}.');
-    }
   }
 
   // Parses a 'double' property.
@@ -831,11 +857,11 @@ class ApiParser {
               'with format: \'float\', must be in the range: '
               '[$SMALLEST_FLOAT, $LARGEST_FLOAT]');
         } else if (apiFormat == 'double' &&
-            (metadata.defaultValue < -double.MAX_FINITE ||
-                metadata.defaultValue > double.MAX_FINITE)) {
+            (metadata.defaultValue < -double.maxFinite ||
+                metadata.defaultValue > double.maxFinite)) {
           addError('$propertyName: Default value of: ${metadata.defaultValue} '
               'with format: \'double\', must be in the range: '
-              '[${-double.MAX_FINITE}, ${double.MAX_FINITE}]');
+              '[${-double.maxFinite}, ${double.maxFinite}]');
         }
       }
     }

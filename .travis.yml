@@ -1,0 +1,8 @@
+language: dart
+dart:
+  - dev
+dart_task:
+  - test: --platform vm
+cache:
+  directories:
+  - $HOME/.pub-cache
