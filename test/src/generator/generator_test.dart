@@ -31,12 +31,14 @@ main() {
   // file.
   void setupPackage({bool addPubSpec: true}) {
     assert(packagePath == null);
-    packagePath = Directory.systemTemp.createTempSync('rpc_generator_tests').path;
+    packagePath =
+        Directory.systemTemp.createTempSync('rpc_generator_tests').path;
     new Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
       var source = new File(join(dataPath, 'pubspec.yamll')).readAsStringSync();
       var destFile = new File(join(absolute(packagePath), 'pubspec.yaml'));
-      destFile.writeAsStringSync(source.replaceAll('_path_to_rpc_', rpcRootPath));
+      destFile
+          .writeAsStringSync(source.replaceAll('_path_to_rpc_', rpcRootPath));
     }
   }
 

@@ -78,12 +78,12 @@ class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
       this.minValue,
       this.maxValue)
       : super(
-      name,
-      description,
-      required,
-      defaultValue != null ? defaultValue.toString() : null,
-      apiType,
-      apiFormat);
+            name,
+            description,
+            required,
+            defaultValue != null ? defaultValue.toString() : null,
+            apiType,
+            apiFormat);
 
   _toResponse(value) {
     assert(value != null);
@@ -104,7 +104,7 @@ class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
     }
     throw new InternalServerError(
         'Integer return value: \'$value\' not within the \'$_apiFormat\' '
-            'property range.');
+        'property range.');
   }
 
   _fromRequest(value) {
@@ -149,13 +149,7 @@ class IntegerProperty extends ApiConfigSchemaProperty<int, int> {
       String apiFormat,
       this.minValue,
       this.maxValue)
-      : super(
-            name,
-            description,
-            required,
-            defaultValue,
-            apiType,
-            apiFormat);
+      : super(name, description, required, defaultValue, apiType, apiFormat);
 
   _toResponse(value) {
     assert(value != null);
@@ -371,7 +365,8 @@ class ListProperty extends ApiConfigSchemaProperty<List, List> {
   }
 }
 
-class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>, Map<String, dynamic>> {
+class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>,
+    Map<String, dynamic>> {
   final dynamic _additionalProperty;
 
   MapProperty(

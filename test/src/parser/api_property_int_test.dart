@@ -190,16 +190,10 @@ class WrongInt {
       defaultValue: '-1')
   BigInt anUInt64TooSmallDefault;
 
-  @ApiProperty(
-      format: 'uint64'
-  )
+  @ApiProperty(format: 'uint64')
   int anUInt64WrongType;
 
-  @ApiProperty(
-      format: 'int64',
-      minValue: 23,
-      maxValue: 57,
-      defaultValue: 28)
+  @ApiProperty(format: 'int64', minValue: 23, maxValue: 57, defaultValue: 28)
   BigInt anInt64WrongParamTypes;
 }
 

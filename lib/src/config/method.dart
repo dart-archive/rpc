@@ -221,12 +221,15 @@ class ApiConfigMethod {
             context.responseHeaders[HttpHeaders.contentTypeHeader] =
                 apiResult.contentType;
           }
-          if (apiResult.updated != null) context.responseHeaders[
-              HttpHeaders.lastModifiedHeader] = formatHttpDate(apiResult.updated);
-          if (apiResult.contentEncoding != null) context.responseHeaders[
-              HttpHeaders.contentEncodingHeader] = apiResult.contentEncoding;
-          if (apiResult.contentLanguage != null) context.responseHeaders[
-              HttpHeaders.contentLanguageHeader] = apiResult.contentLanguage;
+          if (apiResult.updated != null)
+            context.responseHeaders[HttpHeaders.lastModifiedHeader] =
+                formatHttpDate(apiResult.updated);
+          if (apiResult.contentEncoding != null)
+            context.responseHeaders[HttpHeaders.contentEncodingHeader] =
+                apiResult.contentEncoding;
+          if (apiResult.contentLanguage != null)
+            context.responseHeaders[HttpHeaders.contentLanguageHeader] =
+                apiResult.contentLanguage;
           if (apiResult.md5Hash != null) {
             context.responseHeaders[HttpHeaders.contentMD5Header] =
                 apiResult.md5Hash;
@@ -243,14 +246,15 @@ class ApiConfigMethod {
             context.responseHeaders.remove(HttpHeaders.cacheControlHeader);
           }
 
-          if (context.requestHeaders[HttpHeaders.ifModifiedSinceHeader] != null) {
+          if (context.requestHeaders[HttpHeaders.ifModifiedSinceHeader] !=
+              null) {
             DateTime ifModifiedSince = parseHttpDate(
                 context.requestHeaders[HttpHeaders.ifModifiedSinceHeader]);
             if (ifModifiedSince != null &&
                 !apiResult.updated.isAfter(ifModifiedSince)) {
               context.responseHeaders.remove(HttpHeaders.contentTypeHeader);
-              return new HttpApiResponse(HttpStatus.notModified,
-                  null, context.responseHeaders);
+              return new HttpApiResponse(
+                  HttpStatus.notModified, null, context.responseHeaders);
             }
           }
         }

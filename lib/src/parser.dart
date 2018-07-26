@@ -187,11 +187,13 @@ class ApiParser {
     var methods = <ApiConfigMethod>[];
     // Parse all methods annotated with the @ApiMethod annotation on this class
     // instance.
-    classInstance.type.declarations.values.whereType<MethodMirror>().forEach((dm) {
+    classInstance.type.declarations.values
+        .whereType<MethodMirror>()
+        .forEach((dm) {
       var metadata = _getMetadata(dm, ApiMethod);
       if (metadata == null) return null;
 
-      if  (!dm.isRegularMethod) {
+      if (!dm.isRegularMethod) {
         // The @ApiMethod annotation is only supported on regular methods.
         var name = MirrorSystem.getName(dm.simpleName);
         addError('@ApiMethod annotation on non-method declaration: \'$name\'');
@@ -529,7 +531,8 @@ class ApiParser {
     // If the schema is used as a request check that it has an unnamed default
     // constructor.
     if (isRequest) {
-      var methods = schemaClass.declarations.values.whereType<MethodMirror>()
+      var methods = schemaClass.declarations.values
+          .whereType<MethodMirror>()
           .where((mm) => mm.isConstructor);
       if (!methods.isEmpty &&
           methods
@@ -575,8 +578,8 @@ class ApiParser {
       // We explicitly want the two to be the same bound class or we will fail.
       if (existingSchemaConfig.schemaClass != schemaClass) {
         var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
-        var existingSchemaName = MirrorSystem
-            .getName(existingSchemaConfig.schemaClass.qualifiedName);
+        var existingSchemaName = MirrorSystem.getName(
+            existingSchemaConfig.schemaClass.qualifiedName);
         addError('Schema \'$newSchemaName\' has a name conflict with '
             '\'$existingSchemaName\'.');
         existingSchemaConfig = null;
@@ -617,8 +620,8 @@ class ApiParser {
       // We explicitly want the two to be the same bound class or we will fail.
       if (existingSchemaConfig.schemaClass != schemaClass) {
         var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
-        var existingSchemaName = MirrorSystem
-            .getName(existingSchemaConfig.schemaClass.qualifiedName);
+        var existingSchemaName = MirrorSystem.getName(
+            existingSchemaConfig.schemaClass.qualifiedName);
         addError('Schema \'$newSchemaName\' has a name conflict with '
             '\'$existingSchemaName\'.');
         existingSchemaConfig = null;
@@ -644,7 +647,6 @@ class ApiParser {
   // Runs through all fields on a schema class and parses them accordingly.
   Map<Symbol, ApiConfigSchemaProperty> _parseProperties(
       ClassMirror schemaClass, bool isRequest) {
-
     // Figure out if we've got the annotation to include the parent class
     bool includeSuperClass = false;
     for (InstanceMirror im in schemaClass.metadata) {
@@ -782,15 +784,8 @@ class ApiParser {
         }
       }
     }
-    return new IntegerProperty(
-        propertyName,
-        metadata.description,
-        metadata.required,
-        defaultValue,
-        apiType,
-        apiFormat,
-        min,
-        max);
+    return new IntegerProperty(propertyName, metadata.description,
+        metadata.required, defaultValue, apiType, apiFormat, min, max);
   }
 
   // Parses an 'int' property.
@@ -821,11 +816,13 @@ class ApiParser {
     BigInt _convertMetadataValue(dynamic v, String name) {
       if (v == null) return null;
       if (v is! String) {
-        addError('$propertyName: $name for 64 bit integers must be specified as String');
+        addError(
+            '$propertyName: $name for 64 bit integers must be specified as String');
         return null;
       }
       return BigInt.parse(v.toString());
     }
+
     min = _convertMetadataValue(metadata.minValue, 'minValue');
     max = _convertMetadataValue(metadata.maxValue, 'maxValue');
     defaultValue = _convertMetadataValue(metadata.defaultValue, 'defaultValue');
@@ -849,15 +846,8 @@ class ApiParser {
         }
       }
     }
-    return new BigIntegerProperty(
-        propertyName,
-        metadata.description,
-        metadata.required,
-        defaultValue,
-        apiType,
-        apiFormat,
-        min,
-        max);
+    return new BigIntegerProperty(propertyName, metadata.description,
+        metadata.required, defaultValue, apiType, apiFormat, min, max);
   }
 
   // Parses a value to determine if it is a valid integer value.

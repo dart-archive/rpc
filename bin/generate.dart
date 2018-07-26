@@ -234,8 +234,15 @@ class ClientApiGenerator {
     try {
       await Isolate.spawn(
           _isolateTrampoline,
-          [uri, _apiFilePath, cmd, _apiPort, _apiPrefix,
-          messagePort.sendPort, errorPort.sendPort],
+          [
+            uri,
+            _apiFilePath,
+            cmd,
+            _apiPort,
+            _apiPrefix,
+            messagePort.sendPort,
+            errorPort.sendPort
+          ],
           onError: errorPort.sendPort);
     } catch (error) {
       closePorts();
@@ -256,6 +263,7 @@ class ClientApiGenerator {
         completer.complete(value);
       }
     }
+
     messageSubscription = messagePort.listen((value) {
       finish(value, false);
     });
@@ -298,10 +306,15 @@ class ClientApiGenerator {
     SendPort messagePort = args[5];
     SendPort errorPort = args[6];
     return await Isolate.spawnUri(
-      Uri.parse(args[0]),
-      <String>[args[1].toString(), args[2].toString(), args[3].toString(), args[4].toString()],
-      messagePort,
-      onError: errorPort);
+        Uri.parse(args[0]),
+        <String>[
+          args[1].toString(),
+          args[2].toString(),
+          args[3].toString(),
+          args[4].toString()
+        ],
+        messagePort,
+        onError: errorPort);
   }
 
   String get generatorSource {
