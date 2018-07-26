@@ -10,8 +10,7 @@ class ApiConfigSchemaProperty<D, J> {
   final String description;
   final bool required;
 
-  // TODO(jcollins-g): This would be better as [J] rather than [String].
-  final String defaultValue;
+  final J defaultValue;
   bool get hasDefault => (defaultValue != null);
 
   final String _apiType;
@@ -35,7 +34,7 @@ class ApiConfigSchemaProperty<D, J> {
       property.description = description;
     }
     if (defaultValue != null) {
-      property.default_ = defaultValue;
+      property.default_ = defaultValue.toString();
     }
     return property;
   }
@@ -65,36 +64,31 @@ class ApiConfigSchemaProperty<D, J> {
   }
 }
 
-class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
-  final dynamic minValue;
-  final dynamic maxValue;
+class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
+  final BigInt minValue;
+  final BigInt maxValue;
 
-  IntegerProperty(
+  BigIntegerProperty(
       String name,
       String description,
       bool required,
-      dynamic defaultValue,
+      BigInt defaultValue,
       String apiType,
       String apiFormat,
       this.minValue,
       this.maxValue)
       : super(
-            name,
-            description,
-            required,
-            defaultValue != null ? defaultValue.toString() : null,
-            apiType,
-            apiFormat);
+      name,
+      description,
+      required,
+      defaultValue != null ? defaultValue.toString() : null,
+      apiType,
+      apiFormat);
 
   _toResponse(value) {
     assert(value != null);
-    if (_apiFormat.endsWith('64') && value is! BigInt) {
-      throw new InternalServerError(
-          'Trying to return non-BigInt: \'$value\' in 64-bit integer property');
-    } else if (value is! int && value is! BigInt) {
-      throw new InternalServerError(
-          'Trying to return non-integer: \'$value\' in integer property');
-    }
+    assert(_apiFormat.endsWith('64'));
+
     if (minValue != null && value < minValue) {
       throw new InternalServerError(
           'Return value \'$value\' smaller than minimum value \'$minValue\'');
@@ -103,14 +97,81 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
       throw new InternalServerError(
           'Return value \'$value\' larger than maximum value \'$maxValue\'');
     }
-    if (_apiFormat == 'int32' && value == value.toSigned(32) ||
-        _apiFormat == 'uint32' && value == value.toUnsigned(32)) {
-      return value;
-    }
     if (_apiFormat == 'int64' && value == value.toSigned(64) ||
         _apiFormat == 'uint64' && value == value.toUnsigned(64)) {
       assert(_apiType == 'string');
       return value.toString();
+    }
+    throw new InternalServerError(
+        'Integer return value: \'$value\' not within the \'$_apiFormat\' '
+            'property range.');
+  }
+
+  _fromRequest(value) {
+    assert(value != null);
+    BigInt parsedValue;
+    try {
+      parsedValue = BigInt.parse(value);
+    } on FormatException catch (e) {
+      throw new BadRequestError('Invalid integer format: $e');
+    }
+    if (minValue != null && parsedValue < minValue) {
+      throw new BadRequestError('$name needs to be >= $minValue');
+    }
+    if (maxValue != null && parsedValue > maxValue) {
+      throw new BadRequestError('$name needs to be <= $maxValue');
+    }
+    return parsedValue;
+  }
+
+  discovery.JsonSchema get asDiscovery {
+    var property = super.asDiscovery;
+    if (minValue != null) {
+      property.minimum = minValue.toString();
+    }
+    if (maxValue != null) {
+      property.maximum = maxValue.toString();
+    }
+    return property;
+  }
+}
+
+class IntegerProperty extends ApiConfigSchemaProperty<int, int> {
+  final int minValue;
+  final int maxValue;
+
+  IntegerProperty(
+      String name,
+      String description,
+      bool required,
+      int defaultValue,
+      String apiType,
+      String apiFormat,
+      this.minValue,
+      this.maxValue)
+      : super(
+            name,
+            description,
+            required,
+            defaultValue,
+            apiType,
+            apiFormat);
+
+  _toResponse(value) {
+    assert(value != null);
+    assert(_apiFormat.endsWith('32'));
+    if (minValue != null && value < minValue) {
+      throw new InternalServerError(
+          'Return value \'$value\' smaller than minimum value \'$minValue\'');
+    }
+    if (maxValue != null && value > maxValue) {
+      throw new InternalServerError(
+          'Return value \'$value\' larger than maximum value \'$maxValue\'');
+    }
+
+    if (_apiFormat == 'int32' && value == value.toSigned(32) ||
+        _apiFormat == 'uint32' && value == value.toUnsigned(32)) {
+      return value;
     }
     throw new InternalServerError(
         'Integer return value: \'$value\' not within the \'$_apiFormat\' '
@@ -119,17 +180,6 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
 
   _fromRequest(value) {
     assert(value != null);
-    if (value is! int && value is! BigInt) {
-      try {
-        if (_apiFormat.endsWith('64')) {
-          value = BigInt.parse(value);
-        } else {
-          value = int.parse(value);
-        }
-      } on FormatException catch (e) {
-        throw new BadRequestError('Invalid integer format: $e');
-      }
-    }
     if (minValue != null && value < minValue) {
       throw new BadRequestError('$name needs to be >= $minValue');
     }
