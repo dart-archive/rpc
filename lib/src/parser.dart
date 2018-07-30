@@ -815,12 +815,12 @@ class ApiParser {
     /// property.
     BigInt _convertMetadataValue(dynamic v, String name) {
       if (v == null) return null;
-      if (v is! String) {
-        addError(
-            '$propertyName: $name for 64 bit integers must be specified as String');
-        return null;
+      if (v is String) {
+        return BigInt.parse(v);
       }
-      return BigInt.parse(v.toString());
+      addError(
+          '$propertyName: $name for 64 bit integers must be specified as String');
+      return null;
     }
 
     min = _convertMetadataValue(metadata.minValue, 'minValue');
