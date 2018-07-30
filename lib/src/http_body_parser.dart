@@ -50,42 +50,46 @@ Future<PostData> _asFormData(ParsedHttpApiRequest request) {
           new MimeMultipartTransformer(contentType.parameters['boundary']))
       .map(_HttpMultipartFormData.parse)
       .map((_HttpMultipartFormData multipart) {
-    Future future;
-    if (multipart.isText) {
-      future = (multipart as _HttpMultipartFormData<String>)
-          .fold<StringBuffer>(new StringBuffer(), _fillStringBuffer)
-          .then((StringBuffer buffer) => buffer.toString());
-    } else {
-      future = (multipart as _HttpMultipartFormData<List<int>>)
-          .fold(new BytesBuilder(), _fillBytesBuilder)
-          .then((BytesBuilder builder) => builder.takeBytes());
-    }
-    return future.then((dynamic data) {
-      final String filename =
-          multipart.contentDisposition.parameters['filename'];
-      if (filename != null) {
-        if (multipart.isText) data = (data as String).codeUnits;
-        data = new MediaMessage()
-          ..contentType = multipart.contentType.value
-          ..bytes = data
-          ..metadata = {'filename': filename};
-      }
-      return [multipart.contentDisposition.parameters['name'], data];
-    });
-  }).fold<List<Future>>([],
+        Future future;
+        if (multipart.isText) {
+          future = (multipart as _HttpMultipartFormData<String>)
+              .fold<StringBuffer>(new StringBuffer(), _fillStringBuffer)
+              .then((StringBuffer buffer) => buffer.toString());
+        } else {
+          future = (multipart as _HttpMultipartFormData<List<int>>)
+              .fold(new BytesBuilder(), _fillBytesBuilder)
+              .then((BytesBuilder builder) => builder.takeBytes());
+        }
+        return future.then((dynamic data) {
+          final String filename =
+              multipart.contentDisposition.parameters['filename'];
+          if (filename != null) {
+            if (multipart.isText) data = (data as String).codeUnits;
+            data = new MediaMessage()
+              ..contentType = multipart.contentType.value
+              ..bytes = data
+              ..metadata = {'filename': filename};
+          }
+          return [multipart.contentDisposition.parameters['name'], data];
+        });
+      })
+      .fold<List<Future>>([],
           (List<Future> futureList, Future future) => futureList..add(future))
       .then(Future.wait)
       .then((List<dynamic> parts) {
-    Map<String, dynamic> map = {};
-    // Form input file multiple
-    for (var part in parts) {
-      if (map[part[0]] != null) {
-        if (map[part[0]] is List) map[part[0]].add(part[1]);
-        else map[part[0]] = [map[part[0]], part[1]];
-      } else map[part[0]] = part[1];
-    }
-    return new PostData('form', map);
-  });
+        Map<String, dynamic> map = {};
+        // Form input file multiple
+        for (var part in parts) {
+          if (map[part[0]] != null) {
+            if (map[part[0]] is List)
+              map[part[0]].add(part[1]);
+            else
+              map[part[0]] = [map[part[0]], part[1]];
+          } else
+            map[part[0]] = part[1];
+        }
+        return new PostData('form', map);
+      });
 }
 
 Future<PostData> parseRequestBody(ParsedHttpApiRequest request) {
@@ -163,8 +167,9 @@ class _HttpMultipartFormData<T> extends Stream<T> {
           break;
       }
     }
-    if (disposition == null) throw new HttpException(
-        "Mime Multipart doesn't contain a Content-Disposition header value");
+    if (disposition == null)
+      throw new HttpException(
+          "Mime Multipart doesn't contain a Content-Disposition header value");
     return new _HttpMultipartFormData(
         type, disposition, encoding, multipart, utf8);
   }
@@ -177,9 +182,9 @@ class _HttpMultipartFormData<T> extends Stream<T> {
       Encoding defaultEncoding) {
     _stream = _mimeMultipart;
 
-    if (contentTransferEncoding !=
-        null) throw new HttpException("Unsupported contentTransferEncoding: "
-        "${contentTransferEncoding.value}");
+    if (contentTransferEncoding != null)
+      throw new HttpException("Unsupported contentTransferEncoding: "
+          "${contentTransferEncoding.value}");
 
     if (contentType == null ||
         contentType.primaryType == 'text' ||

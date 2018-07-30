@@ -187,11 +187,13 @@ class ApiParser {
     var methods = <ApiConfigMethod>[];
     // Parse all methods annotated with the @ApiMethod annotation on this class
     // instance.
-    classInstance.type.declarations.values.whereType<MethodMirror>().forEach((dm) {
+    classInstance.type.declarations.values
+        .whereType<MethodMirror>()
+        .forEach((dm) {
       var metadata = _getMetadata(dm, ApiMethod);
       if (metadata == null) return null;
 
-      if  (!dm.isRegularMethod) {
+      if (!dm.isRegularMethod) {
         // The @ApiMethod annotation is only supported on regular methods.
         var name = MirrorSystem.getName(dm.simpleName);
         addError('@ApiMethod annotation on non-method declaration: \'$name\'');
@@ -529,7 +531,8 @@ class ApiParser {
     // If the schema is used as a request check that it has an unnamed default
     // constructor.
     if (isRequest) {
-      var methods = schemaClass.declarations.values.whereType<MethodMirror>()
+      var methods = schemaClass.declarations.values
+          .whereType<MethodMirror>()
           .where((mm) => mm.isConstructor);
       if (!methods.isEmpty &&
           methods
@@ -575,8 +578,8 @@ class ApiParser {
       // We explicitly want the two to be the same bound class or we will fail.
       if (existingSchemaConfig.schemaClass != schemaClass) {
         var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
-        var existingSchemaName = MirrorSystem
-            .getName(existingSchemaConfig.schemaClass.qualifiedName);
+        var existingSchemaName = MirrorSystem.getName(
+            existingSchemaConfig.schemaClass.qualifiedName);
         addError('Schema \'$newSchemaName\' has a name conflict with '
             '\'$existingSchemaName\'.');
         existingSchemaConfig = null;
@@ -617,8 +620,8 @@ class ApiParser {
       // We explicitly want the two to be the same bound class or we will fail.
       if (existingSchemaConfig.schemaClass != schemaClass) {
         var newSchemaName = MirrorSystem.getName(schemaClass.qualifiedName);
-        var existingSchemaName = MirrorSystem
-            .getName(existingSchemaConfig.schemaClass.qualifiedName);
+        var existingSchemaName = MirrorSystem.getName(
+            existingSchemaConfig.schemaClass.qualifiedName);
         addError('Schema \'$newSchemaName\' has a name conflict with '
             '\'$existingSchemaName\'.');
         existingSchemaConfig = null;
@@ -644,7 +647,6 @@ class ApiParser {
   // Runs through all fields on a schema class and parses them accordingly.
   Map<Symbol, ApiConfigSchemaProperty> _parseProperties(
       ClassMirror schemaClass, bool isRequest) {
-
     // Figure out if we've got the annotation to include the parent class
     bool includeSuperClass = false;
     for (InstanceMirror im in schemaClass.metadata) {
@@ -704,7 +706,11 @@ class ApiParser {
         }
         break;
       case BigInt:
-        return parseIntegerProperty(propertyName, metadata);
+        if (metadata.format == null || metadata.format.endsWith('32')) {
+          addError('$propertyName: 32 bit integers must be of type int');
+          return null;
+        }
+        return parseBigIntegerProperty(propertyName, metadata);
       case double:
         return parseDoubleProperty(propertyName, metadata);
       case bool:
@@ -751,31 +757,72 @@ class ApiParser {
     String apiType;
     if (apiFormat == 'int32' || apiFormat == 'uint32') {
       apiType = 'integer';
-    } else if (apiFormat == 'int64' || apiFormat == 'uint64') {
-      apiType = 'string';
     } else {
       addError('$propertyName: Invalid integer variant: $apiFormat. Supported '
-          'variants are: int32, uint32, int64, uint64');
+          'variants are: int32, uint32');
     }
-    var min;
-    var max;
-    dynamic defaultValue;
+    int min = metadata.minValue;
+    int max = metadata.maxValue;
+    int defaultValue = metadata.defaultValue;
+
+    if (_parseInt(min, apiFormat, propertyName, 'Min') &&
+        _parseInt(max, apiFormat, propertyName, 'Max')) {
+      // Check that min is less than max.
+      if (min > max) {
+        addError('$propertyName: Invalid min/max range: [$min, $max]. Min must '
+            'be less than max.');
+      }
+      // We only parse the default if min/max are valid since we need them to
+      // do the range checking.
+
+      if (_parseInt(defaultValue, apiFormat, propertyName, 'Default')) {
+        if (defaultValue < min) {
+          addError('$propertyName: Default value must be >= ${min}.');
+        }
+        if (defaultValue > max) {
+          addError('$propertyName: Default value must be <= ${max}.');
+        }
+      }
+    }
+    return new IntegerProperty(propertyName, metadata.description,
+        metadata.required, defaultValue, apiType, apiFormat, min, max);
+  }
+
+  // Parses an 'int' property.
+  BigIntegerProperty parseBigIntegerProperty(
+      String propertyName, ApiProperty metadata) {
+    assert(metadata != null);
+    const List<Symbol> extraFields = const [
+      #defaultValue,
+      #format,
+      #minValue,
+      #maxValue
+    ];
+    _checkValidFields(propertyName, 'integer', metadata, extraFields);
+    String apiFormat = metadata.format;
+    String apiType;
+    if (apiFormat == 'int64' || apiFormat == 'uint64') {
+      apiType = 'string';
+    } else {
+      addError('$propertyName: Invalid BigInt variant: $apiFormat. Supported '
+          'variants are: int64, uint64');
+    }
+    BigInt min;
+    BigInt max;
+    BigInt defaultValue;
 
     /// Return v as it was, or via parsing a String if this is a 64 bit
     /// property.
-    dynamic _convertMetadataValue(dynamic v, String name) {
-      if (apiFormat.endsWith('64')) {
-        if (v is String) {
-          return BigInt.parse(v);
-        } else {
-          if (v != null) {
-            addError('$propertyName: $name for 64 bit integers must be specified as String');
-          }
-          return null;
-        }
+    BigInt _convertMetadataValue(dynamic v, String name) {
+      if (v == null) return null;
+      if (v is String) {
+        return BigInt.parse(v);
       }
-      return v;
+      addError(
+          '$propertyName: $name for 64 bit integers must be specified as String');
+      return null;
     }
+
     min = _convertMetadataValue(metadata.minValue, 'minValue');
     max = _convertMetadataValue(metadata.maxValue, 'maxValue');
     defaultValue = _convertMetadataValue(metadata.defaultValue, 'defaultValue');
@@ -799,15 +846,8 @@ class ApiParser {
         }
       }
     }
-    return new IntegerProperty(
-        propertyName,
-        metadata.description,
-        metadata.required,
-        defaultValue,
-        apiType,
-        apiFormat,
-        min,
-        max);
+    return new BigIntegerProperty(propertyName, metadata.description,
+        metadata.required, defaultValue, apiType, apiFormat, min, max);
   }
 
   // Parses a value to determine if it is a valid integer value.

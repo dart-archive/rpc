@@ -621,31 +621,23 @@ void main() {
     });
 
     test('recursion', () {
-      expect(
-          new Future.sync(() {
-            var parser = new ApiParser();
-            parser.parseSchema(reflectClass(RecursiveMessage1), true);
-          }),
-          completes);
-      expect(
-          new Future.sync(() {
-            var parser = new ApiParser();
-            parser.parseSchema(reflectClass(RecursiveMessage2), true);
-          }),
-          completes);
-      expect(
-          new Future.sync(() {
-            var parser = new ApiParser();
-            parser.parseSchema(reflectClass(RecursiveMessage3), true);
-          }),
-          completes);
-      expect(
-          new Future.sync(() {
-            var parser = new ApiParser();
-            parser.parseSchema(reflectClass(RecursiveMessage2), true);
-            parser.parseSchema(reflectClass(RecursiveMessage3), true);
-          }),
-          completes);
+      expect(new Future.sync(() {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage1), true);
+      }), completes);
+      expect(new Future.sync(() {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage2), true);
+      }), completes);
+      expect(new Future.sync(() {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage3), true);
+      }), completes);
+      expect(new Future.sync(() {
+        var parser = new ApiParser();
+        parser.parseSchema(reflectClass(RecursiveMessage2), true);
+        parser.parseSchema(reflectClass(RecursiveMessage3), true);
+      }), completes);
     });
 
     test('variants', () {

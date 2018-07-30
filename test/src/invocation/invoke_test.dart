@@ -213,7 +213,6 @@ class GetAPI {
       ..stringFromBase = 'From base'
       ..stringFromChild = 'From child';
   }
-
 }
 
 class DeleteAPI {
@@ -263,7 +262,6 @@ class PostAPI {
     return message;
   }
 
-
   @ApiMethod(method: 'POST', path: 'post/inheritanceChildClassBaseIncluded')
   InheritanceChildClassBaseIncluded inheritanceChildClassBaseIncludedPost(
       InheritanceChildClassBaseIncluded message) {
@@ -299,7 +297,8 @@ main() async {
     headers.addAll(extraHeaders);
     var bodyStream;
     if ((method == 'POST' || method == 'PUT') && body != 'empty') {
-      bodyStream = new Stream<List<int>>.fromIterable([utf8.encode(jsonEncode(body))]);
+      bodyStream =
+          new Stream<List<int>>.fromIterable([utf8.encode(jsonEncode(body))]);
     } else {
       bodyStream = new Stream<List<int>>.fromIterable([]);
     }
@@ -365,8 +364,7 @@ main() async {
       expect(response.status, HttpStatus.ok);
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello Ghost'});
-      response =
-          await _sendRequest('GET', 'get/hello', query: '?name=John');
+      response = await _sendRequest('GET', 'get/hello', query: '?name=John');
       expect(response.status, HttpStatus.ok);
       result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
@@ -385,8 +383,7 @@ main() async {
     });
 
     test('hello-path', () async {
-      HttpApiResponse response =
-          await _sendRequest('GET', 'get/hello/John');
+      HttpApiResponse response = await _sendRequest('GET', 'get/hello/John');
       expect(response.status, HttpStatus.ok);
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John'});
@@ -399,7 +396,6 @@ main() async {
       var result = await _decodeBody(response.body);
       expect(result, {'aString': 'Hello John Cena'});
     });
-
 
     test('minmax', () async {
       HttpApiResponse response = await _sendRequest('GET', 'get/minmax/7');
@@ -519,10 +515,11 @@ main() async {
 
     test('get-blob-media-unmodified', () async {
       final file = _blobFile();
-      HttpApiResponse response =
-          await _sendRequest('GET', 'get/blob', extraHeaders: {
-        HttpHeaders.ifModifiedSinceHeader: formatHttpDate(file.lastModifiedSync())
-      });
+      HttpApiResponse response = await _sendRequest('GET', 'get/blob',
+          extraHeaders: {
+            HttpHeaders.ifModifiedSinceHeader:
+                formatHttpDate(file.lastModifiedSync())
+          });
       expect(response.status, HttpStatus.notModified);
       expect(response.headers[HttpHeaders.contentTypeHeader], null);
       expect(response.headers[HttpHeaders.lastModifiedHeader],
@@ -546,9 +543,9 @@ main() async {
       expect(blob['md5Hash'], 'a675cb93b75d5f1656c920dceecdcb38');
     });
 
-    test('get-inherited-child-class-base-included', () async{
+    test('get-inherited-child-class-base-included', () async {
       HttpApiResponse response =
-      await _sendRequest('GET', 'get/inheritanceChildClassBaseIncluded');
+          await _sendRequest('GET', 'get/inheritanceChildClassBaseIncluded');
       expect(response.status, HttpStatus.ok);
       expect(response.headers[HttpHeaders.contentTypeHeader],
           'application/json; charset=utf-8');
@@ -557,16 +554,15 @@ main() async {
           {'stringFromBase': 'From base', 'stringFromChild': 'From child'});
     });
 
-    test('get-inherited-child-class-base-excluded', () async{
+    test('get-inherited-child-class-base-excluded', () async {
       HttpApiResponse response =
-      await _sendRequest('GET', 'get/inheritanceChildClassBaseExcluded');
+          await _sendRequest('GET', 'get/inheritanceChildClassBaseExcluded');
       expect(response.status, HttpStatus.ok);
       expect(response.headers[HttpHeaders.contentTypeHeader],
           'application/json; charset=utf-8');
       var result = await _decodeBody(response.body);
       expect(result, {'stringFromChild': 'From child'});
     });
-
   });
 
   group('api-invoke-delete', () {
@@ -667,14 +663,15 @@ main() async {
         'stringFromBase': 'posted string from base',
         'stringFromChild': 'posted string from child'
       };
-      HttpApiResponse response = await _sendRequest('POST',
-          'post/inheritanceChildClassBaseIncluded', body: objectFields);
+      HttpApiResponse response = await _sendRequest(
+          'POST', 'post/inheritanceChildClassBaseIncluded',
+          body: objectFields);
       var resultBody = await _decodeBody(response.body);
       expect(resultBody, objectFields);
     });
     test('add-inheritance-child-class-base-excluded', () async {
-      HttpApiResponse response = await _sendRequest('POST',
-          'post/inheritanceChildClassBaseExcluded',
+      HttpApiResponse response = await _sendRequest(
+          'POST', 'post/inheritanceChildClassBaseExcluded',
           body: {
             // don't expect this in the result...
             'stringFromBase': 'posted string from base',
@@ -815,7 +812,9 @@ main() async {
           'InheritanceChildClassBaseExcluded': {
             'id': 'InheritanceChildClassBaseExcluded',
             'type': 'object',
-            'properties': {'stringFromChild': {'type': 'string'}}
+            'properties': {
+              'stringFromChild': {'type': 'string'}
+            }
           },
           'DefaultValueMessage': {
             'id': 'DefaultValueMessage',
@@ -1131,7 +1130,9 @@ main() async {
   });
 
   group('api-invoke-options', () {
-    Map<String, dynamic> extraHeaders(dynamic methods, {bool asString: false}) => {
+    Map<String, dynamic> extraHeaders(dynamic methods,
+            {bool asString: false}) =>
+        {
           'access-control-request-method':
               asString ? methods.join(',') : methods,
           'access-control-request-headers': 'content-type'

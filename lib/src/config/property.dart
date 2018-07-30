@@ -10,8 +10,7 @@ class ApiConfigSchemaProperty<D, J> {
   final String description;
   final bool required;
 
-  // TODO(jcollins-g): This would be better as [J] rather than [String].
-  final String defaultValue;
+  final J defaultValue;
   bool get hasDefault => (defaultValue != null);
 
   final String _apiType;
@@ -35,7 +34,7 @@ class ApiConfigSchemaProperty<D, J> {
       property.description = description;
     }
     if (defaultValue != null) {
-      property.default_ = defaultValue;
+      property.default_ = defaultValue.toString();
     }
     return property;
   }
@@ -65,15 +64,15 @@ class ApiConfigSchemaProperty<D, J> {
   }
 }
 
-class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
-  final dynamic minValue;
-  final dynamic maxValue;
+class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
+  final BigInt minValue;
+  final BigInt maxValue;
 
-  IntegerProperty(
+  BigIntegerProperty(
       String name,
       String description,
       bool required,
-      dynamic defaultValue,
+      BigInt defaultValue,
       String apiType,
       String apiFormat,
       this.minValue,
@@ -86,15 +85,10 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
             apiType,
             apiFormat);
 
-  _toResponse(value) {
+  String _toResponse(BigInt value) {
     assert(value != null);
-    if (_apiFormat.endsWith('64') && value is! BigInt) {
-      throw new InternalServerError(
-          'Trying to return non-BigInt: \'$value\' in 64-bit integer property');
-    } else if (value is! int && value is! BigInt) {
-      throw new InternalServerError(
-          'Trying to return non-integer: \'$value\' in integer property');
-    }
+    assert(_apiFormat.endsWith('64'));
+
     if (minValue != null && value < minValue) {
       throw new InternalServerError(
           'Return value \'$value\' smaller than minimum value \'$minValue\'');
@@ -102,10 +96,6 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
     if (maxValue != null && value > maxValue) {
       throw new InternalServerError(
           'Return value \'$value\' larger than maximum value \'$maxValue\'');
-    }
-    if (_apiFormat == 'int32' && value == value.toSigned(32) ||
-        _apiFormat == 'uint32' && value == value.toUnsigned(32)) {
-      return value;
     }
     if (_apiFormat == 'int64' && value == value.toSigned(64) ||
         _apiFormat == 'uint64' && value == value.toUnsigned(64)) {
@@ -117,19 +107,73 @@ class IntegerProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
         'property range.');
   }
 
-  _fromRequest(value) {
+  BigInt _fromRequest(String value) {
     assert(value != null);
-    if (value is! int && value is! BigInt) {
-      try {
-        if (_apiFormat.endsWith('64')) {
-          value = BigInt.parse(value);
-        } else {
-          value = int.parse(value);
-        }
-      } on FormatException catch (e) {
-        throw new BadRequestError('Invalid integer format: $e');
-      }
+    BigInt parsedValue;
+    try {
+      parsedValue = BigInt.parse(value);
+    } on FormatException catch (e) {
+      throw new BadRequestError('Invalid integer format: $e');
     }
+    if (minValue != null && parsedValue < minValue) {
+      throw new BadRequestError('$name needs to be >= $minValue');
+    }
+    if (maxValue != null && parsedValue > maxValue) {
+      throw new BadRequestError('$name needs to be <= $maxValue');
+    }
+    return parsedValue;
+  }
+
+  discovery.JsonSchema get asDiscovery {
+    var property = super.asDiscovery;
+    if (minValue != null) {
+      property.minimum = minValue.toString();
+    }
+    if (maxValue != null) {
+      property.maximum = maxValue.toString();
+    }
+    return property;
+  }
+}
+
+class IntegerProperty extends ApiConfigSchemaProperty<int, int> {
+  final int minValue;
+  final int maxValue;
+
+  IntegerProperty(
+      String name,
+      String description,
+      bool required,
+      int defaultValue,
+      String apiType,
+      String apiFormat,
+      this.minValue,
+      this.maxValue)
+      : super(name, description, required, defaultValue, apiType, apiFormat);
+
+  int _toResponse(int value) {
+    assert(value != null);
+    assert(_apiFormat.endsWith('32'));
+    if (minValue != null && value < minValue) {
+      throw new InternalServerError(
+          'Return value \'$value\' smaller than minimum value \'$minValue\'');
+    }
+    if (maxValue != null && value > maxValue) {
+      throw new InternalServerError(
+          'Return value \'$value\' larger than maximum value \'$maxValue\'');
+    }
+
+    if (_apiFormat == 'int32' && value == value.toSigned(32) ||
+        _apiFormat == 'uint32' && value == value.toUnsigned(32)) {
+      return value;
+    }
+    throw new InternalServerError(
+        'Integer return value: \'$value\' not within the \'$_apiFormat\' '
+        'property range.');
+  }
+
+  int _fromRequest(int value) {
+    assert(value != null);
     if (minValue != null && value < minValue) {
       throw new BadRequestError('$name needs to be >= $minValue');
     }
@@ -162,7 +206,7 @@ class DoubleProperty extends ApiConfigSchemaProperty<double, dynamic> {
             'number',
             apiFormat);
 
-  _fromRequest(value) {
+  double _fromRequest(dynamic value) {
     assert(value != null);
     if (value is num) {
       return value.toDouble();
@@ -174,7 +218,7 @@ class DoubleProperty extends ApiConfigSchemaProperty<double, dynamic> {
     }
   }
 
-  _toResponse(value) {
+  dynamic _toResponse(double value) {
     if (_apiFormat == 'float' &&
         (value < SMALLEST_FLOAT || value > LARGEST_FLOAT)) {
       throw new InternalServerError(
@@ -204,7 +248,7 @@ class EnumProperty extends ApiConfigSchemaProperty<String, String> {
       ..enumDescriptions = _values.values.toList();
   }
 
-  _fromRequest(value) {
+  String _fromRequest(String value) {
     assert(value != null);
     if (_values.containsKey(value)) {
       return value;
@@ -224,7 +268,7 @@ class BooleanProperty extends ApiConfigSchemaProperty<bool, dynamic> {
             'boolean',
             null);
 
-  _fromRequest(value) {
+  bool _fromRequest(dynamic value) {
     assert(value != null);
     if (value is bool) {
       return value;
@@ -253,12 +297,12 @@ class DateTimeProperty extends ApiConfigSchemaProperty<DateTime, String> {
             'string',
             'date-time');
 
-  _toResponse(value) {
+  String _toResponse(DateTime value) {
     assert(value != null);
     return value.toUtc().toIso8601String();
   }
 
-  _fromRequest(value) {
+  DateTime _fromRequest(String value) {
     assert(value != null);
     try {
       return DateTime.parse(value);
@@ -274,12 +318,12 @@ class SchemaProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
   SchemaProperty(String name, String description, bool required, this._ref)
       : super(name, description, required, null, null, null);
 
-  _toResponse(value) {
+  dynamic _toResponse(dynamic value) {
     assert(value != null);
     return _ref.toResponse(value);
   }
 
-  _fromRequest(value) {
+  dynamic _fromRequest(dynamic value) {
     assert(value != null);
     if (value is! Map && value is! MediaMessage) {
       throw new BadRequestError('Invalid request message');
@@ -306,22 +350,17 @@ class ListProperty extends ApiConfigSchemaProperty<List, List> {
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..items = _itemsProperty.asDiscovery;
 
-  _toResponse(listObject) {
-    if (listObject is! List) {
-      throw new BadRequestError('Invalid property, should be of type \'List\'');
-    }
+  List _toResponse(List listObject) {
     return listObject.map(_itemsProperty._toResponse).toList();
   }
 
-  _fromRequest(encodedList) {
-    if (encodedList is! List) {
-      throw new BadRequestError('Invalid list request value');
-    }
+  List _fromRequest(List encodedList) {
     return encodedList.map(_itemsProperty._fromRequest).toList();
   }
 }
 
-class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>, Map<String, dynamic>> {
+class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>,
+    Map<String, dynamic>> {
   final dynamic _additionalProperty;
 
   MapProperty(
@@ -334,7 +373,7 @@ class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>, Map<Stri
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
 
-  _toResponse(mapObject) {
+  Map<String, dynamic> _toResponse(Map<String, dynamic> mapObject) {
     var result = <String, dynamic>{};
     mapObject.forEach((String key, object) {
       result[key] = _additionalProperty._toResponse(object);
@@ -342,7 +381,7 @@ class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>, Map<Stri
     return result;
   }
 
-  _fromRequest(encodedMap) {
+  Map<String, dynamic> _fromRequest(Map<String, dynamic> encodedMap) {
     // Map from String to the type of the additional property.
     var result = <String, dynamic>{};
     encodedMap.forEach((String key, encodedObject) {
