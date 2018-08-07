@@ -1,4 +1,6 @@
-# Changelog
+## 0.6.0-dev.2
+
+- Support latest `package:gcloud`.
 
 ## 0.6.0-dev.1
 
