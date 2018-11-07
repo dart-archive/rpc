@@ -312,18 +312,18 @@ class DateTimeProperty extends ApiConfigSchemaProperty<DateTime, String> {
   }
 }
 
-class SchemaProperty<D, J extends Map> extends ApiConfigSchemaProperty<dynamic, dynamic> {
+class SchemaProperty<D> extends ApiConfigSchemaProperty<D, dynamic> {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
       : super(name, description, required, null, null, null);
 
-  dynamic _toResponse(value) {
+  dynamic _toResponse(D value) {
     assert(value != null);
     return _ref.toResponse(value);
   }
 
-  dynamic _fromRequest(value) {
+  D _fromRequest(dynamic value) {
     assert(value != null);
     if (value is! Map && value is! MediaMessage) {
       throw new BadRequestError('Invalid request message');

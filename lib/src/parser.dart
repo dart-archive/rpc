@@ -987,8 +987,10 @@ class ApiParser {
     var propertyTypeName = MirrorSystem.getName(schemaTypeMirror.simpleName);
     _checkValidFields(propertyName, propertyTypeName, metadata, []);
     var schema = parseSchema(schemaTypeMirror, isRequest);
-    return new SchemaProperty(
-        propertyName, metadata.description, metadata.required, schema);
+    ClassMirror schemaProperty = reflectType(SchemaProperty, [schemaTypeMirror.reflectedType]);
+    return schemaProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, schema]).reflectee;
+    //return new SchemaProperty(
+    //    propertyName, metadata.description, metadata.required, schema);
   }
 
   /// Return the type arguments for the given class [T], which is or is a
