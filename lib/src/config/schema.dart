@@ -48,7 +48,7 @@ class ApiConfigSchema {
     InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
     for (Symbol sym in _properties.keys) {
       final ApiConfigSchemaProperty prop = _properties[sym];
-      try {
+      //try {
         if (request.containsKey(prop.name)) {
           // MediaMessage special case
           if (request[prop.name] is MediaMessage ||
@@ -74,9 +74,9 @@ class ApiConfigSchema {
         } else if (prop.required) {
           throw new BadRequestError('Required field ${prop.name} is missing');
         }
-      } on TypeError catch (e) {
+      /*} on TypeError catch (e) {
         throw BadRequestError('Field ${prop.name} has wrong type:  ${e}');
-      }
+      }*/
     }
     return schema.reflectee;
   }

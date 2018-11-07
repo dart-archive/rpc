@@ -312,18 +312,18 @@ class DateTimeProperty extends ApiConfigSchemaProperty<DateTime, String> {
   }
 }
 
-class SchemaProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
+class SchemaProperty<D, J extends Map> extends ApiConfigSchemaProperty<dynamic, dynamic> {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
       : super(name, description, required, null, null, null);
 
-  dynamic _toResponse(dynamic value) {
+  dynamic _toResponse(value) {
     assert(value != null);
     return _ref.toResponse(value);
   }
 
-  dynamic _fromRequest(dynamic value) {
+  dynamic _fromRequest(value) {
     assert(value != null);
     if (value is! Map && value is! MediaMessage) {
       throw new BadRequestError('Invalid request message');
@@ -337,7 +337,7 @@ class SchemaProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
   bool get isSimple => false;
 }
 
-class ListProperty extends ApiConfigSchemaProperty<List, List> {
+class ListProperty<D> extends ApiConfigSchemaProperty<List<D>, List> {
   final ApiConfigSchemaProperty _itemsProperty;
 
   ListProperty(
@@ -350,12 +350,12 @@ class ListProperty extends ApiConfigSchemaProperty<List, List> {
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..items = _itemsProperty.asDiscovery;
 
-  List _toResponse(List listObject) {
+  List _toResponse(List<D> listObject) {
     return listObject.map(_itemsProperty._toResponse).toList();
   }
 
-  List _fromRequest(List encodedList) {
-    return encodedList.map(_itemsProperty._fromRequest).toList();
+  List<D> _fromRequest(List encodedList) {
+    return encodedList.map<D>(_itemsProperty._fromRequest as D Function(Object)).toList();
   }
 }
 

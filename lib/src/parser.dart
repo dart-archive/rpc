@@ -980,7 +980,7 @@ class ApiParser {
   }
 
   // Parses a nested class schema property.
-  SchemaProperty parseSchemaProperty(String propertyName, ApiProperty metadata,
+  SchemaProperty parseSchemaProperty<T>(String propertyName, ApiProperty metadata,
       ClassMirror schemaTypeMirror, bool isRequest) {
     assert(metadata != null);
     assert(schemaTypeMirror is ClassMirror && !schemaTypeMirror.isAbstract);
@@ -991,10 +991,21 @@ class ApiParser {
         propertyName, metadata.description, metadata.required, schema);
   }
 
+  /// Return the type arguments for the given class [T], which is or is a
+  /// a superclass of [classMirror.reflectee].
+  List<TypeMirror> _TypeArgumentsForBaseClass<T>(ClassMirror classMirror) {
+    ClassMirror baseClassMirror = reflectClass(T);
+    if (classMirror.originalDeclaration != baseClassMirror) {
+      return classMirror.superinterfaces.firstWhere((interface) => interface.originalDeclaration == baseClassMirror).typeArguments;
+    }
+    return classMirror.typeArguments;
+  }
+
   ListProperty parseListProperty(String propertyName, ApiProperty metadata,
       ClassMirror listPropertyType, bool isRequest) {
+    var listTypeArguments = _TypeArgumentsForBaseClass<List>(listPropertyType);
+    /*
     // If List<T> is a superclass, the way to get T is different.
-    var listTypeArguments;
     if (listPropertyType.originalDeclaration != reflectClass(List)) {
       listTypeArguments = listPropertyType.superinterfaces
           .firstWhere((interface) =>
@@ -1002,7 +1013,7 @@ class ApiParser {
           .typeArguments;
     } else {
       listTypeArguments = listPropertyType.typeArguments;
-    }
+    }*/
     assert(listTypeArguments.length == 1);
     assert(metadata != null);
     var listTypeName = MirrorSystem.getName(listTypeArguments[0].simpleName);
@@ -1010,8 +1021,13 @@ class ApiParser {
     // TODO: Figure out what to do about metadata for the items property.
     var listItemsProperty = parseProperty(
         listTypeArguments[0], propertyName, new ApiProperty(), isRequest);
-    return new ListProperty(propertyName, metadata.description,
-        metadata.required, listItemsProperty);
+
+    ClassMirror listItemsPropertyMirror = reflect(listItemsProperty).type;
+    // Pull the Dart type of the listItemsProperty and add it to the ListProperty's type parameters, then instantiate a new instance.
+    ClassMirror listProperty = reflectType(ListProperty, [listTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).first]);
+    return listProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, listItemsProperty]).reflectee;
+    //return new ListProperty(propertyName, metadata.description,
+    //    metadata.required, listItemsProperty);
   }
 
   MapProperty parseMapProperty(String propertyName, ApiProperty metadata,
