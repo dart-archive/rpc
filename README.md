@@ -2,6 +2,12 @@
 
 [![Build Status](https://travis-ci.org/dart-lang/rpc.svg?branch=master)](https://travis-ci.org/dart-lang/rpc)
 
+## Discontinued
+
+**NOTE**: This package has been discontinued, and is no longer being actively maintained.
+We recommend you consider other RPC mechanisms, such as our [gRPC package](https://github.com/grpc/grpc-dart).
+
+
 ### Description
 
 Light-weight RPC package for creating RESTful server-side Dart APIs. The package
