@@ -224,11 +224,11 @@ class ApiParser {
 
     // Parse name.
     var name = metadata.name;
+
     if (name == null || name.isEmpty) {
       // Default method name is method name in camel case.
       name = methodName;
     }
-
     // Method discovery document id.
     var discoveryId = _contextId;
 
@@ -543,7 +543,7 @@ class ApiParser {
             'arguments.');
       }
     }
-    schemaConfig = new ApiConfigSchema(name, schemaClass, isRequest);
+    schemaConfig = new ConfigSchema(name, schemaClass, isRequest);
 
     // We put in the schema before parsing properties to detect cycles.
     apiSchemas[name] = schemaConfig;
@@ -590,7 +590,8 @@ class ApiParser {
         return existingSchemaConfig;
       }
     }
-    var schemaConfig = new NamedListSchema(name, schemaClass, isRequest);
+    ClassMirror namedListSchema = reflectType(NamedListSchema, [schemaClass.typeArguments[0].reflectedType]);
+    var schemaConfig = namedListSchema.newInstance(const Symbol(''), [name, schemaClass, isRequest]).reflectee;
     // We put in the schema before parsing properties to detect cycles.
     apiSchemas[name] = schemaConfig;
     var itemsProperty = parseProperty(
@@ -632,8 +633,8 @@ class ApiParser {
         return existingSchemaConfig;
       }
     }
-
-    var schemaConfig = new NamedMapSchema(name, schemaClass, isRequest);
+    ClassMirror namedMapSchema = reflectType(NamedMapSchema, [schemaClass.typeArguments[1].reflectedType]);
+    var schemaConfig = namedMapSchema.newInstance(const Symbol(''), [name, schemaClass, isRequest]).reflectee;
     // We put in the schema before parsing properties to detect cycles.
     apiSchemas[name] = schemaConfig;
     var additionalProperty = parseProperty(
@@ -1005,17 +1006,16 @@ class ApiParser {
 
   ListProperty parseListProperty(String propertyName, ApiProperty metadata,
       ClassMirror listPropertyType, bool isRequest) {
-    var listTypeArguments = _TypeArgumentsForBaseClass<List>(listPropertyType);
-    /*
     // If List<T> is a superclass, the way to get T is different.
+    var listTypeArguments;
     if (listPropertyType.originalDeclaration != reflectClass(List)) {
       listTypeArguments = listPropertyType.superinterfaces
           .firstWhere((interface) =>
               interface.originalDeclaration == reflectClass(List))
           .typeArguments;
     } else {
-      listTypeArguments = listPropertyType.typeArguments;
-    }*/
+      listTypeArguments = _TypeArgumentsForBaseClass<List>(listPropertyType);
+    }
     assert(listTypeArguments.length == 1);
     assert(metadata != null);
     var listTypeName = MirrorSystem.getName(listTypeArguments[0].simpleName);
@@ -1047,8 +1047,9 @@ class ApiParser {
     // TODO: Figure out what to do about metadata for the additional property.
     var additionalProperty = parseProperty(
         mapTypeArguments[1], propertyName, new ApiProperty(), isRequest);
-    return new MapProperty(propertyName, metadata.description,
-        metadata.required, additionalProperty);
+    ClassMirror mapProperty = reflectType(MapProperty, [mapTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).last]);
+    return mapProperty.newInstance(const Symbol(''), [propertyName, metadata.description,
+        metadata.required, additionalProperty]).reflectee;
   }
 
   // Helper method to check that a field annotated with an ApiProperty is using
