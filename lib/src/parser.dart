@@ -990,8 +990,6 @@ class ApiParser {
     var schema = parseSchema(schemaTypeMirror, isRequest);
     ClassMirror schemaProperty = reflectType(SchemaProperty, [schemaTypeMirror.reflectedType]);
     return schemaProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, schema]).reflectee;
-    //return new SchemaProperty(
-    //    propertyName, metadata.description, metadata.required, schema);
   }
 
   /// Return the type arguments for the given class [T], which is or is a
@@ -1024,12 +1022,9 @@ class ApiParser {
     var listItemsProperty = parseProperty(
         listTypeArguments[0], propertyName, new ApiProperty(), isRequest);
 
-    ClassMirror listItemsPropertyMirror = reflect(listItemsProperty).type;
     // Pull the Dart type of the listItemsProperty and add it to the ListProperty's type parameters, then instantiate a new instance.
     ClassMirror listProperty = reflectType(ListProperty, [listTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).first]);
     return listProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, listItemsProperty]).reflectee;
-    //return new ListProperty(propertyName, metadata.description,
-    //    metadata.required, listItemsProperty);
   }
 
   MapProperty parseMapProperty(String propertyName, ApiProperty metadata,

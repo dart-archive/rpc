@@ -84,11 +84,10 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
         }
       }
       return schema.reflectee;
-    } else {
-      throw new BadRequestError(
-          'Invalid parameter: \'$request\', should be an instance of type '
-              '\'$schemaName\'.');
     }
+    throw new BadRequestError(
+        'Invalid parameter: \'$request\', should be an instance of type '
+            '\'$schemaName\'.');
   }
 
   J toResponse(D result) {
