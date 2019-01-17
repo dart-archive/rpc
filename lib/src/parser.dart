@@ -224,11 +224,11 @@ class ApiParser {
 
     // Parse name.
     var name = metadata.name;
-
     if (name == null || name.isEmpty) {
       // Default method name is method name in camel case.
       name = methodName;
     }
+
     // Method discovery document id.
     var discoveryId = _contextId;
 
@@ -633,6 +633,7 @@ class ApiParser {
         return existingSchemaConfig;
       }
     }
+
     ClassMirror namedMapSchema = reflectType(NamedMapSchema, [schemaClass.typeArguments[1].reflectedType]);
     var schemaConfig = namedMapSchema.newInstance(const Symbol(''), [name, schemaClass, isRequest]).reflectee;
     // We put in the schema before parsing properties to detect cycles.
@@ -1021,8 +1022,6 @@ class ApiParser {
     // TODO: Figure out what to do about metadata for the items property.
     var listItemsProperty = parseProperty(
         listTypeArguments[0], propertyName, new ApiProperty(), isRequest);
-
-    // Pull the Dart type of the listItemsProperty and add it to the ListProperty's type parameters, then instantiate a new instance.
     ClassMirror listProperty = reflectType(ListProperty, [listTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).first]);
     return listProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, listItemsProperty]).reflectee;
   }

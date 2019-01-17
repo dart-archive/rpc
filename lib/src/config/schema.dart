@@ -44,7 +44,7 @@ abstract class ApiConfigSchema<D, J> {
   J toResponse(D result);
 }
 
-// TODO(jcollins-j): consider `J extends Map`
+// TODO(jcollins-g): consider `J extends Map`
 class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
   ConfigSchema(String schemaName, ClassMirror schemaClass, bool isRequest)
       : super(schemaName, schemaClass, isRequest);
