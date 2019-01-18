@@ -44,6 +44,8 @@ abstract class ApiConfigSchema<D, J> {
   J toResponse(D result);
 }
 
+final Type _listOfMediaMessage = reflectType(List, [MediaMessage]).reflectedType;
+
 // TODO(jcollins-g): consider `J extends Map`
 class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
   ConfigSchema(String schemaName, ClassMirror schemaClass, bool isRequest)
@@ -63,7 +65,7 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
               // If in form, there is an (input[type="file"] multiple) and the user
               // put only one file. It's not an error and it should be accept.
               // Maybe it cans be optimized.
-              if (schema.type.instanceMembers[sym].returnType.reflectedType is List<MediaMessage> &&
+              if (schema.type.instanceMembers[sym].returnType.reflectedType == _listOfMediaMessage &&
                   requestForSymbol is MediaMessage) {
                 schema.setField(sym, [requestForSymbol]);
               } else if (requestForSymbol is List) {
