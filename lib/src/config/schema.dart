@@ -56,24 +56,23 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
         final ApiConfigSchemaProperty prop = _properties[sym];
         try {
           if (request.containsKey(prop.name)) {
+            final requestForSymbol = request[prop.name];
             // MediaMessage special case
-            if (request[prop.name] is MediaMessage ||
-                request[prop.name] is List<MediaMessage>) {
+            if (requestForSymbol is MediaMessage ||
+                requestForSymbol is List<MediaMessage>) {
               // If in form, there is an (input[type="file"] multiple) and the user
               // put only one file. It's not an error and it should be accept.
               // Maybe it cans be optimized.
-              if (schema.type.instanceMembers[sym].returnType.reflectedType
-                  .toString() ==
-                  'List<MediaMessage>' &&
-                  request[prop.name] is MediaMessage) {
-                schema.setField(sym, [request[prop.name]]);
-              } else if (request[prop.name] is List) {
-                schema.setField(sym, prop.fromRequest(request[prop.name]));
+              if (schema.type.instanceMembers[sym].returnType.reflectedType is List<MediaMessage> &&
+                  requestForSymbol is MediaMessage) {
+                schema.setField(sym, [requestForSymbol]);
+              } else if (requestForSymbol is List) {
+                schema.setField(sym, prop.fromRequest(requestForSymbol));
               } else {
-                schema.setField(sym, request[prop.name]);
+                schema.setField(sym, requestForSymbol);
               }
             } else {
-              schema.setField(sym, prop.fromRequest(request[prop.name]));
+              schema.setField(sym, prop.fromRequest(requestForSymbol));
             }
           } else if (prop.hasDefault) {
             schema.setField(sym, prop.fromRequest(prop.defaultValue));
