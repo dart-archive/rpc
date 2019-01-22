@@ -5,7 +5,7 @@
 part of rpc.config;
 
 /// [D] is the type used in Dart code.  [J] is the type used in JSON.
-class ApiConfigSchemaProperty<D, J> {
+abstract class ApiConfigSchemaProperty<D, J> {
   final String name;
   final String description;
   final bool required;
@@ -312,18 +312,18 @@ class DateTimeProperty extends ApiConfigSchemaProperty<DateTime, String> {
   }
 }
 
-class SchemaProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
+class SchemaProperty<D> extends ApiConfigSchemaProperty<D, dynamic> {
   final ApiConfigSchema _ref;
 
   SchemaProperty(String name, String description, bool required, this._ref)
       : super(name, description, required, null, null, null);
 
-  dynamic _toResponse(dynamic value) {
+  dynamic _toResponse(D value) {
     assert(value != null);
     return _ref.toResponse(value);
   }
 
-  dynamic _fromRequest(dynamic value) {
+  D _fromRequest(dynamic value) {
     assert(value != null);
     if (value is! Map && value is! MediaMessage) {
       throw new BadRequestError('Invalid request message');
@@ -337,7 +337,7 @@ class SchemaProperty extends ApiConfigSchemaProperty<dynamic, dynamic> {
   bool get isSimple => false;
 }
 
-class ListProperty extends ApiConfigSchemaProperty<List, List> {
+class ListProperty<D> extends ApiConfigSchemaProperty<List<D>, List> {
   final ApiConfigSchemaProperty _itemsProperty;
 
   ListProperty(
@@ -350,18 +350,17 @@ class ListProperty extends ApiConfigSchemaProperty<List, List> {
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..items = _itemsProperty.asDiscovery;
 
-  List _toResponse(List listObject) {
+  List _toResponse(List<D> listObject) {
     return listObject.map(_itemsProperty._toResponse).toList();
   }
 
-  List _fromRequest(List encodedList) {
-    return encodedList.map(_itemsProperty._fromRequest).toList();
+  List<D> _fromRequest(List encodedList) {
+    return encodedList.map<D>(_itemsProperty._fromRequest as D Function(Object)).toList();
   }
 }
 
-class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>,
-    Map<String, dynamic>> {
-  final dynamic _additionalProperty;
+class MapProperty<D> extends ApiConfigSchemaProperty<Map<String, D>, Map> {
+  final ApiConfigSchemaProperty _additionalProperty;
 
   MapProperty(
       String name, String description, bool required, this._additionalProperty)
@@ -373,18 +372,18 @@ class MapProperty extends ApiConfigSchemaProperty<Map<String, dynamic>,
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;
 
-  Map<String, dynamic> _toResponse(Map<String, dynamic> mapObject) {
-    var result = <String, dynamic>{};
-    mapObject.forEach((String key, object) {
+  Map _toResponse(Map<String, D> mapObject) {
+    var result = {};
+    mapObject.forEach((String key, D object) {
       result[key] = _additionalProperty._toResponse(object);
     });
     return result;
   }
 
-  Map<String, dynamic> _fromRequest(Map<String, dynamic> encodedMap) {
+  Map<String, D> _fromRequest(Map encodedMap) {
     // Map from String to the type of the additional property.
-    var result = <String, dynamic>{};
-    encodedMap.forEach((String key, encodedObject) {
+    var result = <String, D>{};
+    encodedMap.forEach((key, encodedObject) {
       result[key] = _additionalProperty._fromRequest(encodedObject);
     });
     return result;
