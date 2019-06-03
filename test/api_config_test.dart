@@ -18,21 +18,20 @@ import 'src/test_api.dart';
 void main() {
   group('api_config_misconfig', () {
     test('no_apiclass_annotation', () {
-      var parser = new ApiParser();
-      parser.parse(new NoAnnotation());
+      var parser = ApiParser();
+      parser.parse(NoAnnotation());
       var expected = [
-        new ApiConfigError(
-            'NoAnnotation: Missing required @ApiClass annotation.'),
-        new ApiConfigError('NoAnnotation: @ApiClass.version field is required.')
+        ApiConfigError('NoAnnotation: Missing required @ApiClass annotation.'),
+        ApiConfigError('NoAnnotation: @ApiClass.version field is required.')
       ];
       expect(parser.errors.toString(), expected.toString());
     });
 
     test('no_apiclass_version', () {
-      var parser = new ApiParser();
-      parser.parse(new NoVersion());
+      var parser = ApiParser();
+      parser.parse(NoVersion());
       var expected = [
-        new ApiConfigError('NoVersion: @ApiClass.version field is required.')
+        ApiConfigError('NoVersion: @ApiClass.version field is required.')
       ];
       expect(parser.errors.toString(), expected.toString());
     });
@@ -40,8 +39,8 @@ void main() {
 
   group('api_config_correct', () {
     test('correct_simple', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new Tester());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(Tester());
       expect(parser.isValid, isTrue);
       Map expectedJson = {
         'kind': 'discovery#restDescription',
@@ -69,8 +68,8 @@ void main() {
     });
 
     test('correct_simple2', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new CorrectSimple());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(CorrectSimple());
       expect(parser.isValid, isTrue);
       Map expectedSchemas = {
         'TestMessage2': {
@@ -150,8 +149,8 @@ void main() {
     });
 
     test('correct_extended', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new CorrectMethods());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(CorrectMethods());
       expect(parser.isValid, isTrue);
       var discoveryDoc =
           apiConfig.generateDiscoveryDocument('http://localhost:8080', null);
@@ -384,35 +383,35 @@ void main() {
 
   group('api_config_resources_misconfig', () {
     test('multiple_method_annotations', () {
-      var parser = new ApiParser();
-      var metadata = new ApiResource();
+      var parser = ApiParser();
+      var metadata = ApiResource();
       parser.parseResource(
-          'foo', reflect(new MultipleMethodAnnotations()), metadata);
+          'foo', reflect(MultipleMethodAnnotations()), metadata);
       expect(parser.isValid, isFalse);
       var errors = [
-        new ApiConfigError('foo: Multiple ApiMethod annotations on declaration '
+        ApiConfigError('foo: Multiple ApiMethod annotations on declaration '
             '\'multiAnnotations\'.')
       ];
       expect(parser.errors.toString(), errors.toString());
     });
 
     test('multiple_resource_annotations', () {
-      var parser = new ApiParser();
-      parser.parse(new TesterWithMultipleResourceAnnotations());
+      var parser = ApiParser();
+      parser.parse(TesterWithMultipleResourceAnnotations());
       expect(parser.isValid, isFalse);
       var errors = [
-        new ApiConfigError('TesterWithMultipleResourceAnnotations: Multiple '
+        ApiConfigError('TesterWithMultipleResourceAnnotations: Multiple '
             'ApiResource annotations on declaration \'someResource\'.')
       ];
       expect(parser.errors.toString(), errors.toString());
     });
 
     test('duplicate_resources', () {
-      var parser = new ApiParser();
-      parser.parse(new TesterWithDuplicateResourceNames());
+      var parser = ApiParser();
+      parser.parse(TesterWithDuplicateResourceNames());
       expect(parser.isValid, isFalse);
       var errors = [
-        new ApiConfigError('TesterWithDuplicateResourceNames: Duplicate '
+        ApiConfigError('TesterWithDuplicateResourceNames: Duplicate '
             'resource with name: someResource')
       ];
       expect(parser.errors.toString(), errors.toString());
@@ -421,8 +420,8 @@ void main() {
 
   group('api_config_resources_correct', () {
     test('simple', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new TesterWithOneResource());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(TesterWithOneResource());
       expect(parser.isValid, isTrue);
       var discoveryDoc =
           apiConfig.generateDiscoveryDocument('http://localhost:8080', null);
@@ -445,8 +444,8 @@ void main() {
     });
 
     test('two_resources', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new TesterWithTwoResources());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(TesterWithTwoResources());
       expect(parser.isValid, isTrue);
       var expectedResources = {
         'someResource': {
@@ -481,8 +480,8 @@ void main() {
     });
 
     test('nested_resources', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new TesterWithNestedResources());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(TesterWithNestedResources());
       expect(parser.isValid, isTrue);
       var expectedResources = {
         'resourceWithNested': {
@@ -513,75 +512,73 @@ void main() {
 
   group('api_config_methods', () {
     test('misconfig', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongMethods());
+      var parser = ApiParser();
+      parser.parse(WrongMethods());
       expect(parser.isValid, isFalse);
       var errors = [
-        new ApiConfigError(
-            'WrongMethods: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongMethods: @ApiClass.version field is required.'),
-        new ApiConfigError('WrongMethods.missingAnnotations1: ApiMethod.path '
+        ApiConfigError('WrongMethods: Missing required @ApiClass annotation.'),
+        ApiConfigError('WrongMethods: @ApiClass.version field is required.'),
+        ApiConfigError('WrongMethods.missingAnnotations1: ApiMethod.path '
             'field is required.'),
-        new ApiConfigError('WrongMethods.missingAnnotations1: API Method '
+        ApiConfigError('WrongMethods.missingAnnotations1: API Method '
             'cannot be void, use VoidMessage as return type instead.'),
-        new ApiConfigError('WrongMethods.missingAnnotations2: ApiMethod.path '
+        ApiConfigError('WrongMethods.missingAnnotations2: ApiMethod.path '
             'field is required.'),
-        new ApiConfigError('WrongMethods.missingAnnotations2: API Method '
+        ApiConfigError('WrongMethods.missingAnnotations2: API Method '
             'cannot be void, use VoidMessage as return type instead.'),
-        new ApiConfigError('WrongMethods.missingAnnotations3: API Method '
+        ApiConfigError('WrongMethods.missingAnnotations3: API Method '
             'cannot be void, use VoidMessage as return type instead.'),
-        new ApiConfigError('WrongMethods.wrongMethodParameter: Non-path '
+        ApiConfigError('WrongMethods.wrongMethodParameter: Non-path '
             'parameter \'_\' must be a named parameter.'),
-        new ApiConfigError('WrongMethods.wrongMethodParameter: Query '
+        ApiConfigError('WrongMethods.wrongMethodParameter: Query '
             'parameter \'_\' must be of type int, String or bool.'),
-        new ApiConfigError('WrongMethods.wrongPathAnnotation: Non-path '
+        ApiConfigError('WrongMethods.wrongPathAnnotation: Non-path '
             'parameter \'test\' must be a named parameter.'),
-        new ApiConfigError('WrongMethods.wrongResponseType1: Return type: '
+        ApiConfigError('WrongMethods.wrongResponseType1: Return type: '
             'String is not a valid return type.'),
-        new ApiConfigError('WrongMethods.wrongResponseType2: Return type: '
+        ApiConfigError('WrongMethods.wrongResponseType2: Return type: '
             'bool is not a valid return type.'),
-        new ApiConfigError('WrongMethods.wrongFutureResponse: Return type: '
+        ApiConfigError('WrongMethods.wrongFutureResponse: Return type: '
             'bool is not a valid return type.'),
-        new ApiConfigError('WrongMethods.genericFutureResponse: API Method '
+        ApiConfigError('WrongMethods.genericFutureResponse: API Method '
             'return type has to be a instantiable class.'),
-        new ApiConfigError('WrongMethods.missingPathParam1: Missing methods '
+        ApiConfigError('WrongMethods.missingPathParam1: Missing methods '
             'parameters specified in method path: test9/{id}.'),
-        new ApiConfigError('WrongMethods.missingPathParam2: Expected method '
+        ApiConfigError('WrongMethods.missingPathParam2: Expected method '
             'parameter with name \'id\', but found parameter with name '
             '\'request\'.'),
-        new ApiConfigError('WrongMethods.missingPathParam2: Path parameter '
+        ApiConfigError('WrongMethods.missingPathParam2: Path parameter '
             '\'id\' must be of type int, String or bool.'),
-        new ApiConfigError('WrongMethods.missingPathParam2: API methods using '
+        ApiConfigError('WrongMethods.missingPathParam2: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError('WrongMethods.voidResponse: API Method cannot be '
+        ApiConfigError('WrongMethods.voidResponse: API Method cannot be '
             'void, use VoidMessage as return type instead.'),
-        new ApiConfigError('WrongMethods.noRequest1: API methods using POST '
+        ApiConfigError('WrongMethods.noRequest1: API methods using POST '
             'must have a signature of path parameters followed by one request '
             'parameter.'),
-        new ApiConfigError('WrongMethods.noRequest2: API methods using POST '
+        ApiConfigError('WrongMethods.noRequest2: API methods using POST '
             'must have a signature of path parameters followed by one request '
             'parameter.'),
-        new ApiConfigError('WrongMethods.genericRequest: API Method parameter '
+        ApiConfigError('WrongMethods.genericRequest: API Method parameter '
             'has to be an instantiable class.'),
-        new ApiConfigError('WrongMethods.invalidPath1: Invalid path: '
+        ApiConfigError('WrongMethods.invalidPath1: Invalid path: '
             'test15/{wrong. Failed with error: ParseException: test15/{wrong'),
-        new ApiConfigError('WrongMethods.invalidPath2: Invalid path: '
+        ApiConfigError('WrongMethods.invalidPath2: Invalid path: '
             'test16/wrong}. Failed with error: ParseException: test16/wrong}')
       ];
       expect(parser.errors.toString(), errors.toString());
     });
 
     test('recursion', () {
-      var parser = new ApiParser();
-      parser.parse(new Recursive());
+      var parser = ApiParser();
+      parser.parse(Recursive());
       expect(parser.isValid, isTrue);
     });
 
     test('correct', () {
-      var parser = new ApiParser();
-      parser.parse(new CorrectMethods());
+      var parser = ApiParser();
+      parser.parse(CorrectMethods());
       expect(parser.isValid, isTrue);
     });
   });
@@ -589,30 +586,30 @@ void main() {
   group('api_config_schema', () {
     group('misconfig', () {
       test('wrong_schema', () {
-        var parser = new ApiParser();
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(WrongSchema1), true);
         var errors = [
-          new ApiConfigError('WrongSchema1: Schema '
+          ApiConfigError('WrongSchema1: Schema '
               '\'WrongSchema1\' must have an unnamed constructor taking no '
               'arguments.')
         ];
         expect(parser.errors.toString(), errors.toString());
       });
       test('schema_with_conflicting_classes', () {
-        var parser = new ApiParser();
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(WrongSchema2), true);
         var errors = [
-          new ApiConfigError('TestMessage2: Schema '
+          ApiConfigError('TestMessage2: Schema '
               '\'messages2.TestMessage2\' has a name conflict with '
               '\'test_api.TestMessage2\'.')
         ];
         expect(parser.errors.toString(), errors.toString());
       });
       test('schema_with_nested_conflicting_classes', () {
-        var parser = new ApiParser();
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(WrongSchema3), true);
         var errors = [
-          new ApiConfigError('TestMessage2: Schema '
+          ApiConfigError('TestMessage2: Schema '
               '\'messages2.TestMessage2\' has a name conflict with '
               '\'test_api.TestMessage2\'.')
         ];
@@ -621,27 +618,27 @@ void main() {
     });
 
     test('recursion', () {
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
+      expect(Future.sync(() {
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(RecursiveMessage1), true);
       }), completes);
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
+      expect(Future.sync(() {
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(RecursiveMessage2), true);
       }), completes);
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
+      expect(Future.sync(() {
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(RecursiveMessage3), true);
       }), completes);
-      expect(new Future.sync(() {
-        var parser = new ApiParser();
+      expect(Future.sync(() {
+        var parser = ApiParser();
         parser.parseSchema(reflectClass(RecursiveMessage2), true);
         parser.parseSchema(reflectClass(RecursiveMessage3), true);
       }), completes);
     });
 
     test('variants', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var message = parser.parseSchema(reflectClass(TestMessage3), true);
       TestMessage3 instance = message.fromRequest(
           {'count32': 1, 'count32u': 2, 'count64': '3', 'count64u': '4'});
@@ -657,7 +654,7 @@ void main() {
     });
 
     test('request-parsing', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
       TestMessage1 instance = m1.fromRequest({'requiredValue': 10});
       expect(instance, TypeMatcher<TestMessage1>());
@@ -699,7 +696,7 @@ void main() {
     });
 
     test('request-parsing-map-list', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var schema = parser.parseSchema(reflectClass(TestMessage5), true);
       var jsonRequest = {
         'myStrings': ['foo', 'bar'],
@@ -719,13 +716,13 @@ void main() {
     });
 
     test('required', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage4), true);
       expect(() => m1.fromRequest({'requiredValue': 1}), returnsNormally);
     });
 
     test('bad-request-creation', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
       var requests = [
         {'count': 'x'},
@@ -755,7 +752,7 @@ void main() {
     });
 
     test('missing-required', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage4), true);
       var requests = [
         {},
@@ -768,26 +765,26 @@ void main() {
     });
 
     test('response-creation', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       var m1 = parser.parseSchema(reflectClass(TestMessage1), true);
-      var instance = new TestMessage1();
+      var instance = TestMessage1();
       instance.count = 1;
       instance.message = 'message';
       instance.value = 12.3;
       instance.check = true;
       instance.messages = ['1', '2', '3'];
       instance.enumValue = 'test1';
-      var date = new DateTime.now();
+      var date = DateTime.now();
       var utcDate = date.toUtc();
       instance.date = date;
-      var instance2 = new TestMessage2();
+      var instance2 = TestMessage2();
       instance2.count = 4;
       instance.submessage = instance2;
-      var instance3 = new TestMessage2();
+      var instance3 = TestMessage2();
       instance3.count = 5;
-      var instance4 = new TestMessage2();
+      var instance4 = TestMessage2();
       instance4.count = 6;
-      var instance5 = new TestMessage2();
+      var instance5 = TestMessage2();
       instance5.count = 7;
       instance.submessages = [instance3, instance4, instance5];
 
@@ -943,8 +940,8 @@ void main() {
         }
       };
 
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new CorrectQueryParameterTester());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(CorrectQueryParameterTester());
       expect(parser.isValid, isTrue);
       var discoveryDoc =
           apiConfig.generateDiscoveryDocument('http://localhost:8080/', null);
@@ -954,20 +951,20 @@ void main() {
     });
 
     test('misconfig', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongQueryParameterTester());
+      var parser = ApiParser();
+      parser.parse(WrongQueryParameterTester());
       expect(parser.isValid, isFalse);
       var errors = [
-        new ApiConfigError('WrongQueryParameterTester.query1: Non-path '
+        ApiConfigError('WrongQueryParameterTester.query1: Non-path '
             'parameter \'path\' must be a named parameter.'),
-        new ApiConfigError('WrongQueryParameterTester.query2: Expected method '
+        ApiConfigError('WrongQueryParameterTester.query2: Expected method '
             'parameter with name \'queryParam\', but found parameter with '
             'name \'pathParam\'.'),
-        new ApiConfigError('WrongQueryParameterTester.query3: Query parameter '
+        ApiConfigError('WrongQueryParameterTester.query3: Query parameter '
             '\'queryParam\' must be of type int, String or bool.'),
-        new ApiConfigError('WrongQueryParameterTester.query4: No support for '
+        ApiConfigError('WrongQueryParameterTester.query4: No support for '
             'optional path parameters in API methods.'),
-        new ApiConfigError('WrongQueryParameterTester.query5: Non-path '
+        ApiConfigError('WrongQueryParameterTester.query5: Non-path '
             'parameter \'queryParam\' must be a named parameter.')
       ];
       expect(parser.errors.toString(), errors.toString());

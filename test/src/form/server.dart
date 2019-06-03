@@ -36,7 +36,7 @@ class MultipleFile2 {
 @ApiClass(version: 'v1')
 class TestAPI {
   @ApiResource()
-  PostAPI post = new PostAPI();
+  PostAPI post = PostAPI();
 }
 
 class PostAPI {
@@ -67,9 +67,9 @@ class PostAPI {
 }
 
 Future main() async {
-  ApiServer _apiServer = new ApiServer(apiPrefix: '', prettyPrint: true);
+  ApiServer _apiServer = ApiServer(apiPrefix: '', prettyPrint: true);
   _apiServer.enableDiscoveryApi();
-  _apiServer.addApi(new TestAPI());
+  _apiServer.addApi(TestAPI());
 
   final server = await HttpServer.bind(InternetAddress.anyIPv4, 4242);
   server.listen((HttpRequest request) {

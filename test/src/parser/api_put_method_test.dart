@@ -152,8 +152,8 @@ class WrongPutApiWithPathQuery {
 void main() {
   group('api-put-method-correct', () {
     test('correct-put-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectPutApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectPutApi());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 4);
       var discoveryDoc =
@@ -211,8 +211,8 @@ void main() {
     });
 
     test('correct-put-api-with-path', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectPutApiWithPath());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectPutApiWithPath());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 8);
       var discoveryDoc =
@@ -394,22 +394,21 @@ void main() {
 
   group('api-put-method-wrong', () {
     test('wrong-put-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongPutApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongPutApi());
       expect(apiCfg.methods.length, 3);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
-            'WrongPutApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError('WrongPutApi: @ApiClass.version field is required.'),
-        new ApiConfigError(
+        ApiConfigError('WrongPutApi: Missing required @ApiClass annotation.'),
+        ApiConfigError('WrongPutApi: @ApiClass.version field is required.'),
+        ApiConfigError(
             'WrongPutApi.missingMessageParam: API methods using PUT must '
             'have a signature of path parameters followed by one request '
             'parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApi.invalidVoidResponse: API Method cannot be void, use '
             'VoidMessage as return type instead.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApi.dynamicMessage: API Method parameter has to be an '
             'instantiable class.')
       ];
@@ -417,53 +416,53 @@ void main() {
     });
 
     test('wrong-put-with-path-query', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongPutApiWithPathQuery());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongPutApiWithPathQuery());
       expect(apiCfg.methods.length, 8);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.missingRequestParam: API methods using '
             'PUT must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.missingPathParam: Expected method '
             'parameter with name \'id\', but found parameter with name '
             '\'msg\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.missingPathParam: Path parameter \'id\' '
             'must be of type int, String or bool.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.missingPathParam: API methods using '
             'PUT must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.missingPathRegExp: API methods using '
             'PUT must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withStringQueryParam: API methods using '
             'PUT must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withIntQueryParam: API methods using '
             'PUT must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withDynamicQueryParam: API methods '
             'using PUT must have a signature of path parameters followed by '
             'one request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withQueryNoMsg: No support for optional '
             'path parameters in API methods.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withQueryNoMsg: API methods using PUT '
             'must have a signature of path parameters followed by one request '
             'parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withOptionalNoMsg: Request parameter '
             'cannot be optional or named.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPutApiWithPathQuery.withOptionalNoMsg: API Method parameter '
             'has to be an instantiable class.')
       ];

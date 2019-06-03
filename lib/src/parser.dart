@@ -17,7 +17,7 @@ class ApiParser {
   // List of all the errors found by the parser.
   final List<ApiConfigError> errors = [];
 
-  final RegExp _pathMatcher = new RegExp(r'\{(.*?)\}');
+  final RegExp _pathMatcher = RegExp(r'\{(.*?)\}');
 
   final Map<String, List<ApiConfigMethod>> apiMethods = {};
 
@@ -33,7 +33,7 @@ class ApiParser {
   // If the strict flag is set to true, the parser will require all message
   // classes to have a zero-arg default constructor. When 'false' this is only
   // required for messages classes used for requests.
-  ApiParser({this.strict: false});
+  ApiParser({this.strict = false});
 
   // Returns the current id, which is the last in the list (top of the stack).
   String get _contextId => _idStack.last.join('.');
@@ -71,7 +71,7 @@ class ApiParser {
   dynamic _getMetadata(DeclarationMirror dm, Type apiType) {
     var annotations =
         dm.metadata.where((a) => a.reflectee.runtimeType == apiType).toList();
-    if (annotations.length == 0) {
+    if (annotations.isEmpty) {
       return null;
     } else if (annotations.length > 1) {
       var name = MirrorSystem.getName(dm.simpleName);
@@ -84,7 +84,7 @@ class ApiParser {
   void addError(String errorMessage) {
     // TODO: Make it configurable whether to throw or collect the errors.
     rpcLogger.severe('$_contextId: $errorMessage');
-    errors.add(new ApiConfigError('$_contextId: $errorMessage'));
+    errors.add(ApiConfigError('$_contextId: $errorMessage'));
   }
 
   bool get isValid => errors.isEmpty;
@@ -103,7 +103,7 @@ class ApiParser {
     ApiClass metaData = _getMetadata(apiClass, ApiClass);
     if (metaData == null) {
       addError('Missing required @ApiClass annotation.');
-      metaData = new ApiClass();
+      metaData = ApiClass();
     }
     var name = metaData.name;
     if (name == null || name.isEmpty) {
@@ -121,7 +121,7 @@ class ApiParser {
     var resources = _parseResources(apiInstance);
     var methods = _parseMethods(apiInstance);
 
-    var apiConfig = new ApiConfig(apiKey, name, version, metaData.title,
+    var apiConfig = ApiConfig(apiKey, name, version, metaData.title,
         metaData.description, resources, methods, apiSchemas, apiMethods);
     _removeIdSegment();
     assert(_contextId.isEmpty);
@@ -178,7 +178,7 @@ class ApiParser {
     }
     _removeIdSegment();
 
-    return new ApiConfigResource(name, resources, methods);
+    return ApiConfigResource(name, resources, methods);
   }
 
   // Parse a specific instance's methods and return a list of ApiConfigMethod's
@@ -209,7 +209,7 @@ class ApiParser {
   // the corresponding ApiConfigMethod.
   ApiConfigMethod parseMethod(
       MethodMirror mm, ApiMethod metadata, InstanceMirror methodOwner) {
-    const List<String> allowedMethods = const [
+    const List<String> allowedMethods = [
       'GET',
       'DELETE',
       'PUT',
@@ -248,7 +248,7 @@ class ApiParser {
     // Setup a uri parser used to match a uri to this method.
     var parser;
     try {
-      parser = new UriParser(new UriTemplate('${metadata.path}'));
+      parser = UriParser(UriTemplate('${metadata.path}'));
     } catch (e) {
       addError('Invalid path: ${metadata.path}. Failed with error: $e');
     }
@@ -276,7 +276,7 @@ class ApiParser {
     // Parse method return type.
     var responseSchema = _parseMethodReturnType(mm);
 
-    var methodConfig = new ApiConfigMethod(
+    var methodConfig = ApiConfigMethod(
         discoveryId,
         methodOwner,
         mm.simpleName,
@@ -307,7 +307,7 @@ class ApiParser {
     // The path parameters must be parsed before the query or request
     // parameters since the number of path parameters is needed.
     var parsedPathParams = _pathMatcher.allMatches(path);
-    if (parsedPathParams.length > 0 &&
+    if (parsedPathParams.isNotEmpty &&
         (mm.parameters == null ||
             mm.parameters.length < parsedPathParams.length)) {
       addError('Missing methods parameters specified in method path: $path.');
@@ -332,7 +332,7 @@ class ApiParser {
         addError(
             'Path parameter \'$pathParamName\' must be of type int, String or bool.');
       }
-      pathParams.add(new ApiParameter(pathParamName, pm));
+      pathParams.add(ApiParameter(pathParamName, pm));
     }
     return pathParams;
   }
@@ -357,7 +357,7 @@ class ApiParser {
         addError(
             'Query parameter \'$paramName\' must be of type int, String or bool.');
       }
-      queryParams.add(new ApiParameter(paramName, pm));
+      queryParams.add(ApiParameter(paramName, pm));
     }
     return queryParams;
   }
@@ -534,7 +534,7 @@ class ApiParser {
       var methods = schemaClass.declarations.values
           .whereType<MethodMirror>()
           .where((mm) => mm.isConstructor);
-      if (!methods.isEmpty &&
+      if (methods.isNotEmpty &&
           methods
               .where((mm) => (mm.simpleName == schemaClass.simpleName &&
                   mm.parameters.isEmpty))
@@ -543,7 +543,7 @@ class ApiParser {
             'arguments.');
       }
     }
-    schemaConfig = new ConfigSchema(name, schemaClass, isRequest);
+    schemaConfig = ConfigSchema(name, schemaClass, isRequest);
 
     // We put in the schema before parsing properties to detect cycles.
     apiSchemas[name] = schemaConfig;
@@ -590,12 +590,14 @@ class ApiParser {
         return existingSchemaConfig;
       }
     }
-    ClassMirror namedListSchema = reflectType(NamedListSchema, [schemaClass.typeArguments[0].reflectedType]);
-    var schemaConfig = namedListSchema.newInstance(const Symbol(''), [name, schemaClass, isRequest]).reflectee;
+    ClassMirror namedListSchema = reflectType(
+        NamedListSchema, [schemaClass.typeArguments[0].reflectedType]);
+    var schemaConfig = namedListSchema.newInstance(
+        const Symbol(''), [name, schemaClass, isRequest]).reflectee;
     // We put in the schema before parsing properties to detect cycles.
     apiSchemas[name] = schemaConfig;
-    var itemsProperty = parseProperty(
-        itemsType, '${name}Property', new ApiProperty(), isRequest);
+    var itemsProperty =
+        parseProperty(itemsType, '${name}Property', ApiProperty(), isRequest);
     schemaConfig.initItemsProperty(itemsProperty);
     _popId();
 
@@ -634,12 +636,14 @@ class ApiParser {
       }
     }
 
-    ClassMirror namedMapSchema = reflectType(NamedMapSchema, [schemaClass.typeArguments[1].reflectedType]);
-    var schemaConfig = namedMapSchema.newInstance(const Symbol(''), [name, schemaClass, isRequest]).reflectee;
+    ClassMirror namedMapSchema = reflectType(
+        NamedMapSchema, [schemaClass.typeArguments[1].reflectedType]);
+    var schemaConfig = namedMapSchema.newInstance(
+        const Symbol(''), [name, schemaClass, isRequest]).reflectee;
     // We put in the schema before parsing properties to detect cycles.
     apiSchemas[name] = schemaConfig;
     var additionalProperty = parseProperty(
-        additionalType, '${name}Property', new ApiProperty(), isRequest);
+        additionalType, '${name}Property', ApiProperty(), isRequest);
     schemaConfig.initAdditionalProperty(additionalProperty);
     _popId();
 
@@ -662,7 +666,7 @@ class ApiParser {
       var metadata = _getMetadata(vm, ApiProperty);
       if (metadata == null) {
         // Generate a metadata with default values
-        metadata = new ApiProperty();
+        metadata = ApiProperty();
       }
       if (vm.isConst || vm.isPrivate || vm.isStatic) {
         // We only serialize non-const, non-static public fields.
@@ -745,7 +749,7 @@ class ApiParser {
   IntegerProperty parseIntegerProperty(
       String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [
+    const List<Symbol> extraFields = [
       #defaultValue,
       #format,
       #minValue,
@@ -786,7 +790,7 @@ class ApiParser {
         }
       }
     }
-    return new IntegerProperty(propertyName, metadata.description,
+    return IntegerProperty(propertyName, metadata.description,
         metadata.required, defaultValue, apiType, apiFormat, min, max);
   }
 
@@ -794,7 +798,7 @@ class ApiParser {
   BigIntegerProperty parseBigIntegerProperty(
       String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [
+    const List<Symbol> extraFields = [
       #defaultValue,
       #format,
       #minValue,
@@ -848,7 +852,7 @@ class ApiParser {
         }
       }
     }
-    return new BigIntegerProperty(propertyName, metadata.description,
+    return BigIntegerProperty(propertyName, metadata.description,
         metadata.required, defaultValue, apiType, apiFormat, min, max);
   }
 
@@ -878,7 +882,7 @@ class ApiParser {
   DoubleProperty parseDoubleProperty(
       String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [#defaultValue, #format];
+    const List<Symbol> extraFields = [#defaultValue, #format];
     _checkValidFields(propertyName, 'double', metadata, extraFields);
     String apiFormat = metadata.format;
     if (apiFormat == null || apiFormat == '') {
@@ -907,28 +911,28 @@ class ApiParser {
         }
       }
     }
-    return new DoubleProperty(propertyName, metadata.description,
-        metadata.required, metadata.defaultValue, apiFormat);
+    return DoubleProperty(propertyName, metadata.description, metadata.required,
+        metadata.defaultValue, apiFormat);
   }
 
   // Parses a 'bool' property.
   BooleanProperty parseBooleanProperty(
       String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [#defaultValue];
+    const List<Symbol> extraFields = [#defaultValue];
     _checkValidFields(propertyName, 'bool', metadata, extraFields);
     if (metadata.defaultValue != null && metadata.defaultValue is! bool) {
       addError('$propertyName: Default value: ${metadata.defaultValue} must be '
           'boolean \'true\' or \'false\'.');
     }
-    return new BooleanProperty(propertyName, metadata.description,
+    return BooleanProperty(propertyName, metadata.description,
         metadata.required, metadata.defaultValue);
   }
 
   // Parses an 'enum' property.
   EnumProperty parseEnumProperty(String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [#defaultValue, #values];
+    const List<Symbol> extraFields = [#defaultValue, #values];
     _checkValidFields(propertyName, 'Enum', metadata, extraFields);
     var defaultValue = metadata.defaultValue;
     if (defaultValue != null &&
@@ -937,29 +941,29 @@ class ApiParser {
       addError('$propertyName: Default value: $defaultValue must be one of the '
           'valid enum values: ${metadata.values.keys.toString()}.');
     }
-    return new EnumProperty(propertyName, metadata.description,
-        metadata.required, metadata.defaultValue, metadata.values);
+    return EnumProperty(propertyName, metadata.description, metadata.required,
+        metadata.defaultValue, metadata.values);
   }
 
   // Parses a 'String' property.
   StringProperty parseStringProperty(
       String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [#defaultValue];
+    const List<Symbol> extraFields = [#defaultValue];
     _checkValidFields(propertyName, 'String', metadata, extraFields);
     if (metadata.defaultValue != null && metadata.defaultValue is! String) {
       addError('$propertyName: Default value: ${metadata.defaultValue} must be '
           'of type \'String\'.');
     }
-    return new StringProperty(propertyName, metadata.description,
-        metadata.required, metadata.defaultValue);
+    return StringProperty(propertyName, metadata.description, metadata.required,
+        metadata.defaultValue);
   }
 
   // Parses a 'DateTime' property.
   DateTimeProperty parseDateTimeProperty(
       String propertyName, ApiProperty metadata) {
     assert(metadata != null);
-    const List<Symbol> extraFields = const [#defaultValue];
+    const List<Symbol> extraFields = [#defaultValue];
     _checkValidFields(propertyName, 'DateTime', metadata, extraFields);
     DateTime defaultValue;
     if (metadata.defaultValue != null) {
@@ -977,20 +981,26 @@ class ApiParser {
         }
       }
     }
-    return new DateTimeProperty(
+    return DateTimeProperty(
         propertyName, metadata.description, metadata.required, defaultValue);
   }
 
   // Parses a nested class schema property.
-  SchemaProperty parseSchemaProperty<T>(String propertyName, ApiProperty metadata,
-      ClassMirror schemaTypeMirror, bool isRequest) {
+  SchemaProperty parseSchemaProperty<T>(String propertyName,
+      ApiProperty metadata, ClassMirror schemaTypeMirror, bool isRequest) {
     assert(metadata != null);
     assert(schemaTypeMirror is ClassMirror && !schemaTypeMirror.isAbstract);
     var propertyTypeName = MirrorSystem.getName(schemaTypeMirror.simpleName);
     _checkValidFields(propertyName, propertyTypeName, metadata, []);
     var schema = parseSchema(schemaTypeMirror, isRequest);
-    ClassMirror schemaProperty = reflectType(SchemaProperty, [schemaTypeMirror.reflectedType]);
-    return schemaProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, schema]).reflectee;
+    ClassMirror schemaProperty =
+        reflectType(SchemaProperty, [schemaTypeMirror.reflectedType]);
+    return schemaProperty.newInstance(const Symbol(''), [
+      propertyName,
+      metadata.description,
+      metadata.required,
+      schema
+    ]).reflectee;
   }
 
   /// Return the type arguments for the given class [T], which is or is a
@@ -998,7 +1008,10 @@ class ApiParser {
   List<TypeMirror> _TypeArgumentsForBaseClass<T>(ClassMirror classMirror) {
     ClassMirror baseClassMirror = reflectClass(T);
     if (classMirror.originalDeclaration != baseClassMirror) {
-      return classMirror.superinterfaces.firstWhere((interface) => interface.originalDeclaration == baseClassMirror).typeArguments;
+      return classMirror.superinterfaces
+          .firstWhere(
+              (interface) => interface.originalDeclaration == baseClassMirror)
+          .typeArguments;
     }
     return classMirror.typeArguments;
   }
@@ -1021,9 +1034,16 @@ class ApiParser {
     _checkValidFields(propertyName, 'List<$listTypeName>', metadata, []);
     // TODO: Figure out what to do about metadata for the items property.
     var listItemsProperty = parseProperty(
-        listTypeArguments[0], propertyName, new ApiProperty(), isRequest);
-    ClassMirror listProperty = reflectType(ListProperty, [listTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).first]);
-    return listProperty.newInstance(const Symbol(''), [propertyName, metadata.description, metadata.required, listItemsProperty]).reflectee;
+        listTypeArguments[0], propertyName, ApiProperty(), isRequest);
+    ClassMirror listProperty = reflectType(ListProperty, [
+      listTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).first
+    ]);
+    return listProperty.newInstance(const Symbol(''), [
+      propertyName,
+      metadata.description,
+      metadata.required,
+      listItemsProperty
+    ]).reflectee;
   }
 
   MapProperty parseMapProperty(String propertyName, ApiProperty metadata,
@@ -1040,10 +1060,15 @@ class ApiParser {
     }
     // TODO: Figure out what to do about metadata for the additional property.
     var additionalProperty = parseProperty(
-        mapTypeArguments[1], propertyName, new ApiProperty(), isRequest);
-    ClassMirror mapProperty = reflectType(MapProperty, [mapTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).last]);
-    return mapProperty.newInstance(const Symbol(''), [propertyName, metadata.description,
-        metadata.required, additionalProperty]).reflectee;
+        mapTypeArguments[1], propertyName, ApiProperty(), isRequest);
+    ClassMirror mapProperty = reflectType(MapProperty,
+        [mapTypeArguments.map<Type>((TypeMirror tm) => tm.reflectedType).last]);
+    return mapProperty.newInstance(const Symbol(''), [
+      propertyName,
+      metadata.description,
+      metadata.required,
+      additionalProperty
+    ]).reflectee;
   }
 
   // Helper method to check that a field annotated with an ApiProperty is using
@@ -1051,12 +1076,7 @@ class ApiParser {
   void _checkValidFields(String propertyName, String propertyTypeName,
       ApiProperty metadata, List<Symbol> extraFields) {
     assert(extraFields != null);
-    const List<Symbol> commonFields = const [
-      #name,
-      #description,
-      #required,
-      #ignore
-    ];
+    const List<Symbol> commonFields = [#name, #description, #required, #ignore];
     InstanceMirror im = reflect(metadata);
     im.type.declarations.forEach((Symbol field, DeclarationMirror fieldMirror) {
       if (fieldMirror is! VariableMirror || commonFields.contains(field)) {

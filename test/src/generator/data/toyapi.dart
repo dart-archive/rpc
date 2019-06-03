@@ -49,10 +49,10 @@ class ToyApi {
   ToyApi();
 
   @ApiResource()
-  final ToyCompute compute = new ToyCompute();
+  final ToyCompute compute = ToyCompute();
 
   @ApiResource()
-  final ToyStorage storage = new ToyStorage();
+  final ToyStorage storage = ToyStorage();
 
   @ApiMethod(path: 'noop')
   VoidMessage noop() {
@@ -61,13 +61,13 @@ class ToyApi {
 
   @ApiMethod(path: 'failing')
   VoidMessage failing() {
-    throw new RpcError(
+    throw RpcError(
         HttpStatus.notImplemented, 'Not Implemented', 'I like to fail!');
   }
 
   @ApiMethod(path: 'hello')
   ToyResponse hello() {
-    return new ToyResponse()..result = 'Hello there!';
+    return ToyResponse()..result = 'Hello there!';
   }
 
   // Clients calling this method will all receive an Internal Server Error
@@ -80,7 +80,7 @@ class ToyApi {
 
   @ApiMethod(path: 'hello/{name}/age/{age}')
   ToyResponse helloNameAge(String name, int age) {
-    return new ToyResponse()..result = 'Hello ${name} of age ${age}!';
+    return ToyResponse()..result = 'Hello ${name} of age ${age}!';
   }
 
   @ApiMethod(path: 'hero/{name}/{isHero}')
@@ -97,27 +97,27 @@ class ToyApi {
       isHeroString = "you are not a hero";
     }
     String response = "Hello ${name} ${isHeroString}";
-    return new ToyResponse()..result = response;
+    return ToyResponse()..result = response;
   }
 
   @ApiMethod(path: 'helloPost', method: 'POST')
   ToyResponse helloPost(ToyRequest request) {
-    return new ToyResponse()
+    return ToyResponse()
       ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloPostWithAsync', method: 'POST')
   Future<ToyResponse> helloPostWithAsync(ToyRequest request) async {
     int delayInSeconds = 5;
-    await new Future.delayed(new Duration(seconds: delayInSeconds));
-    return new ToyResponse()
+    await Future.delayed(Duration(seconds: delayInSeconds));
+    return ToyResponse()
       ..result =
           'I waited ${delayInSeconds} seconds to say: Hello ${request.name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloVoid', method: 'POST')
   ToyResponse helloVoid(VoidMessage request) {
-    return new ToyResponse()..result = 'Hello Mr. Void!';
+    return ToyResponse()..result = 'Hello Mr. Void!';
   }
 
   @ApiMethod(path: 'helloPost/{name}', method: 'POST')
@@ -126,23 +126,23 @@ class ToyApi {
     // Can also be used to pass response headers and look at the HTTP requests
     // headers, cookies, and url.
     context.responseStatusCode = HttpStatus.created;
-    return new ToyResponse()..result = 'Hello ${name} of age ${request.age}!';
+    return ToyResponse()..result = 'Hello ${name} of age ${request.age}!';
   }
 
   @ApiMethod(path: 'helloNestedMap')
   ToyMapResponse helloNestedMap() {
     var map = {
-      'bar': new NestedResponse()..nestedResult = 'somethingNested',
-      'var': new NestedResponse()..nestedResult = 'someotherNested'
+      'bar': NestedResponse()..nestedResult = 'somethingNested',
+      'var': NestedResponse()..nestedResult = 'someotherNested'
     };
-    return new ToyMapResponse()
+    return ToyMapResponse()
       ..result = 'foo'
       ..mapResult = map;
   }
 
   @ApiMethod(path: 'helloQuery/{name}')
   ToyResponse helloNameQueryAgeFoo(String name, {String foo, int age}) {
-    return new ToyResponse()..result = 'Hello $name of age $age with $foo!';
+    return ToyResponse()..result = 'Hello $name of age $age with $foo!';
   }
 
   @ApiMethod(path: 'reverseList', method: 'POST')
@@ -189,7 +189,7 @@ class ToyApi {
       key = request.first.name;
       value = request.first.age;
     }
-    return {key: new ToyResponse()..result = value.toString()};
+    return {key: ToyResponse()..result = value.toString()};
   }
 
   @ApiMethod(path: 'helloListOfListOfClass', method: 'POST')
@@ -206,14 +206,14 @@ class ToyApi {
       key = request.first.first.name;
       value = request.first.first.age;
     }
-    return {key: new ToyResponse()..result = value.toString()};
+    return {key: ToyResponse()..result = value.toString()};
   }
 }
 
 class ToyCompute {
   @ApiMethod(path: 'toyresource/{resource}/compute/{compute}')
   ToyResourceResponse get(String resource, String compute) {
-    return new ToyResourceResponse()
+    return ToyResourceResponse()
       ..result = 'I am the compute: $compute of resource: $resource';
   }
 }
@@ -221,7 +221,7 @@ class ToyCompute {
 class ToyStorage {
   @ApiMethod(path: 'toyresource/{resource}/storage/{storage}')
   ToyResourceResponse get(String resource, String storage) {
-    return new ToyResourceResponse()
+    return ToyResourceResponse()
       ..result = 'I am the storage: $storage of resource: $resource';
   }
 }

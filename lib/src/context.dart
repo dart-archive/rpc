@@ -31,13 +31,13 @@ class InvocationContext {
   // use to ensure the map will not contain duplicates due to different casing.
   final CanonicalizedMap<String, String, dynamic> responseHeaders;
   // When set overrides the default HTTP response status code.
-  int responseStatusCode = null;
+  int responseStatusCode;
 
   InvocationContext(ParsedHttpApiRequest request)
       : requestHeaders = request.headers,
         requestUri = request.originalRequest.uri,
         requestCookies = request.originalRequest.cookies,
-        responseHeaders = new CanonicalizedMap.from(
+        responseHeaders = CanonicalizedMap.from(
             defaultResponseHeaders, (String k) => k.toLowerCase(),
             isValidKey: (Object k) => k is String);
 

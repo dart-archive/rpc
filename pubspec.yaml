@@ -1,11 +1,11 @@
 name: rpc
-version: 0.6.1
+version: 0.6.1+1
 author: Dart Team <misc@dartlang.org>
 description: Library for exposing Dart server-side APIs.
 homepage: https://github.com/dart-lang/rpc
 
 environment:
-  sdk: '>=2.0.0-dev.69.0 <3.0.0'
+  sdk: '>=2.2.0 <3.0.0'
 
 dependencies:
   args: ^1.4.4
@@ -22,3 +22,4 @@ dependencies:
 
 dev_dependencies:
   test: ^1.2.0
+  pedantic: ^1.7.0

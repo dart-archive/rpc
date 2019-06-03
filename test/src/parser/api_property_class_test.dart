@@ -50,17 +50,17 @@ class WrongClass {
   @ApiProperty(format: 'int32')
   SomeClass aClassWithFormat;
 
-  @ApiProperty(values: const {'enumValue': 'Enum Description'})
+  @ApiProperty(values: {'enumValue': 'Enum Description'})
   SomeClass aClassWithEnumValues;
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-class-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectClass), true);
       expect(parser.isValid, isTrue);
@@ -92,27 +92,27 @@ void main() {
 
   group('api-class-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongClass), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongClass: aClassWithDefault: Invalid property annotation. '
             'Property of type SomeClass does not support the ApiProperty '
             'field: defaultValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongClass: aClassWithMinMax: Invalid property annotation. '
             'Property of type SomeClass does not support the ApiProperty '
             'field: minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongClass: aClassWithMinMax: Invalid property annotation. '
             'Property of type SomeClass does not support the ApiProperty '
             'field: maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongClass: aClassWithFormat: Invalid property annotation. '
             'Property of type SomeClass does not support the ApiProperty '
             'field: format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongClass: aClassWithEnumValues: Invalid property annotation. '
             'Property of type SomeClass does not support the ApiProperty '
             'field: values')

@@ -64,7 +64,8 @@ class ApiMethod {
   /// Description of the method.
   final String description;
 
-  const ApiMethod({this.name, this.path, this.method: 'GET', this.description});
+  const ApiMethod(
+      {this.name, this.path, this.method = 'GET', this.description});
 }
 
 /// Optional annotation for parameters inside of API request/response messages.
@@ -115,8 +116,8 @@ class ApiProperty {
       {this.name,
       this.description,
       this.format,
-      this.required: false,
-      this.ignore: false,
+      this.required = false,
+      this.ignore = false,
       this.defaultValue,
       this.minValue,
       this.maxValue,
@@ -127,7 +128,7 @@ class ApiProperty {
 class ApiMessage {
   final bool includeSuper;
 
-  const ApiMessage({this.includeSuper: false});
+  const ApiMessage({this.includeSuper = false});
 }
 
 /// Special API Message to use when a method doesn't need a request or doesn't

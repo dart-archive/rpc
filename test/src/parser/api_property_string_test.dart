@@ -47,12 +47,12 @@ class WrongString {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-string-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectString), true);
       expect(parser.isValid, isTrue);
@@ -85,19 +85,19 @@ void main() {
 
   group('api-string-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongString), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongString: aStringWithMinMax: Invalid property annotation. '
             'Property of type String does not support the ApiProperty field: '
             'minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongString: aStringWithMinMax: Invalid property annotation. '
             'Property of type String does not support the ApiProperty field: '
             'maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongString: aStringWithFormat: Invalid property annotation. '
             'Property of type String does not support the ApiProperty field: '
             'format'),

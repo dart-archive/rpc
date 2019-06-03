@@ -26,14 +26,14 @@ abstract class ApiConfigSchema<D, J> {
     propertiesInitialized = true;
   }
 
-  bool get containsData => !_properties.isEmpty;
+  bool get containsData => _properties.isNotEmpty;
 
   discovery.JsonSchema get asDiscovery {
-    var schema = new discovery.JsonSchema();
+    var schema = discovery.JsonSchema();
     schema
       ..id = schemaName
       ..type = 'object'
-      ..properties = new Map<String, discovery.JsonSchema>();
+      ..properties = Map<String, discovery.JsonSchema>();
     _properties.values.forEach((prop) {
       schema.properties[prop.name] = prop.asDiscovery;
     });
@@ -44,7 +44,8 @@ abstract class ApiConfigSchema<D, J> {
   J toResponse(D result);
 }
 
-final Type _listOfMediaMessage = reflectType(List, [MediaMessage]).reflectedType;
+final Type _listOfMediaMessage =
+    reflectType(List, [MediaMessage]).reflectedType;
 
 // TODO(jcollins-g): consider `J extends Map`
 class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
@@ -53,7 +54,7 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
 
   D fromRequest(J request) {
     if (request is Map) {
-      InstanceMirror schema = schemaClass.newInstance(new Symbol(''), []);
+      InstanceMirror schema = schemaClass.newInstance(Symbol(''), []);
       for (Symbol sym in _properties.keys) {
         final ApiConfigSchemaProperty prop = _properties[sym];
         try {
@@ -65,7 +66,8 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
               // If in form, there is an (input[type="file"] multiple) and the user
               // put only one file. It's not an error and it should be accept.
               // Maybe it cans be optimized.
-              if (schema.type.instanceMembers[sym].returnType.reflectedType == _listOfMediaMessage &&
+              if (schema.type.instanceMembers[sym].returnType.reflectedType ==
+                      _listOfMediaMessage &&
                   requestForSymbol is MediaMessage) {
                 schema.setField(sym, [requestForSymbol]);
               } else if (requestForSymbol is List) {
@@ -79,7 +81,7 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
           } else if (prop.hasDefault) {
             schema.setField(sym, prop.fromRequest(prop.defaultValue));
           } else if (prop.required) {
-            throw new BadRequestError('Required field ${prop.name} is missing');
+            throw BadRequestError('Required field ${prop.name} is missing');
           }
         } on TypeError catch (e) {
           throw BadRequestError('Field ${prop.name} has wrong type:  ${e}');
@@ -87,9 +89,9 @@ class ConfigSchema<D, J> extends ApiConfigSchema<D, J> {
       }
       return schema.reflectee;
     }
-    throw new BadRequestError(
+    throw BadRequestError(
         'Invalid parameter: \'$request\', should be an instance of type '
-            '\'$schemaName\'.');
+        '\'$schemaName\'.');
   }
 
   J toResponse(D result) {
@@ -121,7 +123,7 @@ class NamedListSchema<D> extends ApiConfigSchema<List<D>, List> {
   bool get containsData => _itemsProperty != null;
 
   discovery.JsonSchema get asDiscovery {
-    var schema = new discovery.JsonSchema();
+    var schema = discovery.JsonSchema();
     schema
       ..id = schemaName
       ..type = 'array'
@@ -132,12 +134,15 @@ class NamedListSchema<D> extends ApiConfigSchema<List<D>, List> {
   List<D> fromRequest(List request) {
     // TODO: Performance optimization, we don't need to decode a list of
     // primitive-type since it is already the correct list.
-    return request.map(_itemsProperty.fromRequest as D Function(Object)).toList();
+    return request
+        .map(_itemsProperty.fromRequest as D Function(Object))
+        .toList();
   }
 
   // TODO: Performance optimization, we don't need to encode a list of
   // primitive-type since it is already the correct list.
-  List toResponse(List<D> result) => result.map(_itemsProperty.toResponse).toList();
+  List toResponse(List<D> result) =>
+      result.map(_itemsProperty.toResponse).toList();
 }
 
 // Schema for explicitly handling Map<String, 'some value'> as either return
@@ -156,7 +161,7 @@ class NamedMapSchema<D> extends ApiConfigSchema<Map<String, D>, Map> {
   bool get containsData => _additionalProperty != null;
 
   discovery.JsonSchema get asDiscovery {
-    var schema = new discovery.JsonSchema();
+    var schema = discovery.JsonSchema();
     schema
       ..id = schemaName
       ..type = 'object'

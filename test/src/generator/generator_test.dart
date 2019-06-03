@@ -22,21 +22,21 @@ main() {
     assert(dstPath != null && dstPath.isNotEmpty);
     assert(files != null && files.isNotEmpty);
     files.forEach((fileName) =>
-        new File(join(srcPath, fileName)).copySync(join(dstPath, fileName)));
+        File(join(srcPath, fileName)).copySync(join(dstPath, fileName)));
   }
 
   String packagePath;
 
   // Creates a package directory with a lib directory and an optional pubspec
   // file.
-  void setupPackage({bool addPubSpec: true}) {
+  void setupPackage({bool addPubSpec = true}) {
     assert(packagePath == null);
     packagePath =
         Directory.systemTemp.createTempSync('rpc_generator_tests').path;
-    new Directory(join(absolute(packagePath), 'lib')).createSync();
+    Directory(join(absolute(packagePath), 'lib')).createSync();
     if (addPubSpec) {
-      var source = new File(join(dataPath, 'pubspec.yamll')).readAsStringSync();
-      var destFile = new File(join(absolute(packagePath), 'pubspec.yaml'));
+      var source = File(join(dataPath, 'pubspec.yamll')).readAsStringSync();
+      var destFile = File(join(absolute(packagePath), 'pubspec.yaml'));
       destFile
           .writeAsStringSync(source.replaceAll('_path_to_rpc_', rpcRootPath));
     }
@@ -44,13 +44,13 @@ main() {
 
   ProcessResult runPub(String workingDir, List<String> arguments) {
     // We assume pub is placed next to the dart executable.
-    var pubDir = new File(Platform.executable).parent;
+    var pubDir = File(Platform.executable).parent;
     var pub = join(absolute(pubDir.path), 'pub');
-    var pubFile = new File(pub);
+    var pubFile = File(pub);
     if (!pubFile.existsSync() && !Platform.isWindows) {
-      pubDir = new File(Platform.environment['_']).parent;
+      pubDir = File(Platform.environment['_']).parent;
       pub = join(absolute(pubDir.path), 'pub');
-      pubFile = new File(pub);
+      pubFile = File(pub);
     }
     if (pubFile.existsSync()) {
       return Process.runSync(pub, arguments, workingDirectory: workingDir);
@@ -60,9 +60,9 @@ main() {
 
   ProcessResult runGenerator(String workingDir, List<String> arguments) {
     var args = [join(rpcRootPath, 'bin', 'generate.dart')]..addAll(arguments);
-    var dartFile = new File(Platform.executable);
+    var dartFile = File(Platform.executable);
     if (!dartFile.existsSync() && !Platform.isWindows) {
-      dartFile = new File(Platform.environment['_']);
+      dartFile = File(Platform.environment['_']);
     }
     if (dartFile.existsSync()) {
       return Process.runSync(dartFile.path, args, workingDirectory: workingDir);
@@ -71,14 +71,14 @@ main() {
   }
 
   void checkFilesIdentical(String libPath, String actual, String expected) {
-    var actualCode = new File(join(libPath, 'client', actual));
-    var expectedCode = new File(join(dataPath, expected));
+    var actualCode = File(join(libPath, 'client', actual));
+    var expectedCode = File(join(dataPath, expected));
     expect(actualCode.readAsStringSync(), expectedCode.readAsStringSync());
   }
 
   tearDown(() {
     if (packagePath != null) {
-      var dir = new Directory(packagePath);
+      var dir = Directory(packagePath);
       if (dir.existsSync()) {
         try {
           dir.deleteSync(recursive: true);
@@ -112,7 +112,7 @@ main() {
         return;
       }
       var expectedDiscovery =
-          new File(join(dataPath, 'expected_multiple_discovery.json'));
+          File(join(dataPath, 'expected_multiple_discovery.json'));
       expect(result.stderr, '');
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });
@@ -162,7 +162,7 @@ main() {
         return;
       }
       var expectedDiscovery =
-          new File(join(dataPath, 'expected_toy_discovery.json'));
+          File(join(dataPath, 'expected_toy_discovery.json'));
       expect(result.stderr, '');
       expect(result.stdout, expectedDiscovery.readAsStringSync());
     });

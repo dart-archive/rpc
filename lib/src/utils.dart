@@ -17,8 +17,8 @@ import 'parser.dart';
 import 'discovery/config.dart' as discovery;
 
 // Global constants
-const List<String> bodyLessMethods = const ['GET', 'DELETE'];
-const Map<String, dynamic> defaultResponseHeaders = const {
+const List<String> bodyLessMethods = ['GET', 'DELETE'];
+const Map<String, dynamic> defaultResponseHeaders = {
   // We always return json in the response.
   HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
   HttpHeaders.cacheControlHeader: 'no-cache, no-store, must-revalidate',
@@ -30,25 +30,25 @@ const Map<String, dynamic> defaultResponseHeaders = const {
 const double SMALLEST_FLOAT = -3.4e38;
 const double LARGEST_FLOAT = 3.4e38;
 
-final Logger rpcLogger = new Logger('rpc');
+final Logger rpcLogger = Logger('rpc');
 
 // Used to generate the etag.
 final ApiConfigSchema discoveryDocSchema =
-    new ApiParser().parseSchema(reflectType(discovery.RestDescription), false);
+    ApiParser().parseSchema(reflectType(discovery.RestDescription), false);
 
 // Utility method for creating an HTTP error response given an exception.
 // Optionally drains the request body.
 Future<HttpApiResponse> httpErrorResponse(
     HttpApiRequest request, Exception error,
-    {StackTrace stack, bool drainRequest: true}) async {
+    {StackTrace stack, bool drainRequest = true}) async {
   // TODO support more encodings.
   var response;
   if (error is RpcError) {
-    response = new HttpApiResponse.error(
+    response = HttpApiResponse.error(
         error.statusCode, error.message, error, stack,
         errors: error.errors);
   } else {
-    response = new HttpApiResponse.error(HttpStatus.internalServerError,
+    response = HttpApiResponse.error(HttpStatus.internalServerError,
         'Unknown error occurred with API.', error, stack);
   }
   if (drainRequest) {
@@ -76,7 +76,7 @@ void logRequest(ParsedHttpApiRequest request, dynamic jsonBody,
   if (!rpcLogger.isLoggable(level)) {
     return;
   }
-  var msg = new StringBuffer();
+  var msg = StringBuffer();
   msg
     ..writeln('\nRequest for API ${request.apiKey}:')
     ..writeln('  Method: ${request.httpMethod}')
@@ -93,7 +93,7 @@ void logResponse(HttpApiResponse response, dynamic jsonBody,
   if (!rpcLogger.isLoggable(level)) {
     return;
   }
-  var msg = new StringBuffer();
+  var msg = StringBuffer();
   msg
     ..writeln('\nResponse')
     ..writeln('  Status Code: ${response.status}')
@@ -117,7 +117,7 @@ void logMethodInvocation(Symbol symbol, List<dynamic> positionalParams,
   }
   assert(positionalParams != null);
   assert(namedParams != null);
-  var msg = new StringBuffer();
+  var msg = StringBuffer();
   msg
     ..writeln('\nInvoking method: ${MirrorSystem.getName(symbol)} with:')
     ..writeln('  Positional Parameters:');

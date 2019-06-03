@@ -60,7 +60,7 @@ class WrongDouble {
   @ApiProperty(format: 'foo')
   double aDoubleWithInvalidFormat;
 
-  @ApiProperty(values: const {'enumKey': 'enumValue'})
+  @ApiProperty(values: {'enumKey': 'enumValue'})
   double aDoubleWithEnumValues;
 
   @ApiProperty(defaultValue: -2.0e308)
@@ -77,12 +77,12 @@ class WrongDouble {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-double-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectDouble), true);
       expect(parser.isValid, isTrue);
@@ -140,41 +140,41 @@ void main() {
 
   group('api-double-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongDouble), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithMinMax: Invalid property annotation. '
             'Property of type double does not support the ApiProperty field: '
             'minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithMinMax: Invalid property annotation. '
             'Property of type double does not support the ApiProperty field: '
             'maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithIntFormat: Invalid double variant: '
             '\'int32\'. Must be either \'double\' or \'float\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithInvalidFormat: Invalid double variant: '
             '\'foo\'. Must be either \'double\' or \'float\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithEnumValues: Invalid property annotation. '
             'Property of type double does not support the ApiProperty field: '
             'values'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithTooSmallDefault: Default value of: '
             '-Infinity with format: \'double\', must be in the range: '
             '[-1.7976931348623157e+308, 1.7976931348623157e+308]'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aDoubleWithTooLargeDefault: Default value of: '
             'Infinity with format: \'double\', must be in the range: '
             '[-1.7976931348623157e+308, 1.7976931348623157e+308]'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aFloatWithTooSmallDefault: Default value of: '
             '-3.4e+39 with format: \'float\', must be in the range: '
             '[-3.4e+38, 3.4e+38]'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDouble: aFloatWithTooLargeDefault: Default value of: '
             '3.4e+39 with format: \'float\', must be in the range: '
             '[-3.4e+38, 3.4e+38]')

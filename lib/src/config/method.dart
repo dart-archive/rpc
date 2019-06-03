@@ -38,7 +38,7 @@ class ApiConfigMethod {
     if (match == null) {
       return false;
     }
-    assert(match.rest.path.length == 0);
+    assert(match.rest.path.isEmpty);
     match.parameters.forEach((key, value) {
       match.parameters[key] = Uri.decodeFull(value);
     });
@@ -47,16 +47,16 @@ class ApiConfigMethod {
   }
 
   discovery.RestMethod get asDiscovery {
-    var method = new discovery.RestMethod();
+    var method = discovery.RestMethod();
     method
       ..id = id
       ..path = path
       ..httpMethod = httpMethod.toUpperCase()
       ..description = description
       ..parameterOrder = _pathParams.map((param) => param.name).toList();
-    method.parameters = new Map<String, discovery.JsonSchema>();
+    method.parameters = Map<String, discovery.JsonSchema>();
     _pathParams.forEach((param) {
-      var schema = new discovery.JsonSchema();
+      var schema = discovery.JsonSchema();
       schema
         ..type = param.isInt
             ? discovery.JsonSchema.PARAM_INTEGER_TYPE
@@ -70,7 +70,7 @@ class ApiConfigMethod {
     });
     if (_queryParams != null) {
       _queryParams.forEach((param) {
-        var schema = new discovery.JsonSchema();
+        var schema = discovery.JsonSchema();
         schema
           ..type = param.isInt
               ? discovery.JsonSchema.PARAM_INTEGER_TYPE
@@ -84,14 +84,14 @@ class ApiConfigMethod {
       });
     }
     if (_requestSchema != null && _requestSchema.containsData) {
-      method.request = new discovery.RestMethodRequest()
+      method.request = discovery.RestMethodRequest()
         ..P_ref = _requestSchema.schemaName;
     }
     if (_responseSchema != null && _responseSchema.containsData) {
       if (_responseSchema.schemaClass == reflectClass(MediaMessage)) {
         method.supportsMediaDownload = true;
       }
-      method.response = new discovery.RestMethodResponse()
+      method.response = discovery.RestMethodResponse()
         ..P_ref = _responseSchema.schemaName;
     }
     return method;
@@ -108,7 +108,7 @@ class ApiConfigMethod {
       var value = request.pathParameters[param.name];
       if (value == null) {
         return httpErrorResponse(request.originalRequest,
-            new BadRequestError('Required parameter: ${param.name} missing.'));
+            BadRequestError('Required parameter: ${param.name} missing.'));
       }
       if (param.isInt) {
         try {
@@ -116,7 +116,7 @@ class ApiConfigMethod {
         } on FormatException catch (error, stack) {
           return httpErrorResponse(
               request.originalRequest,
-              new BadRequestError('Invalid integer value: $value for '
+              BadRequestError('Invalid integer value: $value for '
                   'path parameter: ${param.name}. '
                   '${error.toString()}'),
               stack: stack);
@@ -141,7 +141,7 @@ class ApiConfigMethod {
             } on FormatException catch (error, stack) {
               return httpErrorResponse(
                   request.originalRequest,
-                  new BadRequestError('Invalid integer value: $value for '
+                  BadRequestError('Invalid integer value: $value for '
                       'query parameter: ${param.name}. '
                       '${error.toString()}'),
                   stack: stack);
@@ -162,7 +162,7 @@ class ApiConfigMethod {
     // and to provide response headers and possibly other (future) values to be
     // used in the response.
     return ss.fork(() async {
-      ss.register(INVOCATION_CONTEXT, new InvocationContext(request));
+      ss.register(INVOCATION_CONTEXT, InvocationContext(request));
 
       var apiResult;
       try {
@@ -183,7 +183,7 @@ class ApiConfigMethod {
         // would be shown as Unknown API Error since we cannot distinguish them
         // from e.g. an internal null pointer exception.
         return httpErrorResponse(
-            request.originalRequest, new ApplicationError(error),
+            request.originalRequest, ApplicationError(error),
             stack: stack, drainRequest: false);
       }
       rpcLogger.fine('Method returned result: $apiResult');
@@ -199,7 +199,7 @@ class ApiConfigMethod {
               'Method $name returned null instead of valid return value');
           return httpErrorResponse(
               request.originalRequest,
-              new InternalServerError(
+              InternalServerError(
                   'Method with non-void return type returned \'null\''),
               drainRequest: false);
         }
@@ -221,15 +221,18 @@ class ApiConfigMethod {
             context.responseHeaders[HttpHeaders.contentTypeHeader] =
                 apiResult.contentType;
           }
-          if (apiResult.updated != null)
+          if (apiResult.updated != null) {
             context.responseHeaders[HttpHeaders.lastModifiedHeader] =
                 formatHttpDate(apiResult.updated);
-          if (apiResult.contentEncoding != null)
+          }
+          if (apiResult.contentEncoding != null) {
             context.responseHeaders[HttpHeaders.contentEncodingHeader] =
                 apiResult.contentEncoding;
-          if (apiResult.contentLanguage != null)
+          }
+          if (apiResult.contentLanguage != null) {
             context.responseHeaders[HttpHeaders.contentLanguageHeader] =
                 apiResult.contentLanguage;
+          }
           if (apiResult.md5Hash != null) {
             context.responseHeaders[HttpHeaders.contentMD5Header] =
                 apiResult.md5Hash;
@@ -253,13 +256,13 @@ class ApiConfigMethod {
             if (ifModifiedSince != null &&
                 !apiResult.updated.isAfter(ifModifiedSince)) {
               context.responseHeaders.remove(HttpHeaders.contentTypeHeader);
-              return new HttpApiResponse(
+              return HttpApiResponse(
                   HttpStatus.notModified, null, context.responseHeaders);
             }
           }
         }
 
-        resultBody = new Stream<List<int>>.fromIterable([resultAsBytes]);
+        resultBody = Stream<List<int>>.fromIterable([resultAsBytes]);
         statusCode = HttpStatus.ok;
       } else {
         resultBody = null;
@@ -271,7 +274,7 @@ class ApiConfigMethod {
         statusCode = context.responseStatusCode;
       }
       var response =
-          new HttpApiResponse(statusCode, resultBody, context.responseHeaders);
+          HttpApiResponse(statusCode, resultBody, context.responseHeaders);
       logResponse(response, resultAsJson);
       return response;
     });
@@ -306,14 +309,14 @@ class ApiConfigMethod {
       if (error is FormatException) {
         if (error.message == 'Unexpected end of input') {
           // The method expects a body and none was passed.
-          throw new BadRequestError('Method \'$name\' requires an instance of '
+          throw BadRequestError('Method \'$name\' requires an instance of '
               '${_requestSchema.schemaName}. Passing the empty request is not '
               'supported.');
         }
       } else if (error is RpcError) {
-        throw error;
+        rethrow;
       }
-      throw new BadRequestError(
+      throw BadRequestError(
           'Failed to decode request with internal error: $error');
     }
     logMethodInvocation(symbol, positionalParams, namedParams);

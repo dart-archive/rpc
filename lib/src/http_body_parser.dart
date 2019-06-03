@@ -30,8 +30,8 @@ StringBuffer _fillStringBuffer(StringBuffer buffer, String data) =>
     buffer..write(data);
 
 Future<PostData> _asBinary(ParsedHttpApiRequest request) => request.body
-    .fold(new BytesBuilder(), _fillBytesBuilder)
-    .then((BytesBuilder bld) => new PostData('binary', bld.takeBytes()));
+    .fold(BytesBuilder(), _fillBytesBuilder)
+    .then((BytesBuilder bld) => PostData('binary', bld.takeBytes()));
 
 Future<PostData> _asText(ParsedHttpApiRequest request) {
   final String charset = request.contentType.charset;
@@ -39,25 +39,24 @@ Future<PostData> _asText(ParsedHttpApiRequest request) {
       charset != null ? Encoding.getByName(charset) : utf8;
   return request.body
       .transform(encoding.decoder)
-      .fold(new StringBuffer(), _fillStringBuffer)
-      .then((StringBuffer buffer) => new PostData('text', buffer.toString()));
+      .fold(StringBuffer(), _fillStringBuffer)
+      .then((StringBuffer buffer) => PostData('text', buffer.toString()));
 }
 
 Future<PostData> _asFormData(ParsedHttpApiRequest request) {
   final ContentType contentType = request.contentType;
   return request.body
-      .transform(
-          new MimeMultipartTransformer(contentType.parameters['boundary']))
+      .transform(MimeMultipartTransformer(contentType.parameters['boundary']))
       .map(_HttpMultipartFormData.parse)
       .map((_HttpMultipartFormData multipart) {
         Future future;
         if (multipart.isText) {
           future = (multipart as _HttpMultipartFormData<String>)
-              .fold<StringBuffer>(new StringBuffer(), _fillStringBuffer)
+              .fold<StringBuffer>(StringBuffer(), _fillStringBuffer)
               .then((StringBuffer buffer) => buffer.toString());
         } else {
           future = (multipart as _HttpMultipartFormData<List<int>>)
-              .fold(new BytesBuilder(), _fillBytesBuilder)
+              .fold(BytesBuilder(), _fillBytesBuilder)
               .then((BytesBuilder builder) => builder.takeBytes());
         }
         return future.then((dynamic data) {
@@ -65,7 +64,7 @@ Future<PostData> _asFormData(ParsedHttpApiRequest request) {
               multipart.contentDisposition.parameters['filename'];
           if (filename != null) {
             if (multipart.isText) data = (data as String).codeUnits;
-            data = new MediaMessage()
+            data = MediaMessage()
               ..contentType = multipart.contentType.value
               ..bytes = data
               ..metadata = {'filename': filename};
@@ -81,14 +80,16 @@ Future<PostData> _asFormData(ParsedHttpApiRequest request) {
         // Form input file multiple
         for (var part in parts) {
           if (map[part[0]] != null) {
-            if (map[part[0]] is List)
+            if (map[part[0]] is List) {
               map[part[0]].add(part[1]);
-            else
+            } else {
               map[part[0]] = [map[part[0]], part[1]];
-          } else
+            }
+          } else {
             map[part[0]] = part[1];
+          }
         }
-        return new PostData('form', map);
+        return PostData('form', map);
       });
 }
 
@@ -103,14 +104,14 @@ Future<PostData> parseRequestBody(ParsedHttpApiRequest request) {
     case "application":
       switch (contentType.subType) {
         case "json":
-          return _asText(request).then(
-              (PostData body) => new PostData('json', jsonDecode(body.body)));
+          return _asText(request)
+              .then((PostData body) => PostData('json', jsonDecode(body.body)));
 
         case "x-www-form-urlencoded":
           return _asText(request).then((PostData body) {
             Map<String, String> map =
                 Uri.splitQueryString(body.body, encoding: utf8);
-            return new PostData('form', new Map.from(map));
+            return PostData('form', Map.from(map));
           });
 
         default:
@@ -167,11 +168,11 @@ class _HttpMultipartFormData<T> extends Stream<T> {
           break;
       }
     }
-    if (disposition == null)
-      throw new HttpException(
+    if (disposition == null) {
+      throw HttpException(
           "Mime Multipart doesn't contain a Content-Disposition header value");
-    return new _HttpMultipartFormData(
-        type, disposition, encoding, multipart, utf8);
+    }
+    return _HttpMultipartFormData(type, disposition, encoding, multipart, utf8);
   }
 
   _HttpMultipartFormData(
@@ -182,15 +183,16 @@ class _HttpMultipartFormData<T> extends Stream<T> {
       Encoding defaultEncoding) {
     _stream = _mimeMultipart;
 
-    if (contentTransferEncoding != null)
-      throw new HttpException("Unsupported contentTransferEncoding: "
+    if (contentTransferEncoding != null) {
+      throw HttpException("Unsupported contentTransferEncoding: "
           "${contentTransferEncoding.value}");
+    }
 
     if (contentType == null ||
         contentType.primaryType == 'text' ||
         contentType.mimeType == 'application/json') {
       _isText = true;
-      final StringBuffer buffer = new StringBuffer();
+      final StringBuffer buffer = StringBuffer();
       final Encoding encoding = contentType != null
           ? Encoding.getByName(contentType.charset) ?? defaultEncoding
           : defaultEncoding;
@@ -221,7 +223,7 @@ class _HttpMultipartFormData<T> extends Stream<T> {
     int end = input.lastIndexOf(';');
     if (end < amp) return null;
 
-    StringBuffer buffer = new StringBuffer();
+    StringBuffer buffer = StringBuffer();
     int offset = 0;
 
     final Function parse = (amp, end) {
@@ -236,10 +238,11 @@ class _HttpMultipartFormData<T> extends Stream<T> {
           break;
 
         default:
-          throw new HttpException('Unhandled HTTP entity token');
+          throw HttpException('Unhandled HTTP entity token');
       }
     };
 
+    // ignore: prefer_contains
     while ((amp = input.indexOf('&', offset)) >= 0) {
       buffer.write(input.substring(offset, amp));
       end = input.indexOf(';', amp);

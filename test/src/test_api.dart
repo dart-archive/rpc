@@ -43,12 +43,12 @@ class WrongMethods {
 
   @ApiMethod(name: 'test7', method: 'GET', path: 'test7')
   Future<bool> wrongFutureResponse() {
-    return new Future.value(true);
+    return Future.value(true);
   }
 
   @ApiMethod(name: 'test8', method: 'GET', path: 'test8')
   Future genericFutureResponse() {
-    return new Future.value(true);
+    return Future.value(true);
   }
 
   @ApiMethod(name: 'test9', method: 'GET', path: 'test9/{id}')
@@ -107,9 +107,9 @@ class Recursive {
 class CorrectSimple {
   final String _foo = 'ffo';
 
-  final CorrectMethods _cm = new CorrectMethods();
+  final CorrectMethods _cm = CorrectMethods();
 
-  CorrectMethods _cmNonFinal = new CorrectMethods();
+  CorrectMethods _cmNonFinal = CorrectMethods();
 
   @ApiMethod(path: 'test1/{path}')
   VoidMessage simple1(String path) {
@@ -135,27 +135,27 @@ class CorrectMethods {
 
   @ApiMethod(name: 'test2', path: 'test2')
   TestMessage1 method2() {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test3', path: 'test3/{count}')
   TestMessage1 method3(String count) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test4', path: 'test4/{count}/{more}')
   TestMessage1 method4(String count, String more) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test5', path: 'test5/{count}/some/{more}')
   TestMessage1 method5(String count, String more) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test6', method: 'POST', path: 'test6')
   TestMessage1 method6(VoidMessage _) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test7', method: 'POST', path: 'test7')
@@ -165,17 +165,17 @@ class CorrectMethods {
 
   @ApiMethod(name: 'test8', method: 'POST', path: 'test8')
   TestMessage1 method8(TestMessage1 request) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test9', method: 'POST', path: 'test9/{count}')
   TestMessage1 method9(String count, VoidMessage _) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test10', method: 'POST', path: 'test10/{count}')
   TestMessage1 method10(String count, TestMessage1 request) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test11', method: 'POST', path: 'test11/{count}')
@@ -185,12 +185,12 @@ class CorrectMethods {
 
   @ApiMethod(name: 'test12', method: 'POST', path: 'test12')
   Future<TestMessage1> method12(VoidMessage _) {
-    return new Future.value(new TestMessage1());
+    return Future.value(TestMessage1());
   }
 
   @ApiMethod(name: 'test13', method: 'POST', path: 'test13')
   Future<VoidMessage> method13(VoidMessage _) {
-    return new Future.value(new VoidMessage());
+    return Future.value(VoidMessage());
   }
 
   @ApiMethod(name: 'test14', method: 'POST', path: 'test14/{count}/bar')
@@ -200,17 +200,17 @@ class CorrectMethods {
 
   @ApiMethod(name: 'test15', method: 'POST', path: 'test15/{count}')
   TestMessage1 method15(int count, VoidMessage _) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test16', method: 'POST', path: 'test16/{count}')
   TestMessage1 method16(int count, TestMessage1 request) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 
   @ApiMethod(name: 'test17', method: 'POST', path: 'test17/{count}/bar')
   TestMessage1 method17(int count, TestMessage1 request) {
-    return new TestMessage1();
+    return TestMessage1();
   }
 }
 
@@ -225,38 +225,38 @@ class Tester {}
 @ApiClass(version: 'v1test')
 class TesterWithOneResource {
   @ApiResource()
-  final SomeResource someResource = new SomeResource();
+  final SomeResource someResource = SomeResource();
 }
 
 @ApiClass(version: 'v1test')
 class TesterWithTwoResources {
   @ApiResource()
-  final SomeResource someResource = new SomeResource();
+  final SomeResource someResource = SomeResource();
 
   @ApiResource(name: 'nice_name')
-  final NamedResource namedResource = new NamedResource();
+  final NamedResource namedResource = NamedResource();
 }
 
 @ApiClass(version: 'v1test')
 class TesterWithNestedResources {
   @ApiResource()
-  final ResourceWithNested resourceWithNested = new ResourceWithNested();
+  final ResourceWithNested resourceWithNested = ResourceWithNested();
 }
 
 @ApiClass(version: 'v1test')
 class TesterWithDuplicateResourceNames {
   @ApiResource()
-  final SomeResource someResource = new SomeResource();
+  final SomeResource someResource = SomeResource();
 
   @ApiResource(name: 'someResource')
-  final NamedResource namedResource = new NamedResource();
+  final NamedResource namedResource = NamedResource();
 }
 
 @ApiClass(version: 'v1test')
 class TesterWithMultipleResourceAnnotations {
   @ApiResource()
   @ApiResource()
-  final SomeResource someResource = new SomeResource();
+  final SomeResource someResource = SomeResource();
 }
 
 @ApiClass(version: 'v1test')
@@ -284,7 +284,7 @@ class NamedResource {
 
 class ResourceWithNested {
   @ApiResource()
-  NestedResource nestedResource = new NestedResource();
+  NestedResource nestedResource = NestedResource();
 }
 
 class NestedResource {

@@ -162,8 +162,8 @@ class WrongPostApiWithPathQuery {
 void main() {
   group('api-post-method-correct', () {
     test('correct-post-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectPostApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectPostApi());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 4);
       var discoveryDoc =
@@ -221,8 +221,8 @@ void main() {
     });
 
     test('correct-post-api-with-path', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectPostApiWithPath());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectPostApiWithPath());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 10);
       var discoveryDoc =
@@ -440,23 +440,21 @@ void main() {
 
   group('api-post-method-wrong', () {
     test('wrong-post-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongPostApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongPostApi());
       expect(apiCfg.methods.length, 3);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
-            'WrongPostApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongPostApi: @ApiClass.version field is required.'),
-        new ApiConfigError(
+        ApiConfigError('WrongPostApi: Missing required @ApiClass annotation.'),
+        ApiConfigError('WrongPostApi: @ApiClass.version field is required.'),
+        ApiConfigError(
             'WrongPostApi.missingMessageParam: API methods using POST must '
             'have a signature of path parameters followed by one request '
             'parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApi.invalidVoidResponse: API Method cannot be void, use '
             'VoidMessage as return type instead.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApi.dynamicMessage: API Method parameter has to be an '
             'instantiable class.')
       ];
@@ -464,53 +462,53 @@ void main() {
     });
 
     test('wrong-post-with-path-query', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongPostApiWithPathQuery());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongPostApiWithPathQuery());
       expect(apiCfg.methods.length, 8);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.missingRequestParam: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.missingPathParam: Expected method '
             'parameter with name \'id\', but found parameter with name '
             '\'msg\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.missingPathParam: Path parameter \'id\' '
             'must be of type int, String or bool.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.missingPathParam: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.missingPathRegExp: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withStringQueryParam: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withIntQueryParam: API methods using '
             'POST must have a signature of path parameters followed by one '
             'request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withDynamicQueryParam: API methods '
             'using POST must have a signature of path parameters followed by '
             'one request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withQueryNoMsg: No support for optional '
             'path parameters in API methods.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withQueryNoMsg: API methods using POST '
             'must have a signature of path parameters followed by one request '
             'parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withOptionalNoMsg: Request parameter '
             'cannot be optional or named.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongPostApiWithPathQuery.withOptionalNoMsg: API Method parameter '
             'has to be an instantiable class.')
       ];

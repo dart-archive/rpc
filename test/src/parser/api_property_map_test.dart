@@ -39,7 +39,7 @@ class CorrectMap {
 }
 
 class WrongMap {
-  @ApiProperty(defaultValue: const {'foo': 1, 'bar': 2})
+  @ApiProperty(defaultValue: {'foo': 1, 'bar': 2})
   Map<String, int> aMapWithDefault;
 
   @ApiProperty(minValue: 0, maxValue: 1)
@@ -48,17 +48,17 @@ class WrongMap {
   @ApiProperty(format: 'int32')
   Map<String, SomeClass> aMapWithFormat;
 
-  @ApiProperty(values: const {'enumValue': 'Enum Description'})
+  @ApiProperty(values: {'enumValue': 'Enum Description'})
   Map<String, SomeClass> aMapWithEnumValues;
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-map-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectMap), true);
       expect(parser.isValid, isTrue);
@@ -102,27 +102,27 @@ void main() {
 
   group('api-map-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongMap), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMap: aMapWithDefault: Invalid property annotation. Property '
             'of type Map<String, int> does not support the ApiProperty field: '
             'defaultValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMap: aMapWithMinMax: Invalid property annotation. Property '
             'of type Map<String, SomeClass> does not support the ApiProperty '
             'field: minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMap: aMapWithMinMax: Invalid property annotation. Property '
             'of type Map<String, SomeClass> does not support the ApiProperty '
             'field: maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMap: aMapWithFormat: Invalid property annotation. Property '
             'of type Map<String, SomeClass> does not support the ApiProperty '
             'field: format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMap: aMapWithEnumValues: Invalid property annotation. '
             'Property of type Map<String, SomeClass> does not support the '
             'ApiProperty field: values')

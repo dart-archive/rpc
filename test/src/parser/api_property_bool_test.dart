@@ -35,17 +35,17 @@ class WrongBool {
   @ApiProperty(format: 'int32')
   bool aBoolWithFormat;
 
-  @ApiProperty(values: const {'enumKey': 'enumValue'})
+  @ApiProperty(values: {'enumKey': 'enumValue'})
   bool aBoolWithEnumValues;
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-bool-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectBool), true);
       expect(parser.isValid, isTrue);
@@ -71,21 +71,21 @@ void main() {
 
   group('api-bool-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
 
       parser.parseSchema(reflectClass(WrongBool), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongBool: aBoolWithMinMax: Invalid property annotation. Property '
             'of type bool does not support the ApiProperty field: minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongBool: aBoolWithMinMax: Invalid property annotation. Property '
             'of type bool does not support the ApiProperty field: maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongBool: aBoolWithFormat: Invalid property annotation. Property '
             'of type bool does not support the ApiProperty field: format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongBool: aBoolWithEnumValues: Invalid property annotation. '
             'Property of type bool does not support the ApiProperty field: '
             'values')

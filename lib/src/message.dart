@@ -39,21 +39,20 @@ class HttpApiRequest {
   factory HttpApiRequest(String httpMethod, Uri uri,
       Map<String, dynamic> headers, Stream<List<int>> body,
       {List<Cookie> cookies}) {
-    var headersLowerCase = new Map<String, dynamic>();
+    var headersLowerCase = Map<String, dynamic>();
     headers.forEach((String key, dynamic value) =>
         headersLowerCase[key.toLowerCase()] = value);
-    return new HttpApiRequest._(
-        httpMethod, uri, headersLowerCase, cookies, body);
+    return HttpApiRequest._(httpMethod, uri, headersLowerCase, cookies, body);
   }
 
   factory HttpApiRequest.fromHttpRequest(HttpRequest request) {
     // Convert HttpHeaders to a Map<String, dynamic>. We don't need to
     // lowercase the keys as they are already lowercased in the HttpRequest.
-    var headers = new Map<String, dynamic>();
+    var headers = Map<String, dynamic>();
     request.headers
         .forEach((String key, dynamic value) => headers[key] = value);
 
-    return new HttpApiRequest._(request.method, request.requestedUri, headers,
+    return HttpApiRequest._(request.method, request.requestedUri, headers,
         request.cookies, request);
   }
 
@@ -99,11 +98,11 @@ class HttpApiResponse {
     Map json = {
       'error': {'code': status, 'message': message}
     };
-    if (errors != null && errors.length > 0) {
+    if (errors != null && errors.isNotEmpty) {
       json['error']['errors'] = errors.map((error) => error.toJson()).toList();
     }
-    Stream<List<int>> s = new Stream.fromIterable([_jsonToBytes.convert(json)]);
-    return new HttpApiResponse(status, s, defaultResponseHeaders,
+    Stream<List<int>> s = Stream.fromIterable([_jsonToBytes.convert(json)]);
+    return HttpApiResponse(status, s, defaultResponseHeaders,
         exception: exception, stack: stack);
   }
 }

@@ -13,7 +13,7 @@ import 'package:test/test.dart';
 void main() {
   group('POST multipart/form-data', () {
     test('post-simple', () async {
-      final form = new FormData()
+      final form = FormData()
         ..append('field1', 'hello')
         ..append('field2', 'world');
       final response = await HttpRequest.request(
@@ -28,8 +28,8 @@ void main() {
     test('post-simple-mix', () async {
       final blobString =
           'Indescribable... Indestructible! Nothing can stop it!';
-      final blob = new Blob([blobString], 'text/plain');
-      final form = new FormData()
+      final blob = Blob([blobString], 'text/plain');
+      final form = FormData()
         ..append('field1', 'hello')
         ..appendBlob('field2', blob, 'theBlob.txt');
       final response = await HttpRequest.request(
@@ -45,8 +45,8 @@ void main() {
     test('post-mega-mix', () async {
       final blobString =
           'Indescribable... Indestructible! Nothing can stop me!';
-      final blob = new Blob([blobString], 'text/plain');
-      final form = new FormData()
+      final blob = Blob([blobString], 'text/plain');
+      final form = FormData()
         ..append('name', 'John')
         ..append('age', '42')
         ..appendBlob('resume', blob, 'theResume.txt');

@@ -20,7 +20,7 @@ abstract class ApiConfigSchemaProperty<D, J> {
       this.defaultValue, this._apiType, this._apiFormat);
 
   discovery.JsonSchema get typeAsDiscovery {
-    return new discovery.JsonSchema()
+    return discovery.JsonSchema()
       ..type = _apiType
       ..format = _apiFormat;
   }
@@ -90,11 +90,11 @@ class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
     assert(_apiFormat.endsWith('64'));
 
     if (minValue != null && value < minValue) {
-      throw new InternalServerError(
+      throw InternalServerError(
           'Return value \'$value\' smaller than minimum value \'$minValue\'');
     }
     if (maxValue != null && value > maxValue) {
-      throw new InternalServerError(
+      throw InternalServerError(
           'Return value \'$value\' larger than maximum value \'$maxValue\'');
     }
     if (_apiFormat == 'int64' && value == value.toSigned(64) ||
@@ -102,7 +102,7 @@ class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
       assert(_apiType == 'string');
       return value.toString();
     }
-    throw new InternalServerError(
+    throw InternalServerError(
         'Integer return value: \'$value\' not within the \'$_apiFormat\' '
         'property range.');
   }
@@ -113,13 +113,13 @@ class BigIntegerProperty extends ApiConfigSchemaProperty<BigInt, String> {
     try {
       parsedValue = BigInt.parse(value);
     } on FormatException catch (e) {
-      throw new BadRequestError('Invalid integer format: $e');
+      throw BadRequestError('Invalid integer format: $e');
     }
     if (minValue != null && parsedValue < minValue) {
-      throw new BadRequestError('$name needs to be >= $minValue');
+      throw BadRequestError('$name needs to be >= $minValue');
     }
     if (maxValue != null && parsedValue > maxValue) {
-      throw new BadRequestError('$name needs to be <= $maxValue');
+      throw BadRequestError('$name needs to be <= $maxValue');
     }
     return parsedValue;
   }
@@ -155,11 +155,11 @@ class IntegerProperty extends ApiConfigSchemaProperty<int, int> {
     assert(value != null);
     assert(_apiFormat.endsWith('32'));
     if (minValue != null && value < minValue) {
-      throw new InternalServerError(
+      throw InternalServerError(
           'Return value \'$value\' smaller than minimum value \'$minValue\'');
     }
     if (maxValue != null && value > maxValue) {
-      throw new InternalServerError(
+      throw InternalServerError(
           'Return value \'$value\' larger than maximum value \'$maxValue\'');
     }
 
@@ -167,7 +167,7 @@ class IntegerProperty extends ApiConfigSchemaProperty<int, int> {
         _apiFormat == 'uint32' && value == value.toUnsigned(32)) {
       return value;
     }
-    throw new InternalServerError(
+    throw InternalServerError(
         'Integer return value: \'$value\' not within the \'$_apiFormat\' '
         'property range.');
   }
@@ -175,10 +175,10 @@ class IntegerProperty extends ApiConfigSchemaProperty<int, int> {
   int _fromRequest(int value) {
     assert(value != null);
     if (minValue != null && value < minValue) {
-      throw new BadRequestError('$name needs to be >= $minValue');
+      throw BadRequestError('$name needs to be >= $minValue');
     }
     if (maxValue != null && value > maxValue) {
-      throw new BadRequestError('$name needs to be <= $maxValue');
+      throw BadRequestError('$name needs to be <= $maxValue');
     }
     return value;
   }
@@ -214,14 +214,14 @@ class DoubleProperty extends ApiConfigSchemaProperty<double, dynamic> {
     try {
       return double.parse(value);
     } on FormatException catch (e) {
-      throw new BadRequestError('Invalid double format: $e');
+      throw BadRequestError('Invalid double format: $e');
     }
   }
 
   dynamic _toResponse(double value) {
     if (_apiFormat == 'float' &&
         (value < SMALLEST_FLOAT || value > LARGEST_FLOAT)) {
-      throw new InternalServerError(
+      throw InternalServerError(
           'Result \'$value\' not in single precision \'float\' range: '
           '[$SMALLEST_FLOAT, $LARGEST_FLOAT].');
     }
@@ -253,7 +253,7 @@ class EnumProperty extends ApiConfigSchemaProperty<String, String> {
     if (_values.containsKey(value)) {
       return value;
     }
-    throw new BadRequestError('Value is not a valid enum value');
+    throw BadRequestError('Value is not a valid enum value');
   }
 }
 
@@ -280,7 +280,7 @@ class BooleanProperty extends ApiConfigSchemaProperty<bool, dynamic> {
         return false;
       }
     }
-    throw new BadRequestError('Invalid boolean value: $value');
+    throw BadRequestError('Invalid boolean value: $value');
   }
 }
 
@@ -307,7 +307,7 @@ class DateTimeProperty extends ApiConfigSchemaProperty<DateTime, String> {
     try {
       return DateTime.parse(value);
     } on FormatException catch (e) {
-      throw new BadRequestError('Invalid date format: $e');
+      throw BadRequestError('Invalid date format: $e');
     }
   }
 }
@@ -326,13 +326,13 @@ class SchemaProperty<D> extends ApiConfigSchemaProperty<D, dynamic> {
   D _fromRequest(dynamic value) {
     assert(value != null);
     if (value is! Map && value is! MediaMessage) {
-      throw new BadRequestError('Invalid request message');
+      throw BadRequestError('Invalid request message');
     }
     return _ref.fromRequest(value);
   }
 
   discovery.JsonSchema get typeAsDiscovery =>
-      new discovery.JsonSchema()..P_ref = _ref.schemaName;
+      discovery.JsonSchema()..P_ref = _ref.schemaName;
 
   bool get isSimple => false;
 }
@@ -345,7 +345,7 @@ class ListProperty<D> extends ApiConfigSchemaProperty<List<D>, List> {
       : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
-      new discovery.JsonSchema()..type = 'array';
+      discovery.JsonSchema()..type = 'array';
 
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..items = _itemsProperty.asDiscovery;
@@ -355,7 +355,9 @@ class ListProperty<D> extends ApiConfigSchemaProperty<List<D>, List> {
   }
 
   List<D> _fromRequest(List encodedList) {
-    return encodedList.map<D>(_itemsProperty._fromRequest as D Function(Object)).toList();
+    return encodedList
+        .map<D>(_itemsProperty._fromRequest as D Function(Object))
+        .toList();
   }
 }
 
@@ -367,7 +369,7 @@ class MapProperty<D> extends ApiConfigSchemaProperty<Map<String, D>, Map> {
       : super(name, description, required, null, null, null);
 
   discovery.JsonSchema get typeAsDiscovery =>
-      new discovery.JsonSchema()..type = 'object';
+      discovery.JsonSchema()..type = 'object';
 
   discovery.JsonSchema get asDiscovery =>
       super.asDiscovery..additionalProperties = _additionalProperty.asDiscovery;

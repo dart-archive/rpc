@@ -16,7 +16,7 @@ import 'utils.dart';
 import 'discovery/api.dart';
 import 'discovery/config.dart';
 
-typedef Future HttpRequestHandler(io.HttpRequest request);
+typedef HttpRequestHandler = Future Function(io.HttpRequest request);
 
 /// The main class for handling all API requests.
 class ApiServer {
@@ -27,10 +27,10 @@ class ApiServer {
 
   final Map<String, ApiConfig> _apis = {};
 
-  ApiServer({String apiPrefix, bool prettyPrint: false})
+  ApiServer({String apiPrefix, bool prettyPrint = false})
       : _apiPrefix = apiPrefix != null ? apiPrefix : '' {
     _jsonToBytes = prettyPrint
-        ? new JsonEncoder.withIndent(' ').fuse(utf8.encoder)
+        ? JsonEncoder.withIndent(' ').fuse(utf8.encoder)
         : json.encoder.fuse(utf8.encoder);
   }
 
@@ -40,39 +40,33 @@ class ApiServer {
         try {
           if (!request.uri.path.startsWith(_apiPrefix)) {
             await request.drain();
-            apiResponse = new HttpApiResponse.error(
-                io.HttpStatus.notImplemented,
-                'Invalid request for path: ${request.uri.path}',
-                null,
-                null);
+            apiResponse = HttpApiResponse.error(io.HttpStatus.notImplemented,
+                'Invalid request for path: ${request.uri.path}', null, null);
           } else {
-            var apiRequest = new HttpApiRequest.fromHttpRequest(request);
+            var apiRequest = HttpApiRequest.fromHttpRequest(request);
             apiResponse = await handleHttpApiRequest(apiRequest);
           }
         } catch (error, stack) {
           var exception = error;
           if (exception is Error) {
-            exception = new Exception(exception.toString());
+            exception = Exception(exception.toString());
           }
-          apiResponse = new HttpApiResponse.error(
-              io.HttpStatus.internalServerError,
-              exception.toString(),
-              exception,
-              stack);
+          apiResponse = HttpApiResponse.error(io.HttpStatus.internalServerError,
+              exception.toString(), exception, stack);
         }
         return sendApiResponse(apiResponse, request.response);
       };
 
   /// Add a new api to the API server.
   String addApi(api) {
-    ApiParser parser = new ApiParser();
+    ApiParser parser = ApiParser();
     ApiConfig apiConfig = parser.parse(api);
     if (_apis.containsKey(apiConfig.apiKey)) {
       parser.addError('API already exists with path: ${apiConfig.apiKey}.');
     }
     if (!parser.isValid) {
-      throw new ApiConfigError('RPC: Failed to parse API.\n\n'
-          '${apiConfig.apiKey}:\n' +
+      throw ApiConfigError('RPC: Failed to parse API.\n\n'
+              '${apiConfig.apiKey}:\n' +
           parser.errors.join('\n') +
           '\n');
     }
@@ -106,13 +100,13 @@ class ApiServer {
       // Parse the request to compute some of the values needed to determine
       // which method to invoke.
       var parsedRequest =
-          new ParsedHttpApiRequest(request, _apiPrefix, _jsonToBytes);
+          ParsedHttpApiRequest(request, _apiPrefix, _jsonToBytes);
 
       // The api key is the first two path segments.
       ApiConfig api = _apis[parsedRequest.apiKey];
       if (api == null) {
         return httpErrorResponse(request,
-            new NotFoundError('No API with key: ${parsedRequest.apiKey}.'));
+            NotFoundError('No API with key: ${parsedRequest.apiKey}.'));
       }
       drain = false;
       rpcLogger.info('Invoking API: ${parsedRequest.apiKey} with HTTP method: '
@@ -130,7 +124,7 @@ class ApiServer {
       // before or after invoking the method and we cannot drain the body twice.
       var exception = e;
       if (exception is Error) {
-        exception = new Exception(e.toString());
+        exception = Exception(e.toString());
       }
       response = httpErrorResponse(request, exception,
           stack: stack, drainRequest: drain);
@@ -141,7 +135,7 @@ class ApiServer {
   void enableDiscoveryApi() {
     apis.forEach((api) =>
         rpcLogger.info('Enabling Discovery API Service for api: $api'));
-    _discoveryApiKey = addApi(new DiscoveryApi(this, _apiPrefix));
+    _discoveryApiKey = addApi(DiscoveryApi(this, _apiPrefix));
   }
 
   void disableDiscoveryApi() {
@@ -156,7 +150,7 @@ class ApiServer {
   List<DirectoryListItems> getDiscoveryDirectory() {
     if (_discoveryApiKey == null) {
       // The Discovery API has not been enabled for this ApiServer.
-      throw new BadRequestError('Discovery API not enabled.');
+      throw BadRequestError('Discovery API not enabled.');
     }
     var apiDirectory = <DirectoryListItems>[];
     _apis.values.forEach((api) => apiDirectory.add(api.asDirectoryListItem));
@@ -167,11 +161,11 @@ class ApiServer {
   RestDescription getDiscoveryDocument(String baseUrl, String apiKey) {
     if (_discoveryApiKey == null) {
       // The Discovery API has not been enabled for this ApiServer.
-      throw new BadRequestError('Discovery API not enabled.');
+      throw BadRequestError('Discovery API not enabled.');
     }
     var api = _apis[apiKey];
     if (api == null) {
-      throw new NotFoundError('Discovery API \'$apiKey\' not found.');
+      throw NotFoundError('Discovery API \'$apiKey\' not found.');
     }
     return api.generateDiscoveryDocument(baseUrl, _apiPrefix);
   }

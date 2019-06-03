@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 main() {
   group('errors-rpc-error-detail-to-json', () {
     test('maps-properly', () async {
-      var errorDetail = new RpcErrorDetail();
+      var errorDetail = RpcErrorDetail();
       expect(errorDetail.toJson(), {});
 
       var jsonTemplate = {
@@ -22,7 +22,7 @@ main() {
         'extendedHelp': '6',
         'sendReport': '7',
       };
-      errorDetail = new RpcErrorDetail(
+      errorDetail = RpcErrorDetail(
           domain: jsonTemplate['domain'],
           reason: jsonTemplate['reason'],
           message: jsonTemplate['message'],

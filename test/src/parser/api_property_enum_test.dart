@@ -13,54 +13,52 @@ import 'package:rpc/src/discovery/config.dart' as discovery;
 import 'package:test/test.dart';
 
 class CorrectEnum {
-  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'})
+  @ApiProperty(values: {'foo': 'A Foo', 'bar': 'A Bar'})
   String anEnum;
 
   @ApiProperty(
       name: 'anotherName',
       description: 'Description of an Enum.',
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'})
+      values: {'foo': 'A Foo', 'bar': 'A Bar'})
   String aNamedEnum;
 
-  @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'}, defaultValue: 'foo')
+  @ApiProperty(values: {'foo': 'A Foo', 'bar': 'A Bar'}, defaultValue: 'foo')
   String anEnumWithDefault;
 
-  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'}, required: true)
+  @ApiProperty(values: {'foo': 'A Foo', 'bar': 'A Bar'}, required: true)
   String aRequiredEnum;
 
   @ApiProperty(
       name: 'aFullEnum',
       description: 'Description of an Enum.',
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'},
+      values: {'foo': 'A Foo', 'bar': 'A Bar'},
       required: true,
       defaultValue: 'bar')
   String anEnumWithAllAnnotations;
 
-  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'}, ignore: true)
+  @ApiProperty(values: {'foo': 'A Foo', 'bar': 'A Bar'}, ignore: true)
   String ignored;
 }
 
 class WrongEnum {
   @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'}, minValue: 0, maxValue: 1)
+      values: {'foo': 'A Foo', 'bar': 'A Bar'}, minValue: 0, maxValue: 1)
   String anEnumWithMinMax;
 
-  @ApiProperty(values: const {'foo': 'A Foo', 'bar': 'A Bar'}, format: 'int32')
+  @ApiProperty(values: {'foo': 'A Foo', 'bar': 'A Bar'}, format: 'int32')
   String anEnumWithFormat;
 
-  @ApiProperty(
-      values: const {'foo': 'A Foo', 'bar': 'A Bar'}, defaultValue: 'baz')
+  @ApiProperty(values: {'foo': 'A Foo', 'bar': 'A Bar'}, defaultValue: 'baz')
   String anEnumWithIncorrectDefault;
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-enum-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectEnum), true);
       expect(parser.isValid, isTrue);
@@ -110,23 +108,23 @@ void main() {
 
   group('api-enum-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongEnum), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongEnum: anEnumWithMinMax: Invalid property annotation. '
             'Property of type Enum does not support the ApiProperty field: '
             'minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongEnum: anEnumWithMinMax: Invalid property annotation. '
             'Property of type Enum does not support the ApiProperty field: '
             'maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongEnum: anEnumWithFormat: Invalid property annotation. '
             'Property of type Enum does not support the ApiProperty field: '
             'format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongEnum: anEnumWithIncorrectDefault: Default value: baz must be '
             'one of the valid enum values: (foo, bar).')
       ];

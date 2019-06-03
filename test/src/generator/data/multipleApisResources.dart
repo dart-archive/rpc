@@ -12,6 +12,6 @@ class ApiTwoResource {
 
   @ApiMethod(path: 'apitwo/resource/{name}')
   ApiTwoResponse apiTwoGetWithParams(String name) {
-    return new ApiTwoResponse()..result = 'Hello ${name}!';
+    return ApiTwoResponse()..result = 'Hello ${name}!';
   }
 }

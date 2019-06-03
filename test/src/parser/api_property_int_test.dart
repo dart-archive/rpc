@@ -66,7 +66,7 @@ class CorrectInt {
 }
 
 class WrongInt {
-  @ApiProperty(values: const {'enumKey': 'enumValue'})
+  @ApiProperty(values: {'enumKey': 'enumValue'})
   int anIntWithEnumValues;
 
   @ApiProperty(minValue: 0, maxValue: 2, defaultValue: 3)
@@ -198,12 +198,12 @@ class WrongInt {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-integer-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectInt), true);
       expect(parser.isValid, isTrue);
@@ -281,76 +281,76 @@ void main() {
 
   group('api-integer-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongInt), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError('WrongInt: anIntWithEnumValues: Invalid property '
+        ApiConfigError('WrongInt: anIntWithEnumValues: Invalid property '
             'annotation. Property of type integer does not support the '
             'ApiProperty field: values'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: aBoundedIntWithTooHighDefault: Default value must be '
             '<= 2.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: aBoundedIntWithTooLowDefault: Default value must be '
             '>= 0.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: aBoundedIntWithMaxLessThanMin: Invalid min/max range: '
             '[2, 0]. Min must be less than max.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt32TooSmallMin: Min value: \'-2147483649\' not in '
             'the range of an \'int32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt32TooLargeMax: Max value: \'2147483648\' not in '
             'the range of an \'int32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt32TooLargeDefault: Default value: \'2147483648\' '
             'not in the range of an \'int32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt32TooSmallDefault: Default value: \'-2147483649\' '
             'not in the range of an \'int32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt32TooSmallMin: Min value: \'-1\' not in the range '
             'of an \'uint32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt32TooLargeMax: Max value: \'4294967296\' not in '
             'the range of an \'uint32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt32TooLargeDefault: Default value: \'4294967296\' '
             'not in the range of an \'uint32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt32TooSmallDefault: Default value: \'-1\' not in '
             'the range of an \'uint32\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt64TooSmallMin: Min value: \'-9223372036854775809\' '
             'not in the range of an \'int64\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt64TooLargeMax: Max value: \'9223372036854775808\' '
             'not in the range of an \'int64\''),
-        new ApiConfigError('WrongInt: anInt64TooLargeDefault: Default value: '
+        ApiConfigError('WrongInt: anInt64TooLargeDefault: Default value: '
             '\'9223372036854775808\' not in the range of an \'int64\''),
-        new ApiConfigError('WrongInt: anInt64TooSmallDefault: Default value: '
+        ApiConfigError('WrongInt: anInt64TooSmallDefault: Default value: '
             '\'-9223372036854775809\' not in the range of an \'int64\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt64TooSmallMin: Min value: \'-1\' not in the range '
             'of an \'uint64\''),
-        new ApiConfigError('WrongInt: anUInt64TooLargeMax: Max value: '
+        ApiConfigError('WrongInt: anUInt64TooLargeMax: Max value: '
             '\'18446744073709551616\' not in the range of an \'uint64\''),
-        new ApiConfigError('WrongInt: anUInt64TooLargeDefault: Default value: '
+        ApiConfigError('WrongInt: anUInt64TooLargeDefault: Default value: '
             '\'18446744073709551616\' not in the range of an \'uint64\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt64TooSmallDefault: Default value: \'-1\' not in '
             'the range of an \'uint64\''),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anUInt64WrongType: 64 bit integers must be of type '
             'BigInt'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt64WrongParamTypes: minValue for 64 bit integers '
             'must be specified as String'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt64WrongParamTypes: maxValue for 64 bit integers '
             'must be specified as String'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongInt: anInt64WrongParamTypes: defaultValue for 64 bit '
             'integers must be specified as String'),
       ];

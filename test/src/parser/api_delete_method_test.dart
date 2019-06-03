@@ -173,8 +173,8 @@ class WrongDeleteApiWithPathQuery {
 void main() {
   group('api-delete-method-correct', () {
     test('correct-delete-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectDeleteApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectDeleteApi());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 3);
       var discoveryDoc =
@@ -209,8 +209,8 @@ void main() {
     });
 
     test('correct-delete-api-with-path', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectDeleteApiWithPath());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectDeleteApiWithPath());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 8);
       var discoveryDoc =
@@ -371,8 +371,8 @@ void main() {
     });
 
     test('correct-delete-api-with-query', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectDeleteApiWithQuery());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectDeleteApiWithQuery());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 10);
       var discoveryDoc =
@@ -575,46 +575,42 @@ void main() {
 
   group('api-delete-method-wrong', () {
     test('wrong-delete-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongDeleteApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongDeleteApi());
       expect(apiCfg.methods.length, 1);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDeleteApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongDeleteApi: @ApiClass.version field is required.'),
-        new ApiConfigError(
+        ApiConfigError('WrongDeleteApi: @ApiClass.version field is required.'),
+        ApiConfigError(
             'WrongDeleteApi.deleteWithMessageArg: Non-path parameter '
             '\'requestMessage\' must be a named parameter.'),
-        new ApiConfigError(
-            'WrongDeleteApi.deleteWithMessageArg: Query parameter '
+        ApiConfigError('WrongDeleteApi.deleteWithMessageArg: Query parameter '
             '\'requestMessage\' must be of type int, String or bool.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('wrong-delete-with-path-query', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongDeleteApiWithPathQuery());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongDeleteApiWithPathQuery());
       expect(apiCfg.methods.length, 5);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDeleteApiWithPathQuery.query1: Non-path parameter \'path\' '
             'must be a named parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDeleteApiWithPathQuery.query2: Expected method parameter '
             'with name \'queryParam\', but found parameter with name '
             '\'pathParam\'.'),
-        new ApiConfigError(
-            'WrongDeleteApiWithPathQuery.query3: Query parameter '
+        ApiConfigError('WrongDeleteApiWithPathQuery.query3: Query parameter '
             '\'queryParam\' must be of type int, String or bool.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDeleteApiWithPathQuery.query4: No support for optional path '
             'parameters in API methods.'),
-        new ApiConfigError(
-            'WrongDeleteApiWithPathQuery.query5: Non-path parameter '
+        ApiConfigError('WrongDeleteApiWithPathQuery.query5: Non-path parameter '
             '\'queryParam\' must be a named parameter.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());

@@ -39,7 +39,7 @@ class CorrectList {
 }
 
 class WrongList {
-  @ApiProperty(defaultValue: const [1, 2])
+  @ApiProperty(defaultValue: [1, 2])
   List<int> aListWithDefault;
 
   @ApiProperty(minValue: 0, maxValue: 1)
@@ -48,17 +48,17 @@ class WrongList {
   @ApiProperty(format: 'int32')
   List<SomeClass> aListWithFormat;
 
-  @ApiProperty(values: const {'enumValue': 'Enum Description'})
+  @ApiProperty(values: {'enumValue': 'Enum Description'})
   List<SomeClass> aListWithEnumValues;
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-list-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectList), true);
       expect(parser.isValid, isTrue);
@@ -102,27 +102,27 @@ void main() {
 
   group('api-list-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongList), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongList: aListWithDefault: Invalid property annotation. '
             'Property of type List<int> does not support the ApiProperty '
             'field: defaultValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongList: aListWithMinMax: Invalid property annotation. Property '
             'of type List<SomeClass> does not support the ApiProperty field: '
             'minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongList: aListWithMinMax: Invalid property annotation. Property '
             'of type List<SomeClass> does not support the ApiProperty field: '
             'maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongList: aListWithFormat: Invalid property annotation. Property '
             'of type List<SomeClass> does not support the ApiProperty field: '
             'format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongList: aListWithEnumValues: Invalid property annotation. '
             'Property of type List<SomeClass> does not support the ApiProperty '
             'field: values')

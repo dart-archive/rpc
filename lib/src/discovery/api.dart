@@ -26,8 +26,8 @@ class DiscoveryApi {
     if (apiPrefix.endsWith('/')) {
       apiPrefix = apiPrefix.substring(0, apiPrefix.length - 1);
     }
-    var apis = new DiscoveryResource(server, apiPrefix);
-    return new DiscoveryApi._(apis);
+    var apis = DiscoveryResource(server, apiPrefix);
+    return DiscoveryApi._(apis);
   }
 
   DiscoveryApi._(this.apis);
@@ -63,7 +63,7 @@ class DiscoveryResource {
         ..discoveryRestUrl = '${context.baseUrl}$path'
         ..discoveryLink = '.$path';
     });
-    return new DirectoryList()
+    return DirectoryList()
       ..kind = 'discovery#directoryList'
       ..discoveryVersion = _API_VERSION
       ..items = apiDirectory;

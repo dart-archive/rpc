@@ -29,8 +29,7 @@ class TestMessage1 {
   TestMessage2 submessage;
   List<TestMessage2> submessages;
 
-  @ApiProperty(
-      values: const {'test1': 'test1', 'test2': 'test2', 'test3': 'test3'})
+  @ApiProperty(values: {'test1': 'test1', 'test2': 'test2', 'test3': 'test3'})
   String enumValue;
 
   @ApiProperty(defaultValue: 10)

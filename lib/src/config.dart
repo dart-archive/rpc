@@ -65,7 +65,9 @@ class ParsedHttpApiRequest {
       Converter<Object, dynamic> jsonToBytes) {
     var path = request.uri.path;
     // Get rid of any double '//' in path.
-    while (path.contains('//')) path = path.replaceAll('//', '/');
+    while (path.contains('//')) {
+      path = path.replaceAll('//', '/');
+    }
 
     if (!path.startsWith('/')) {
       path = '/$path';
@@ -86,7 +88,7 @@ class ParsedHttpApiRequest {
     // Hence the number of path segments must be at least three for a valid
     // request (apiPrefix could be empty).
     if (pathSegments.length < 3) {
-      throw new BadRequestError(
+      throw BadRequestError(
           'Invalid request, missing API name and/or version: ${request.uri}.');
     }
     var apiKey = '/${pathSegments[0]}/${pathSegments[1]}';
@@ -105,7 +107,7 @@ class ParsedHttpApiRequest {
         contentType = ContentType.parse(header);
       }
     }
-    return new ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
+    return ParsedHttpApiRequest._(request, apiKey, isOptions, methodKey,
         methodUri, jsonToBytes, contentType);
   }
 

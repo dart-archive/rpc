@@ -42,17 +42,17 @@ class MessageWithArguments {
 class CorrectMessageWithArgsApi {
   @ApiMethod(path: 'simpleWithArgs')
   MessageWithArguments resultWithArgs() {
-    return new MessageWithArguments('foo', 1);
+    return MessageWithArguments('foo', 1);
   }
 
   @ApiMethod(path: 'mapResultWithArgs')
   Map<String, MessageWithArguments> mapResultWithArgs() {
-    return {'foo': new MessageWithArguments('bar', 1)};
+    return {'foo': MessageWithArguments('bar', 1)};
   }
 
   @ApiMethod(path: 'listResultWithArgs')
   List<MessageWithArguments> listResultWithArgs() {
-    return [new MessageWithArguments('foo', 1)];
+    return [MessageWithArguments('foo', 1)];
   }
 }
 
@@ -63,12 +63,12 @@ class InvalidMessageWithArgsApi {
   // request in the next method.
   @ApiMethod(method: 'GET', path: 'resultWithArgs')
   MessageWithArguments resultWithArgs() {
-    return new MessageWithArguments('foo', 1);
+    return MessageWithArguments('foo', 1);
   }
 
   @ApiMethod(method: 'POST', path: 'requestWithArgs')
   MessageWithArguments requestWithArgs(MessageWithArguments msg) {
-    return new MessageWithArguments('foo', 1);
+    return MessageWithArguments('foo', 1);
   }
 
   @ApiMethod(method: 'POST', path: 'mapRequestWithArgs')
@@ -85,8 +85,8 @@ class InvalidMessageWithArgsApi {
 void main() {
   group('api-class-correct', () {
     test('full', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectFull());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectFull());
       expect(parser.isValid, isTrue);
       expect(apiCfg.name, 'testApi');
       expect(apiCfg.version, 'v1');
@@ -119,8 +119,8 @@ void main() {
     });
 
     test('minimum', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectMinimum());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectMinimum());
       expect(apiCfg.version, 'v1');
       // Check the defaults are as expected.
       expect(apiCfg.name, 'correctMinimum');
@@ -129,8 +129,8 @@ void main() {
     });
 
     test('result-with-args', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectMessageWithArgsApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectMessageWithArgsApi());
       expect(parser.isValid, isTrue);
       var discoveryDoc =
           apiCfg.generateDiscoveryDocument('http://localhost:8080', null);
@@ -203,50 +203,49 @@ void main() {
 
   group('api-class-wrong', () {
     test('no-metadata', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongNoMetadata());
+      var parser = ApiParser();
+      parser.parse(WrongNoMetadata());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongNoMetadata: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongNoMetadata: @ApiClass.version field is required.')
+        ApiConfigError('WrongNoMetadata: @ApiClass.version field is required.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('min-no-version', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongNoVersionMinimum());
+      var parser = ApiParser();
+      parser.parse(WrongNoVersionMinimum());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongNoVersionMinimum: @ApiClass.version field is required.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('full-no-version', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongNoVersionFull());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongNoVersionFull());
       expect(apiCfg.name, 'testApi');
       expect(apiCfg.version, isNull);
       expect(apiCfg.title, 'The Test API');
       expect(apiCfg.description, 'An API used to test the implementation');
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongNoVersionFull: @ApiClass.version field is required.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('request-with-args', () {
-      var parser = new ApiParser();
-      parser.parse(new InvalidMessageWithArgsApi());
+      var parser = ApiParser();
+      parser.parse(InvalidMessageWithArgsApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'MessageWithArguments: Schema \'MessageWithArguments\' must have '
             'an unnamed constructor taking no arguments.'),
       ];

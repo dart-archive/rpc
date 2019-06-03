@@ -168,8 +168,8 @@ class WrongGetApiWithPathQuery {
 void main() {
   group('api-get-method-correct', () {
     test('correct-get-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectGetApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectGetApi());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 3);
       var discoveryDoc =
@@ -204,8 +204,8 @@ void main() {
     });
 
     test('correct-get-api-with-path', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectGetApiWithPath());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectGetApiWithPath());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 8);
       var discoveryDoc =
@@ -366,8 +366,8 @@ void main() {
     });
 
     test('correct-get-api-with-query', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectGetApiWithQuery());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectGetApiWithQuery());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 10);
       var discoveryDoc =
@@ -570,17 +570,16 @@ void main() {
 
   group('api-get-method-wrong', () {
     test('wrong-get-api', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongGetApi());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongGetApi());
       expect(apiCfg.methods.length, 1);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
-            'WrongGetApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError('WrongGetApi: @ApiClass.version field is required.'),
-        new ApiConfigError('WrongGetApi.getWithMessageArg: Non-path parameter '
+        ApiConfigError('WrongGetApi: Missing required @ApiClass annotation.'),
+        ApiConfigError('WrongGetApi: @ApiClass.version field is required.'),
+        ApiConfigError('WrongGetApi.getWithMessageArg: Non-path parameter '
             '\'requestMessage\' must be a named parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongGetApi.getWithMessageArg: Query parameter \'requestMessage\' '
             'must be of type int, String or bool.')
       ];
@@ -588,26 +587,25 @@ void main() {
     });
 
     test('wrong-get-with-path-query', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new WrongGetApiWithPathQuery());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(WrongGetApiWithPathQuery());
       expect(apiCfg.methods.length, 5);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongGetApiWithPathQuery.query1: Non-path parameter \'path\' must '
             'be a named parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongGetApiWithPathQuery.query2: Expected method parameter with '
             'name \'queryParam\', but found parameter with name '
             '\'pathParam\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongGetApiWithPathQuery.query3: Query parameter \'queryParam\' '
             'must be of type int, String or bool.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongGetApiWithPathQuery.query4: No support for optional path '
             'parameters in API methods.'),
-        new ApiConfigError(
-            'WrongGetApiWithPathQuery.query5: Non-path parameter '
+        ApiConfigError('WrongGetApiWithPathQuery.query5: Non-path parameter '
             '\'queryParam\' must be a named parameter.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());

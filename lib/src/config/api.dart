@@ -41,7 +41,7 @@ class ApiConfig extends ApiConfigResource {
     }
     return httpErrorResponse(
         request.originalRequest,
-        new NotFoundError(
+        NotFoundError(
             'No method found matching HTTP method: ${request.httpMethod} '
             'and url: ${request.path}.'));
   }
@@ -75,7 +75,7 @@ class ApiConfig extends ApiConfigResource {
     }
 
     // Create OPTIONS response.
-    var headers = new Map<String, dynamic>.from(defaultResponseHeaders);
+    var headers = Map<String, dynamic>.from(defaultResponseHeaders);
     if (allowed.isNotEmpty) {
       var allowedMethods = valueAsString ? allowed.join(',') : allowed;
       headers[HttpHeaders.allowHeader] = allowedMethods;
@@ -83,7 +83,7 @@ class ApiConfig extends ApiConfigResource {
       headers['access-control-allow-headers'] =
           'origin, x-requested-with, content-type, accept';
     }
-    return new HttpApiResponse(HttpStatus.ok, null, headers);
+    return HttpApiResponse(HttpStatus.ok, null, headers);
   }
 
   discovery.RestDescription generateDiscoveryDocument(
@@ -100,7 +100,7 @@ class ApiConfig extends ApiConfigResource {
     } else {
       servicePath = '${apiKey.substring(1)}/';
     }
-    var doc = new discovery.RestDescription();
+    var doc = discovery.RestDescription();
     doc
       ..kind = 'discovery#restDescription'
       ..discoveryVersion = 'v1'
@@ -132,7 +132,7 @@ class ApiConfig extends ApiConfigResource {
   }
 
   Map<String, discovery.JsonSchema> get _schemasAsDiscovery {
-    var schemas = new Map<String, discovery.JsonSchema>();
+    var schemas = Map<String, discovery.JsonSchema>();
     _schemaMap.forEach((String name, ApiConfigSchema schema) {
       if (schema.containsData) {
         schemas[name] = schema.asDiscovery;
@@ -142,7 +142,7 @@ class ApiConfig extends ApiConfigResource {
   }
 
   discovery.DirectoryListItems get asDirectoryListItem {
-    var item = new discovery.DirectoryListItems();
+    var item = discovery.DirectoryListItems();
     // TODO: Support preferred, icons, and documentation link as part
     // of metadata.
     item

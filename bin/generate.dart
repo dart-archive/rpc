@@ -11,7 +11,7 @@ import 'package:discoveryapis_generator/clientstub_generator.dart';
 import 'package:path/path.dart';
 
 ArgParser discoveryCommandArgParser() {
-  return new ArgParser()
+  return ArgParser()
     ..addOption('input-file',
         abbr: 'i', help: 'Dart file containing the top-level API class.')
     ..addOption('port',
@@ -23,7 +23,7 @@ ArgParser discoveryCommandArgParser() {
 }
 
 ArgParser clientCommandArgParser() {
-  return new ArgParser()
+  return ArgParser()
     ..addOption('input-file',
         abbr: 'i', help: 'Dart file containing the top-level API class.')
     ..addOption('output-dir',
@@ -43,7 +43,7 @@ ArgParser clientCommandArgParser() {
 }
 
 ArgParser globalArgParser() {
-  return new ArgParser()
+  return ArgParser()
     ..addCommand('discovery', discoveryCommandArgParser())
     ..addCommand('client', clientCommandArgParser())
     ..addFlag('help', abbr: 'h', help: 'Displays usage information.');
@@ -103,7 +103,7 @@ main(List<String> arguments) async {
       dieWithUsage('Please specify the path to the Dart file containing the '
           'top-level API class (annotated with @ApiClass).');
     }
-    var apiFile = new File(apiFilePath);
+    var apiFile = File(apiFilePath);
     if (!apiFile.existsSync()) {
       print('Cannot find API file \'$apiFilePath\'');
       exit(1);
@@ -113,7 +113,7 @@ main(List<String> arguments) async {
     var apiPrefix = commandOptions['api-prefix'];
     // Strip out leading and ending '/'.
     apiPrefix = apiPrefix == null ? '' : apiPrefix.replaceAll('/', '');
-    var generator = new ClientApiGenerator(apiFilePath, apiPort, apiPrefix);
+    var generator = ClientApiGenerator(apiFilePath, apiPort, apiPrefix);
     var results;
     switch (commandOptions.name) {
       case 'discovery':
@@ -161,9 +161,9 @@ class ClientApiGenerator {
   String _packageDirectoryPath;
 
   ClientApiGenerator(String dartFilePath, this._apiPort, this._apiPrefix) {
-    var apiFile = new File(dartFilePath);
+    var apiFile = File(dartFilePath);
     if (!apiFile.existsSync()) {
-      throw new GeneratorException('Could not find file: $dartFilePath');
+      throw GeneratorException('Could not find file: $dartFilePath');
     }
     _apiFilePath = toUri(absolute(apiFile.path)).toString();
 
@@ -171,13 +171,13 @@ class ClientApiGenerator {
     // top-level API class.
     _packageDirectoryPath = findPackageRoot(_apiFilePath);
     if (_packageDirectoryPath == null) {
-      throw new GeneratorException(
+      throw GeneratorException(
           'File \'$dartFilePath\' must be in a valid package.');
     }
-    var packageDir = new Directory(join(_packageDirectoryPath, 'packages'));
-    var packagesFile = new File(join(_packageDirectoryPath, '.packages'));
+    var packageDir = Directory(join(_packageDirectoryPath, 'packages'));
+    var packagesFile = File(join(_packageDirectoryPath, '.packages'));
     if (!packageDir.existsSync() && !packagesFile.existsSync()) {
-      throw new GeneratorException(
+      throw GeneratorException(
           'Please run \'pub get\' in your API package before running the '
           'generator.');
     }
@@ -185,11 +185,11 @@ class ClientApiGenerator {
     // Make a rudimentary check that this is not a file which is 'part of' a
     // library. If so fail, asking the user to point it at the file with the
     // `library` statement.
-    var partOfRegexp = new RegExp(r'\s*part\s*of\s*(\w*)');
+    var partOfRegexp = RegExp(r'\s*part\s*of\s*(\w*)');
     apiFile.readAsLinesSync().forEach((String line) {
       var matches = partOfRegexp.matchAsPrefix(line);
       if (matches != null) {
-        throw new GeneratorException('Please use the file with the `library '
+        throw GeneratorException('Please use the file with the `library '
             '${matches.group(1)};` statement as input file instead of the '
             '`part of` file $dartFilePath.');
       }
@@ -209,7 +209,7 @@ class ClientApiGenerator {
       // Map the result from the isolate to a list of DescriptionImportPairs.
       var descriptions = <DescriptionImportPair>[];
       result.forEach((description, importMap) {
-        var diPair = new DescriptionImportPair(description, importMap);
+        var diPair = DescriptionImportPair(description, importMap);
         descriptions.add(diPair);
       });
       return descriptions;
@@ -222,8 +222,8 @@ class ClientApiGenerator {
     // NOTE: We do a double isolate spawn to workaround the spawnUri method
     // being blocking, meaning we will deadlock in the current isolate if
     // called directly.
-    ReceivePort messagePort = new ReceivePort();
-    ReceivePort errorPort = new ReceivePort();
+    ReceivePort messagePort = ReceivePort();
+    ReceivePort errorPort = ReceivePort();
 
     closePorts() {
       messagePort.close();
@@ -251,7 +251,7 @@ class ClientApiGenerator {
 
     // If we successfully launched the isolate, we'll wait for either the
     // message or an error and take whatever comes first.
-    var completer = new Completer();
+    var completer = Completer();
     var messageSubscription, errorSubscription;
     finish(value, isError) {
       messageSubscription.cancel();
@@ -277,19 +277,16 @@ class ClientApiGenerator {
     Future _httpSourceLoader(HttpRequest request) async {
       var path = request.uri.path;
       if (path.contains('/packages/')) {
-        File packageFile = new File(_packageDirectoryPath + path);
-        request.response
-          ..add(packageFile.readAsBytesSync())
-          ..close();
+        File packageFile = File(_packageDirectoryPath + path);
+        request.response.add(packageFile.readAsBytesSync());
+        await request.response.close();
       } else if (path.contains('.packages')) {
         // Didn't find .packages so revert to /packages/.
-        request.response
-          ..statusCode = HttpStatus.notFound
-          ..close();
+        request.response.statusCode = HttpStatus.notFound;
+        await request.response.close();
       } else {
-        request.response
-          ..add(utf8.encode(generatorSource))
-          ..close();
+        request.response.add(utf8.encode(generatorSource));
+        await request.response.close();
       }
     }
 
@@ -298,7 +295,7 @@ class ClientApiGenerator {
       server.listen(_httpSourceLoader);
       return await f(server);
     } finally {
-      server.close();
+      await server.close();
     }
   }
 

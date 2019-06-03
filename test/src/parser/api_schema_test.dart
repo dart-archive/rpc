@@ -29,7 +29,7 @@ class CorrectModifiers {
   final int anInt = 42;
   final bool aBool = true;
   final double aDouble = 4.2;
-  final DateTime aDate = new DateTime(2015);
+  final DateTime aDate = DateTime(2015);
 
   // Static and static const fields do _not_ become part of the message.
   static int aStaticInt = 2;
@@ -140,12 +140,12 @@ class WrongConflictingApi {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-schema-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectSimple), true);
       expect(parser.isValid, isTrue);
@@ -167,7 +167,7 @@ void main() {
     });
 
     test('modifiers', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectModifiers), true);
       expect(parser.isValid, isTrue);
@@ -189,7 +189,7 @@ void main() {
     });
 
     test('containers', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectContainers), true);
       expect(parser.isValid, isTrue);
@@ -255,7 +255,7 @@ void main() {
     });
 
     test('nested', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema correctNestedSchema =
           parser.parseSchema(reflectClass(CorrectNested), true);
       expect(parser.isValid, isTrue);
@@ -286,7 +286,7 @@ void main() {
     });
 
     test('recursive', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectRecursive), true);
       expect(parser.isValid, isTrue);
@@ -303,7 +303,7 @@ void main() {
     });
 
     test('indirect-recursive', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectIndirectRecursive), true);
       expect(parser.isValid, isTrue);
@@ -323,71 +323,67 @@ void main() {
 
   group('api-schema-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongSimple), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongSimple: Schema \'WrongSimple\' must have an unnamed '
             'constructor taking no arguments.'),
-        new ApiConfigError(
-            'WrongSimple: aDynamic: Properties cannot be of type: '
+        ApiConfigError('WrongSimple: aDynamic: Properties cannot be of type: '
             '\'dynamic\'.'),
-        new ApiConfigError(
-            'WrongSimple: anUntyped: Properties cannot be of type: '
+        ApiConfigError('WrongSimple: anUntyped: Properties cannot be of type: '
             '\'dynamic\'.'),
-        new ApiConfigError(
-            'WrongSimple: aNumber: Unsupported property type: num')
+        ApiConfigError('WrongSimple: aNumber: Unsupported property type: num')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('containers', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongContainers), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aStringSet: Unsupported property type: '
             'Set<String>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: anIntSet: Unsupported property type: Set<int>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aBoolSet: Unsupported property type: Set<bool>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aDoubleSet: Unsupported property type: '
             'Set<double>'),
-        new ApiConfigError(
-            'WrongContainers: aDateSet: Unsupported property type: '
+        ApiConfigError('WrongContainers: aDateSet: Unsupported property type: '
             'Set<DateTime>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aNestedSet: Unsupported property type: '
             'Set<Nested>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aStringQueue: Unsupported property type: '
             'Queue<String>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: anIntQueue: Unsupported property type: '
             'Queue<int>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aBoolQueue: Unsupported property type: '
             'Queue<bool>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aDoubleQueue: Unsupported property type: '
             'Queue<double>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aDateQueue: Unsupported property type: '
             'Queue<DateTime>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aNestedQueue: Unsupported property type: '
             'Queue<Nested>'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aMapWithIntKey: Maps must have keys of type '
             '\'String\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aMapWithDynamicKey: Maps must have keys of type '
             '\'String\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongContainers: aMapWithNestedKey: Maps must have keys of type '
             '\'String\'.')
       ];
@@ -395,14 +391,14 @@ void main() {
     });
 
     test('conflicting-schemas', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongConflictingApi());
+      var parser = ApiParser();
+      parser.parse(WrongConflictingApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError('WrongConflictingWithOther: Schema '
+        ApiConfigError('WrongConflictingWithOther: Schema '
             '\'messages2.WrongConflictingWithOther\' has a name conflict with '
             '\'api_schema_tests.WrongConflictingWithOther\'.'),
-        new ApiConfigError('WrongConflictingWithOther: Schema '
+        ApiConfigError('WrongConflictingWithOther: Schema '
             '\'messages2.WrongConflictingWithOther\' has a name conflict with '
             '\'api_schema_tests.WrongConflictingWithOther\'.')
       ];

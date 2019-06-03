@@ -18,7 +18,7 @@ import '../test_api/messages2.dart';
 class CorrectMethodApiWithReturnValue {
   @ApiMethod(path: 'returnsMessage')
   SimpleMessage returnsMessage() {
-    return new SimpleMessage();
+    return SimpleMessage();
   }
 
   @ApiMethod(path: 'returnsListOfString')
@@ -33,7 +33,7 @@ class CorrectMethodApiWithReturnValue {
 
   @ApiMethod(path: 'returnsListOfMessage')
   List<SimpleMessage> returnsListOfMessage() {
-    return [new SimpleMessage()];
+    return [SimpleMessage()];
   }
 
   @ApiMethod(path: 'returnsMapOfString')
@@ -48,7 +48,7 @@ class CorrectMethodApiWithReturnValue {
 
   @ApiMethod(path: 'returnsMapOfMessage')
   Map<String, SimpleMessage> returnsMapOfMessage() {
-    return {'foo': new SimpleMessage()};
+    return {'foo': SimpleMessage()};
   }
 }
 
@@ -56,37 +56,37 @@ class CorrectMethodApiWithReturnValue {
 class CorrectMethodApiWithFutureReturnValue {
   @ApiMethod(path: 'returnsMessage')
   Future<SimpleMessage> returnsMessage() {
-    return new Future.value(new SimpleMessage());
+    return Future.value(SimpleMessage());
   }
 
   @ApiMethod(path: 'returnsListOfString')
   Future<List<String>> returnsListOfString() {
-    return new Future.value(['foo']);
+    return Future.value(['foo']);
   }
 
   @ApiMethod(path: 'returnsListOfInt')
   Future<List<int>> returnsListOfInt() {
-    return new Future.value([42]);
+    return Future.value([42]);
   }
 
   @ApiMethod(path: 'returnsListOfMessage')
   Future<List<SimpleMessage>> returnsListOfMessage() {
-    return new Future.value([new SimpleMessage()]);
+    return Future.value([SimpleMessage()]);
   }
 
   @ApiMethod(path: 'returnsMapOfString')
   Future<Map<String, String>> returnsMapOfString() {
-    return new Future.value({'foo': 'bar'});
+    return Future.value({'foo': 'bar'});
   }
 
   @ApiMethod(path: 'returnsMapOfInt')
   Future<Map<String, int>> returnsMapOfInt() {
-    return new Future.value({'foo': 42});
+    return Future.value({'foo': 42});
   }
 
   @ApiMethod(path: 'returnsMapOfMessage')
   Future<Map<String, SimpleMessage>> returnsMapOfMessage() {
-    return new Future.value({'foo': new SimpleMessage()});
+    return Future.value({'foo': SimpleMessage()});
   }
 }
 
@@ -183,12 +183,12 @@ class WrongMethodApiWithReturnValue {
 
   @ApiMethod(path: 'invalidResponseFutureBool')
   Future<bool> invalidResponseFutureBool() {
-    return new Future.value(true);
+    return Future.value(true);
   }
 
   @ApiMethod(path: 'invalidResponseFutureDynamic')
   Future invalidResponseFutureDynamic() {
-    return new Future.value(true);
+    return Future.value(true);
   }
 }
 
@@ -387,8 +387,8 @@ class WrongMethodApiAmbiguousPaths7 {
 void main() {
   group('api-common-method-correct', () {
     test('correct-method-with-return', () {
-      var parser = new ApiParser();
-      ApiConfig apiCfg = parser.parse(new CorrectMethodApiWithReturnValue());
+      var parser = ApiParser();
+      ApiConfig apiCfg = parser.parse(CorrectMethodApiWithReturnValue());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 7);
       var discoveryDoc =
@@ -499,8 +499,8 @@ void main() {
       // Perform the same test but this time with the return values being
       // wrapped in futures. We create a new parser since the old one still
       // contains the methods and schemas for the first api.
-      parser = new ApiParser();
-      apiCfg = parser.parse(new CorrectMethodApiWithFutureReturnValue());
+      parser = ApiParser();
+      apiCfg = parser.parse(CorrectMethodApiWithFutureReturnValue());
       expect(parser.isValid, isTrue);
       expect(apiCfg.methods.length, 7);
       expect(json['schemas'], expectedSchemas);
@@ -508,8 +508,8 @@ void main() {
     });
 
     test('correct-method-list-map', () {
-      var parser = new ApiParser();
-      ApiConfig apiConfig = parser.parse(new CorrectMethodApiListMap());
+      var parser = ApiParser();
+      ApiConfig apiConfig = parser.parse(CorrectMethodApiListMap());
       expect(parser.isValid, isTrue);
       var expectedSchemas = {
         'ListOfString': {
@@ -643,49 +643,46 @@ void main() {
 
   group('api-common-method-wrong', () {
     test('wrong-method-api', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongMethodApi());
+      var parser = ApiParser();
+      parser.parse(WrongMethodApi());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApi: Missing required @ApiClass annotation.'),
-        new ApiConfigError(
-            'WrongMethodApi: @ApiClass.version field is required.'),
-        new ApiConfigError(
-            'WrongMethodApi.invalidHttpMethod: Unknown HTTP method: '
+        ApiConfigError('WrongMethodApi: @ApiClass.version field is required.'),
+        ApiConfigError('WrongMethodApi.invalidHttpMethod: Unknown HTTP method: '
             'INVALID_HTTP_METHOD.'),
-        new ApiConfigError(
-            'WrongMethodApi.invalidHttpMethod: API methods using '
+        ApiConfigError('WrongMethodApi.invalidHttpMethod: API methods using '
             'INVALID_HTTP_METHOD must have a signature of path parameters '
             'followed by one request parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApi.noPath: ApiMethod.path field is required.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApi.nameNoPath: ApiMethod.path field is required.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApi.invalidPath: path cannot start with \'/\'.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('wrong-method-api-path-param', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongMethodApiWithPathParam());
+      var parser = ApiParser();
+      parser.parse(WrongMethodApiWithPathParam());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithPathParam: Missing required @ApiClass '
             'annotation.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithPathParam: @ApiClass.version field is '
             'required.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithPathParam.missingPathParam: Non-path parameter '
             '\'missing\' must be a named parameter.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithPathParam.missingMethodParam: Missing methods '
             'parameters specified in method path: missingMethodParam/{id}.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithPathParam.mismatchMethodParam: Path parameter '
             '\'aMessage\' must be of type int, String or bool.')
       ];
@@ -693,29 +690,29 @@ void main() {
     });
 
     test('wrong-method-api-return-value', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongMethodApiWithReturnValue());
+      var parser = ApiParser();
+      parser.parse(WrongMethodApiWithReturnValue());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue: Missing required @ApiClass '
             'annotation.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue: @ApiClass.version field is '
             'required.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue.invalidResponseVoid: API Method '
             'cannot be void, use VoidMessage as return type instead.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue.invalidResponseString: Return type: '
             'String is not a valid return type.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue.invalidResponseBool: Return type: '
             'bool is not a valid return type.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue.invalidResponseFutureBool: Return '
             'type: bool is not a valid return type.'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongMethodApiWithReturnValue.invalidResponseFutureDynamic: API '
             'Method return type has to be a instantiable class.')
       ];
@@ -723,66 +720,62 @@ void main() {
     });
 
     test('wrong-method-api-list', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongMethodApiList());
+      var parser = ApiParser();
+      parser.parse(WrongMethodApiList());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'ListOfdynamic: ListOfdynamicProperty: Properties cannot be of '
             'type: \'dynamic\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'ListOfdynamic: ListOfdynamicProperty: Properties cannot be of '
             'type: \'dynamic\'.'),
-        new ApiConfigError('ListOfListOfdynamic: ListOfListOfdynamicProperty: '
+        ApiConfigError('ListOfListOfdynamic: ListOfListOfdynamicProperty: '
             'Properties cannot be of type: \'dynamic\'.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     test('wrong-method-api-map', () {
-      var parser = new ApiParser();
-      parser.parse(new WrongMethodApiMap());
+      var parser = ApiParser();
+      parser.parse(WrongMethodApiMap());
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
-            'MapOfdynamic: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
-            'MapOfdynamic: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
+        ApiConfigError('MapOfdynamic: Maps must have keys of type \'String\'.'),
+        ApiConfigError('MapOfdynamic: Maps must have keys of type \'String\'.'),
+        ApiConfigError(
             'MapOfdynamic: MapOfdynamicProperty: Properties cannot be of type: '
             '\'dynamic\'.'),
-        new ApiConfigError(
+        ApiConfigError(
             'MapOfdynamic: MapOfdynamicProperty: Properties cannot be of type: '
             '\'dynamic\'.'),
-        new ApiConfigError(
-            'MapOfString: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
-            'MapOfString: Maps must have keys of type \'String\'.'),
-        new ApiConfigError(
+        ApiConfigError('MapOfString: Maps must have keys of type \'String\'.'),
+        ApiConfigError('MapOfString: Maps must have keys of type \'String\'.'),
+        ApiConfigError(
             'MapOfMapOfdynamic: Maps must have keys of type \'String\'.')
       ];
       expect(parser.errors.toString(), expectedErrors.toString());
     });
 
     List ambiguousPaths = [
-      new WrongMethodApiAmbiguousPaths1(),
+      WrongMethodApiAmbiguousPaths1(),
       1,
-      new WrongMethodApiAmbiguousPaths2(),
+      WrongMethodApiAmbiguousPaths2(),
       2,
-      new WrongMethodApiAmbiguousPaths3(),
+      WrongMethodApiAmbiguousPaths3(),
       1,
-      new WrongMethodApiAmbiguousPaths4(),
+      WrongMethodApiAmbiguousPaths4(),
       1,
-      new WrongMethodApiAmbiguousPaths5(),
+      WrongMethodApiAmbiguousPaths5(),
       3,
-      new WrongMethodApiAmbiguousPaths6(),
+      WrongMethodApiAmbiguousPaths6(),
       3,
-      new WrongMethodApiAmbiguousPaths7(),
+      WrongMethodApiAmbiguousPaths7(),
       15
     ];
     for (int i = 0; i < ambiguousPaths.length; i += 2) {
       test(ambiguousPaths[i].toString(), () {
-        var parser = new ApiParser();
+        var parser = ApiParser();
         ApiConfig apiConfig = parser.parse(ambiguousPaths[i]);
         expect(parser.isValid, isFalse);
         var config = apiConfig.generateDiscoveryDocument('baseUrl', '');

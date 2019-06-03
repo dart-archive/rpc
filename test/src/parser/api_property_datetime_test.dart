@@ -41,7 +41,7 @@ class WrongDateTime {
   @ApiProperty(format: 'foo')
   DateTime aDateTimeWithInvalidFormat;
 
-  @ApiProperty(values: const {'enumKey': 'enumValue'})
+  @ApiProperty(values: {'enumKey': 'enumValue'})
   DateTime aDateTimeWithEnumValues;
 
   @ApiProperty(defaultValue: 'incorrect date')
@@ -49,12 +49,12 @@ class WrongDateTime {
 }
 
 final ApiConfigSchema jsonSchema =
-    new ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
+    ApiParser().parseSchema(reflectClass(discovery.JsonSchema), false);
 
 void main() {
   group('api-datetime-property-correct', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       ApiConfigSchema apiSchema =
           parser.parseSchema(reflectClass(CorrectDateTime), true);
       expect(parser.isValid, isTrue);
@@ -90,31 +90,31 @@ void main() {
 
   group('api-datetime-property-wrong', () {
     test('simple', () {
-      var parser = new ApiParser();
+      var parser = ApiParser();
       parser.parseSchema(reflectClass(WrongDateTime), true);
       expect(parser.isValid, isFalse);
       var expectedErrors = [
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDateTime: aDateTimeWithMinMax: Invalid property annotation. '
             'Property of type DateTime does not support the ApiProperty field: '
             'minValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDateTime: aDateTimeWithMinMax: Invalid property annotation. '
             'Property of type DateTime does not support the ApiProperty field: '
             'maxValue'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDateTime: aDateTimeWithIntFormat: Invalid property '
             'annotation. Property of type DateTime does not support the '
             'ApiProperty field: format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDateTime: aDateTimeWithInvalidFormat: Invalid property '
             'annotation. Property of type DateTime does not support the '
             'ApiProperty field: format'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDateTime: aDateTimeWithEnumValues: Invalid property '
             'annotation. Property of type DateTime does not support the '
             'ApiProperty field: values'),
-        new ApiConfigError(
+        ApiConfigError(
             'WrongDateTime: aDateTimeWithIncorrectDefault: Invalid datetime '
             'value \'incorrect date\'. See documentation for DateTime.parse '
             'for format definition.')

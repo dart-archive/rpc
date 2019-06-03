@@ -14,17 +14,17 @@ class ApiOneApi {
 
   @ApiMethod(path: 'apione')
   ApiOneResponse hello() {
-    return new ApiOneResponse()..result = 'Hello there!';
+    return ApiOneResponse()..result = 'Hello there!';
   }
 
   @ApiMethod(path: 'apione/{name}/age/{age}')
   ApiOneResponse apiOneGetWithParams(String name, int age) {
-    return new ApiOneResponse()..result = 'Hello ${name} of age ${age}!';
+    return ApiOneResponse()..result = 'Hello ${name} of age ${age}!';
   }
 
   @ApiMethod(path: 'apione/post', method: 'POST')
   ApiOneResponse apiOnePost(ApiOneRequest request) {
-    return new ApiOneResponse()
+    return ApiOneResponse()
       ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 }
@@ -34,21 +34,21 @@ class ApiTwoApi {
   ApiTwoApi();
 
   @ApiResource()
-  ApiTwoResource aResource = new ApiTwoResource();
+  ApiTwoResource aResource = ApiTwoResource();
 
   @ApiMethod(path: 'apitwo')
   ApiTwoResponse hello() {
-    return new ApiTwoResponse()..result = 'Hello there!';
+    return ApiTwoResponse()..result = 'Hello there!';
   }
 
   @ApiMethod(path: 'apitwo/{name}/age/{age}')
   ApiTwoResponse apiTwoGetWithParams(String name, int age) {
-    return new ApiTwoResponse()..result = 'Hello ${name} of age ${age}!';
+    return ApiTwoResponse()..result = 'Hello ${name} of age ${age}!';
   }
 
   @ApiMethod(path: 'apitwo/put', method: 'PUT')
   ApiTwoResponse apiTwoPut(ApiTwoRequest request) {
-    return new ApiTwoResponse()
+    return ApiTwoResponse()
       ..result = 'Hello ${request.name} of age ${request.age}!';
   }
 

@@ -20,7 +20,7 @@ import '../../test_util.dart';
 File _blobFile() {
   var blobPath =
       p.join(getPackageDir(), 'test/src/test_api/blob_dart_logo.png');
-  return new File(blobPath);
+  return File(blobPath);
 }
 
 // Tests for exercising the setting of default values
@@ -40,7 +40,7 @@ class DefaultValueMessage {
   @ApiProperty(defaultValue: 'Hello World!')
   String aString;
 
-  @ApiProperty(values: const {
+  @ApiProperty(values: {
     'enum_value1': 'Description of enum_value1',
     'enum_value2': 'Description of enum_value2',
     'enum_value3': 'Description of enum_value3'
@@ -51,7 +51,7 @@ class DefaultValueMessage {
   Type ignoredProperty;
 }
 
-const _expectedDefaultResult = const {
+const _expectedDefaultResult = {
   'anInt': 5,
   'aBool': true,
   'aDouble': 4.2,
@@ -94,16 +94,16 @@ class InheritanceChildClassBaseExcluded extends InheritanceBaseClass {
 @ApiClass(version: 'v1')
 class TestAPI {
   @ApiResource()
-  GetAPI get = new GetAPI();
+  GetAPI get = GetAPI();
 
   @ApiResource()
-  DeleteAPI delete = new DeleteAPI();
+  DeleteAPI delete = DeleteAPI();
 
   @ApiResource()
-  PostAPI post = new PostAPI();
+  PostAPI post = PostAPI();
 
   @ApiResource()
-  PutAPI put = new PutAPI();
+  PutAPI put = PutAPI();
 }
 
 class GetAPI {
@@ -114,17 +114,17 @@ class GetAPI {
 
   @ApiMethod(path: 'get/throwing')
   VoidMessage getThrowing() {
-    throw new BadRequestError('No request is good enough!');
+    throw BadRequestError('No request is good enough!');
   }
 
   @ApiMethod(path: 'get/errors')
   VoidMessage getErrors() {
     var errors = [
-      new RpcErrorDetail(
+      RpcErrorDetail(
           reason: 'FailureByDesign', message: 'This is supposed to happen'),
-      new RpcErrorDetail(reason: 'SecondReason', message: 'Second message')
+      RpcErrorDetail(reason: 'SecondReason', message: 'Second message')
     ];
-    throw new BadRequestError('This is bad :(')..errors = errors;
+    throw BadRequestError('This is bad :(')..errors = errors;
   }
 
   // This should always fail since a method is not allowed to return null.
@@ -135,28 +135,28 @@ class GetAPI {
 
   @ApiMethod(path: 'get/hello')
   StringMessage getHello({String name}) {
-    return new StringMessage()
+    return StringMessage()
       ..aString = 'Hello ' + (name != null ? name : 'Ghost');
   }
 
   @ApiMethod(path: 'get/hello/{name}')
   StringMessage getHelloWithName(String name) {
-    return new StringMessage()..aString = 'Hello ' + name;
+    return StringMessage()..aString = 'Hello ' + name;
   }
 
   @ApiMethod(path: 'get/minmax/{value}')
   MinMaxIntMessage getMinMax(int value) {
-    return new MinMaxIntMessage()..aBoundedInt = value;
+    return MinMaxIntMessage()..aBoundedInt = value;
   }
 
   @ApiMethod(path: 'get/int32/{value}')
   Int32Message getInt32(int value) {
-    return new Int32Message()..anInt = value;
+    return Int32Message()..anInt = value;
   }
 
   @ApiMethod(path: 'get/int64/{value}')
   Int64Message getInt64(String value) {
-    return new Int64Message()..anInt = BigInt.parse(value);
+    return Int64Message()..anInt = BigInt.parse(value);
   }
 
   @ApiMethod(path: 'get/response')
@@ -169,16 +169,16 @@ class GetAPI {
   @ApiMethod(path: 'get/withCookies')
   Future<StringMessage> getWithCookies() async {
     if (context.requestCookies == null) {
-      throw new BadRequestError('missing cookies');
+      throw BadRequestError('missing cookies');
     }
-    return new StringMessage()
+    return StringMessage()
       ..aString = 'Received cookies: ${context.requestCookies}';
   }
 
   @ApiMethod(path: 'get/blob')
   Future<MediaMessage> getBlob() async {
     final file = _blobFile();
-    return new MediaMessage()
+    return MediaMessage()
       ..bytes = file.readAsBytesSync()
       ..contentType = 'image/png'
       ..updated = file.lastModifiedSync();
@@ -190,7 +190,7 @@ class GetAPI {
     final bytes = file.readAsBytesSync();
     final md5Hash = hex.encode(md5.convert(bytes).bytes);
 
-    return new MediaMessage()
+    return MediaMessage()
       ..bytes = bytes
       ..contentType = 'image/png'
       ..updated = file.lastModifiedSync()
@@ -201,7 +201,7 @@ class GetAPI {
   @ApiMethod(path: 'get/inheritanceChildClassBaseIncluded')
   Future<InheritanceChildClassBaseIncluded>
       getInheritanceChildClassBaseIncluded() async {
-    return new InheritanceChildClassBaseIncluded()
+    return InheritanceChildClassBaseIncluded()
       ..stringFromBase = 'From base'
       ..stringFromChild = 'From child';
   }
@@ -209,7 +209,7 @@ class GetAPI {
   @ApiMethod(path: 'get/inheritanceChildClassBaseExcluded')
   Future<InheritanceChildClassBaseExcluded>
       getInheritanceChildClassBaseExcluded() async {
-    return new InheritanceChildClassBaseExcluded()
+    return InheritanceChildClassBaseExcluded()
       ..stringFromBase = 'From base'
       ..stringFromChild = 'From child';
   }
@@ -283,14 +283,14 @@ class PutAPI {
 }
 
 main() async {
-  ApiServer _apiServer = new ApiServer(apiPrefix: '', prettyPrint: true);
+  ApiServer _apiServer = ApiServer(apiPrefix: '', prettyPrint: true);
   _apiServer.enableDiscoveryApi();
-  _apiServer.addApi(new TestAPI());
+  _apiServer.addApi(TestAPI());
 
   Future<HttpApiResponse> _sendRequest(String method, String path,
-      {String api: 'testAPI/v1/',
-      extraHeaders: const <String, dynamic>{},
-      String query: '',
+      {String api = 'testAPI/v1/',
+      extraHeaders = const <String, dynamic>{},
+      String query = '',
       body,
       List<Cookie> cookies}) {
     var headers = <String, dynamic>{'content-type': 'application/json'};
@@ -298,15 +298,15 @@ main() async {
     var bodyStream;
     if ((method == 'POST' || method == 'PUT') && body != 'empty') {
       bodyStream =
-          new Stream<List<int>>.fromIterable([utf8.encode(jsonEncode(body))]);
+          Stream<List<int>>.fromIterable([utf8.encode(jsonEncode(body))]);
     } else {
-      bodyStream = new Stream<List<int>>.fromIterable([]);
+      bodyStream = Stream<List<int>>.fromIterable([]);
     }
     assert(query.isEmpty || query.startsWith('?'));
     Uri uri = Uri.parse('http://server/$api$path$query');
     path = '$api$path';
     var request =
-        new HttpApiRequest(method, uri, headers, bodyStream, cookies: cookies);
+        HttpApiRequest(method, uri, headers, bodyStream, cookies: cookies);
     return _apiServer.handleHttpApiRequest(request);
   }
 
@@ -476,8 +476,8 @@ main() async {
 
     test('get-with-cookies', () async {
       var cookies = [
-        new Cookie('my-cookie', 'cookie-value'),
-        new Cookie('my-other-cookie', 'other-cookie-value')..httpOnly = false
+        Cookie('my-cookie', 'cookie-value'),
+        Cookie('my-other-cookie', 'other-cookie-value')..httpOnly = false
       ];
       HttpApiResponse response =
           await _sendRequest('GET', 'get/withCookies', cookies: cookies);
@@ -1131,7 +1131,7 @@ main() async {
 
   group('api-invoke-options', () {
     Map<String, dynamic> extraHeaders(dynamic methods,
-            {bool asString: false}) =>
+            {bool asString = false}) =>
         {
           'access-control-request-method':
               asString ? methods.join(',') : methods,
