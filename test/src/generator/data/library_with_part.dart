@@ -2,12 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of libraryWithPart;
+library library_with_part;
 
-@ApiClass(version: 'v1')
-class PartApi {
-  @ApiMethod(path: 'partMethod')
-  VoidMessage partMethod() {
-    return null;
-  }
-}
+import 'package:rpc/src/annotations.dart';
+
+part 'part_api.dart';

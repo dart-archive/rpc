@@ -205,8 +205,8 @@ main() {
     test('part-api-file', () {
       setupPackage();
       var libPath = join(packagePath, 'lib');
-      copyFiles(dataPath, libPath, ['libraryWithPart.dart', 'partApi.dart']);
-      var fileName = join(packagePath, 'lib', 'partApi.dart');
+      copyFiles(dataPath, libPath, ['library_with_part.dart', 'part_api.dart']);
+      var fileName = join(packagePath, 'lib', 'part_api.dart');
       var result = runPub(packagePath, ['get']);
       if (result == null) {
         print('Could not find pub.');
@@ -220,7 +220,7 @@ main() {
       }
       expect(
           result.stdout.startsWith(
-              'Please use the file with the `library libraryWithPart'),
+              'Please use the file with the `library library_with_part'),
           isTrue);
     });
 
