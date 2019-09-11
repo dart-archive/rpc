@@ -37,8 +37,7 @@ Future<PostData> _asText(ParsedHttpApiRequest request) {
   final String charset = request.contentType.charset;
   final Encoding encoding =
       charset != null ? Encoding.getByName(charset) : utf8;
-  return request.body
-      .transform(encoding.decoder)
+  return encoding.decoder.bind(request.body)
       .fold(new StringBuffer(), _fillStringBuffer)
       .then((StringBuffer buffer) => new PostData('text', buffer.toString()));
 }
