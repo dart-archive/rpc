@@ -1,3 +1,7 @@
+## 0.6.2
+
+- Fixes for breaking change in Dart 2.5.0 - Utf8Decoder is based on Uint8List now.
+
 ## 0.6.1
 
 - Support strong-mode mirrors (https://github.com/dart-lang/sdk/issues/35611).
